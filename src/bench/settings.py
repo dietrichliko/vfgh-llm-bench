@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     public_url: str = "http://localhost:8000"
 
     session_hours: int = 8
+    cost_cap_total_usd: float | None = None  # over all orders; None = no total cap
+    worker_concurrency: int = 8  # LLM calls in flight per worker, over all providers
     dev_login: bool = False
 
     oidc_issuer: str = ""

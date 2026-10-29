@@ -1,0 +1,345 @@
+"""Orders: plan jobs (interleaved, cutoff rule), estimate cost, snapshot the setup, control.
+
+A job is one LLM call: case × model × condition × phrasing × repetition. Jobs run in
+``seq`` order, which interleaves cases and models, so a partial run is already comparable.
+"""
+
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from datetime import date
+from typing import Any
+
+from sqlalchemy import func
+from sqlmodel import Session, col, select
+
+from bench import prompts
+from bench.models import (
+    OPEN_JOB_STATES,
+    Case,
+    CaseParse,
+    CaseStatus,
+    Job,
+    JobStatus,
+    Order,
+    OrderStatus,
+    Run,
+    audit,
+    utcnow,
+)
+from bench.providers import ResolvedModel, Role, ToolMode
+
+CONDITIONS = {
+    "A": "Modell allein",
+    "B": "mit vorgegebenen Normen (ab Stufe 4)",
+    "C": "mit eigener Recherche im RIS (ab Stufe 4)",
+}
+AVAILABLE_CONDITIONS = ("A",)  # B and C follow in stage 4
+TASK = "decide"
+CHARS_PER_TOKEN = 3.5  # German legal text, rough estimate
+
+
+def months_after(d: date, months: int) -> date:
+    year, month = divmod(d.month - 1 + months, 12)
+    day = min(d.day, 28)
+    return date(d.year + year, month + 1, day)
+
+
+def eligible(case: Case, rm: ResolvedModel, cutoff_months: int) -> bool:
+    """Only decisions issued at least ``cutoff_months`` after the model's training cutoff."""
+    if rm.config.cutoff is None:
+        return False
+    return case.decision_date >= months_after(rm.config.cutoff, cutoff_months)
+
+
+def check_models(models: list[ResolvedModel], conditions: list[str]) -> list[str]:
+    problems = []
+    for rm in models:
+        if Role.TESTED not in rm.config.roles:
+            problems.append(f"{rm.name} ist kein Prüfling")
+        if not rm.available:
+            problems.append(f"{rm.name}: Schlüssel fehlt")
+        if "C" in conditions and rm.provider.tool_mode is not ToolMode.NATIVE:
+            problems.append(f"{rm.name}: kein natives Tool Calling, nicht für Bedingung C")
+    for c in conditions:
+        if c not in AVAILABLE_CONDITIONS:
+            problems.append(f"Bedingung {c} ist noch nicht verfügbar")
+    return problems
+
+
+@dataclass
+class Plan:
+    jobs: list[Job]
+    excluded: dict[str, list[int]]  # model key → case ids left out by the cutoff rule
+    estimated_cost_usd: float
+    cost_by_model: dict[str, float] = field(default_factory=dict)
+    jobs_by_model: dict[str, int] = field(default_factory=dict)
+    problems: list[str] = field(default_factory=list)
+
+
+def plan(
+    db: Session,
+    cases: list[Case],
+    models: list[ResolvedModel],
+    conditions: list[str],
+    repetitions: int,
+    phrasings: int,
+    cutoff_months: int,
+) -> Plan:
+    problems = check_models(models, conditions)
+    if any(c.status != CaseStatus.RELEASED for c in cases):
+        problems.append("Nur freigegebene Fälle können verwendet werden")
+    if not cases or not models or not conditions:
+        problems.append("Fälle, Modelle und Bedingungen auswählen")
+    prompt_versions = {}
+    for p in range(1, phrasings + 1):
+        version = prompts.latest(db, prompts.key(TASK, p))
+        if version is None:
+            problems.append(f"Prompt {prompts.key(TASK, p)} fehlt")
+        else:
+            prompt_versions[p] = version
+
+    parses = {
+        p.id: p
+        for p in db.exec(
+            select(CaseParse).where(col(CaseParse.id).in_([c.released_parse_id for c in cases]))
+        ).all()
+    }
+    excluded: dict[str, list[int]] = defaultdict(list)
+    jobs: list[Job] = []
+    cost: Counter[str] = Counter()
+    count: Counter[str] = Counter()
+    seq = 0
+    # repetition and phrasing outermost, then cases, then models: interleaved
+    for repetition in range(1, repetitions + 1):
+        for phrasing in range(1, phrasings + 1):
+            for condition in conditions:
+                for case in cases:
+                    parse = parses.get(case.released_parse_id)
+                    for rm in models:
+                        if not eligible(case, rm, cutoff_months):
+                            if repetition == phrasing == 1 and condition == conditions[0]:
+                                excluded[rm.key].append(case.id or 0)
+                            continue
+                        if parse is None or phrasing not in prompt_versions:
+                            continue
+                        seq += 1
+                        version = prompt_versions[phrasing]
+                        jobs.append(
+                            Job(
+                                order_id=0,
+                                seq=seq,
+                                case_id=case.id or 0,
+                                parse_id=parse.id or 0,
+                                model_key=rm.key,
+                                provider_key=rm.provider_key,
+                                condition=condition,
+                                phrasing=phrasing,
+                                repetition=repetition,
+                                prompt_version_id=version.id or 0,
+                            )
+                        )
+                        cost[rm.key] += estimate(rm, len(version.text) + len(parse.input_text))
+                        count[rm.key] += 1
+    if not jobs and not problems:
+        problems.append("Kein Fall liegt nach dem Wissensstand der gewählten Modelle")
+    return Plan(
+        jobs=jobs,
+        excluded=dict(excluded),
+        estimated_cost_usd=sum(cost.values()),
+        cost_by_model=dict(cost),
+        jobs_by_model=dict(count),
+        problems=problems,
+    )
+
+
+def estimate(rm: ResolvedModel, input_chars: int) -> float:
+    price = rm.config.price
+    if price is None:
+        return 0.0
+    tokens_in = input_chars / CHARS_PER_TOKEN
+    return (tokens_in * price.input + rm.config.expected_output_tokens * price.output) / 1_000_000
+
+
+def snapshot(
+    db: Session, models: list[ResolvedModel], cases: list[Case], jobs: list[Job]
+) -> dict[str, Any]:
+    return {
+        "models": {
+            rm.key: {
+                "config_hash": rm.config_hash,
+                "provider": rm.provider_key,
+                "provider_config": rm.provider.model_dump(mode="json", by_alias=True),
+                "model_config": rm.config.model_dump(mode="json", by_alias=True),
+            }
+            for rm in models
+        },
+        "prompts": sorted({j.prompt_version_id for j in jobs}),
+        "cases": {str(c.id): c.released_parse_id for c in cases},
+        "created": utcnow().isoformat(),
+    }
+
+
+def create(
+    db: Session,
+    name: str,
+    cases: list[Case],
+    models: list[ResolvedModel],
+    conditions: list[str],
+    repetitions: int,
+    phrasings: int,
+    cutoff_months: int,
+    cost_cap_usd: float | None,
+    user_id: int | None,
+) -> Order:
+    p = plan(db, cases, models, conditions, repetitions, phrasings, cutoff_months)
+    if p.problems:
+        raise ValueError("; ".join(p.problems))
+    if cost_cap_usd is not None and p.estimated_cost_usd > cost_cap_usd:
+        raise ValueError(
+            f"Geschätzte Kosten {p.estimated_cost_usd:.2f} USD über der Obergrenze {cost_cap_usd:.2f} USD"
+        )
+    order = Order(
+        name=name.strip() or f"Auftrag {utcnow():%Y-%m-%d %H:%M}",
+        created_by=user_id,
+        conditions=conditions,
+        model_keys=[rm.key for rm in models],
+        case_ids=[c.id or 0 for c in cases],
+        repetitions=repetitions,
+        phrasings=phrasings,
+        cutoff_months=cutoff_months,
+        cost_cap_usd=cost_cap_usd,
+        estimated_cost_usd=p.estimated_cost_usd,
+        job_count=len(p.jobs),
+        snapshot=snapshot(db, models, cases, p.jobs),
+        excluded=p.excluded,
+    )
+    db.add(order)
+    db.flush()
+    assert order.id is not None
+    for job in p.jobs:
+        job.order_id = order.id
+        db.add(job)
+    audit(
+        db,
+        "order.create",
+        user_id=user_id,
+        obj=f"order:{order.id}",
+        detail={"jobs": len(p.jobs), "estimate": round(p.estimated_cost_usd, 4)},
+    )
+    return order
+
+
+def spent(db: Session, order_id: int | None = None) -> float:
+    query = select(func.coalesce(func.sum(Run.cost_usd), 0.0))
+    if order_id is not None:
+        query = query.where(Run.order_id == order_id)
+    return float(db.exec(query).one())
+
+
+def set_status(
+    db: Session, order: Order, status: OrderStatus, user_id: int | None, reason: str | None = None
+) -> None:
+    allowed = {
+        OrderStatus.PAUSED: {OrderStatus.RUNNING},
+        OrderStatus.RUNNING: {OrderStatus.PAUSED},
+        OrderStatus.CANCELLED: {OrderStatus.RUNNING, OrderStatus.PAUSED},
+    }
+    if order.status not in allowed.get(status, set()):
+        raise ValueError(f"Auftrag ist {order.status.value}")
+    order.status = status
+    order.status_reason = reason
+    if status is OrderStatus.CANCELLED:
+        for job in db.exec(
+            select(Job).where(Job.order_id == order.id, Job.status == JobStatus.QUEUED)
+        ).all():
+            job.status = JobStatus.CANCELLED
+        order.finished_at = utcnow()
+    audit(
+        db,
+        f"order.{status.value}",
+        user_id=user_id,
+        obj=f"order:{order.id}",
+        detail={"reason": reason},
+    )
+
+
+def retry(db: Session, order: Order, user_id: int | None) -> int:
+    """Queue failed, not evaluable and unknown jobs again (earlier runs are kept)."""
+    jobs = db.exec(
+        select(Job).where(
+            Job.order_id == order.id,
+            col(Job.status).in_([JobStatus.FAILED, JobStatus.NOT_EVALUABLE, JobStatus.UNKNOWN]),
+        )
+    ).all()
+    for job in jobs:
+        job.status = JobStatus.QUEUED
+        job.error = None
+        job.lease_until = None
+        job.sent_at = None
+    if jobs and order.status in (OrderStatus.DONE, OrderStatus.PAUSED):
+        order.status = OrderStatus.RUNNING
+        order.status_reason = None
+        order.finished_at = None
+    audit(db, "order.retry", user_id=user_id, obj=f"order:{order.id}", detail={"jobs": len(jobs)})
+    return len(jobs)
+
+
+def finish_if_done(db: Session, order: Order) -> bool:
+    if order.status is not OrderStatus.RUNNING:
+        return False
+    open_jobs = db.exec(
+        select(func.count())
+        .select_from(Job)
+        .where(Job.order_id == order.id, col(Job.status).in_(OPEN_JOB_STATES))
+    ).one()
+    if open_jobs:
+        return False
+    order.status = OrderStatus.DONE
+    order.finished_at = utcnow()
+    return True
+
+
+@dataclass
+class Progress:
+    total: int
+    by_status: dict[str, int]
+    by_model: dict[str, dict[str, int]]
+    spent_usd: float
+    eta_seconds: float | None
+    recent_errors: list[Job]
+
+
+def progress(db: Session, order: Order) -> Progress:
+    rows = db.exec(
+        select(Job.model_key, Job.status, func.count())
+        .where(Job.order_id == order.id)
+        .group_by(col(Job.model_key), col(Job.status))
+    ).all()
+    by_status: Counter[str] = Counter()
+    by_model: dict[str, dict[str, int]] = defaultdict(dict)
+    for model_key, status, n in rows:
+        by_status[status.value] += n
+        by_model[model_key][status.value] = n
+    finished = sum(n for s, n in by_status.items() if s not in ("queued", "running"))
+    eta = None
+    if finished and order.status is OrderStatus.RUNNING:
+        elapsed = (utcnow() - order.created_at).total_seconds()
+        remaining = by_status.get("queued", 0) + by_status.get("running", 0)
+        eta = elapsed / finished * remaining
+    errors = db.exec(
+        select(Job)
+        .where(
+            Job.order_id == order.id,
+            col(Job.status).in_([JobStatus.FAILED, JobStatus.NOT_EVALUABLE, JobStatus.UNKNOWN]),
+        )
+        .order_by(col(Job.finished_at).desc())
+        .limit(10)
+    ).all()
+    return Progress(
+        total=order.job_count,
+        by_status=dict(by_status),
+        by_model=dict(by_model),
+        spent_usd=spent(db, order.id),
+        eta_seconds=eta,
+        recent_errors=list(errors),
+    )

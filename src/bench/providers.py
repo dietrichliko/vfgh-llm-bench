@@ -20,6 +20,7 @@ from pydantic_ai import NativeOutput, PromptedOutput
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIChatModelSettings
 from pydantic_ai.providers.openai import OpenAIProvider
 
+from bench.llm.schemas import PROMPTED_OUTPUT_TEMPLATE
 from bench.settings import Settings
 
 
@@ -58,6 +59,8 @@ class ProviderConfig(_Strict):
     headers: dict[str, str] = Field(default_factory=dict)
     extra_body: dict[str, Any] = Field(default_factory=dict)
     output_mode: OutputMode = OutputMode.NATIVE
+    # prompted mode only: also send response_format {"type": "json_object"}
+    json_object: bool = False
     tool_mode: ToolMode = ToolMode.NONE
     max_concurrency: int = Field(default=4, ge=1)
     requests_per_minute: int | None = Field(default=None, ge=1)
@@ -72,6 +75,7 @@ class ModelConfig(_Strict):
     cutoff: date | None = None
     roles: list[Role] = Field(min_length=1)
     price: Price | None = None
+    expected_output_tokens: int = Field(default=6000, ge=1)  # incl. thinking; for estimates
     parameters: dict[str, Any] = Field(default_factory=dict)
     extra_body: dict[str, Any] = Field(default_factory=dict)
 
@@ -187,14 +191,23 @@ def build_model(
         timeout=rm.provider.timeout_seconds,
         http_client=http_client,
     )
+    provider = OpenAIProvider(openai_client=client)
+    # what the endpoint supports comes from our config, not from guesses by model name
+    profile = {
+        **provider.model_profile(rm.config.model),
+        "supports_json_schema_output": rm.provider.output_mode is OutputMode.NATIVE,
+        "supports_json_object_output": rm.provider.json_object,
+    }
     return OpenAIChatModel(
         rm.config.model,
-        provider=OpenAIProvider(openai_client=client),
+        provider=provider,
+        profile=profile,  # type: ignore[arg-type]
         settings=model_settings(rm),
     )
 
 
 def output_spec[T](rm: ResolvedModel, output_type: type[T]) -> NativeOutput[T] | PromptedOutput[T]:
+    """JSON schema via the API where supported, otherwise our own (versioned) prompt text."""
     if rm.provider.output_mode is OutputMode.NATIVE:
         return NativeOutput(output_type)
-    return PromptedOutput(output_type)
+    return PromptedOutput(output_type, template=PROMPTED_OUTPUT_TEMPLATE)

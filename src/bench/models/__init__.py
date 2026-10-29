@@ -99,15 +99,31 @@ from bench.models.cases import (  # noqa: E402
     ImportRun,
     SourceDocument,
 )
+from bench.models.runs import (  # noqa: E402
+    OPEN_JOB_STATES,
+    Job,
+    JobStatus,
+    Order,
+    OrderStatus,
+    PromptVersion,
+    Run,
+)
 
 __all__ = [
+    "OPEN_JOB_STATES",
     "AuditLog",
     "Case",
     "CaseParse",
     "CaseStatus",
     "DocumentKind",
     "ImportRun",
+    "Job",
+    "JobStatus",
+    "Order",
+    "OrderStatus",
+    "PromptVersion",
     "ProviderCheck",
+    "Run",
     "SourceDocument",
     "User",
     "UserRole",

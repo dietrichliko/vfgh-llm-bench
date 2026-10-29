@@ -5,7 +5,6 @@ import asyncio
 import logging
 import os
 import sys
-import time
 from datetime import date
 from pathlib import Path
 
@@ -24,10 +23,27 @@ def _serve(args: argparse.Namespace) -> int:
 
 
 def _worker(args: argparse.Namespace) -> int:
-    # Placeholder until stage 3 (DB job queue). Keeps the compose service alive and visible.
-    log.info("worker: no job queue yet (stage 3); idling")
-    while True:
-        time.sleep(args.interval)
+    from bench import prompts
+    from bench.db import make_engine, migrate
+    from bench.llm.http import make_http_client
+    from bench.settings import get_settings
+    from bench.worker import Worker
+
+    settings = get_settings()
+    engine = make_engine(settings.db_url)
+    migrate(engine)
+
+    async def go() -> None:
+        async with make_http_client() as client:
+            await Worker(engine, settings, client, poll_seconds=args.interval).run_forever()
+
+    from sqlmodel import Session
+
+    with Session(engine) as db:
+        prompts.seed(db)
+        db.commit()
+    asyncio.run(go())
+    return 0
 
 
 def _migrate(_args: argparse.Namespace) -> int:
@@ -129,7 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_serve)
 
     p = sub.add_parser("worker", help="run the job worker")
-    p.add_argument("--interval", type=float, default=60.0)
+    p.add_argument("--interval", type=float, default=2.0, help="seconds between polls")
     p.set_defaults(func=_worker)
 
     p = sub.add_parser("migrate", help="bring the database schema up to date")
