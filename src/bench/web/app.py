@@ -17,8 +17,9 @@ from bench import __version__, auth
 from bench.db import make_engine, migrate
 from bench.llm.http import make_http_client
 from bench.providers import StudyConfig, load_config
+from bench.ris.client import RisClient
 from bench.settings import SESSION_SECRET, Settings, get_settings
-from bench.web import pages
+from bench.web import cases, pages
 
 log = logging.getLogger(__name__)
 HERE = Path(__file__).parent
@@ -42,7 +43,10 @@ def read_config(settings: Settings) -> tuple[StudyConfig | None, str | None]:
 
 
 def create_app(
-    settings: Settings | None = None, *, http_client: httpx2.AsyncClient | None = None
+    settings: Settings | None = None,
+    *,
+    http_client: httpx2.AsyncClient | None = None,
+    ris: RisClient | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     engine = make_engine(settings.db_url)
@@ -51,6 +55,9 @@ def create_app(
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         migrate(engine)
         yield
+        for task in list(app.state.tasks):
+            task.cancel()
+        await app.state.ris.aclose()
         await app.state.http_client.aclose()
         engine.dispose()
 
@@ -60,6 +67,8 @@ def create_app(
     app.state.oauth = auth.make_oauth(settings)
     app.state.config, app.state.config_error = read_config(settings)
     app.state.http_client = http_client or make_http_client()
+    app.state.ris = ris or RisClient()
+    app.state.tasks = set()
 
     templates = Jinja2Templates(directory=HERE / "templates")
     templates.env.globals["role_labels"] = ROLE_LABELS
@@ -94,4 +103,5 @@ def create_app(
     app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
     app.include_router(auth.router)
     app.include_router(pages.router)
+    app.include_router(cases.router)
     return app

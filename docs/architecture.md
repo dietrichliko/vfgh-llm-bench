@@ -177,7 +177,7 @@ Checked against the RIS on 2026-10-29: there are 89 VfGH decisions under Art 139
 | Table | Content |
 | --- | --- |
 | `SourceDocument` | case or norm, kind (`decision`, `attachment`, `norm`), format/MIME, URL, fetched at, sha256, size, content (bytes). Decisions: XML (parsed) and PDF (for people and the archive); embedded images as attachments. Norms: whatever the RIS has, including PDF only |
-| `ExtractedText` | text per source document, with method (`xml`, `html`, `pypdf`) and extractor version |
+| `ExtractedText` | text per source document, with method (`xml`, `html`, `pypdf`) and extractor version. **Moved to stage 4**: in stage 2 only the decision XML is parsed, and that result is `CaseParse` |
 | `CaseParse` | sections, input, reference, outcome per challenged provision, what the application asked for, leak warnings; parser version and sha256 of the XML it came from |
 | `Case` | RIS document number, case number, date, area, procedure type, status, flags |
 
@@ -190,7 +190,15 @@ Checked against the RIS on 2026-10-29: there are 89 VfGH decisions under Art 139
   - `norm_text_from_pdf`;
   - `ex_officio`.
 - Cases stay **text-only** for all models. Cases with images in the input are flagged and reported separately or excluded.
-- **Ex-officio reviews** leak the court's preliminary view through the review decision, so only application proceedings are used. Procedural rulings (*Beschlüsse*) are filtered out: in a sample of 23 hits, 10 had no considerations section.
+- **Ex-officio reviews** leak the court's preliminary view through the review decision, so only application proceedings are used. Procedural rulings (*Beschlüsse*) are filtered out.
+- **Import of 2026-10-29** (all decisions under Art 139 B-VG from 2025-07-01):
+  - 89 hits: 58 judgments (*Erkenntnisse*) and 31 procedural rulings.
+  - Of the 58 judgments: **49 ready for review**, 7 ex-officio reviews and 1 individual complaint (E 1411/2025) excluded automatically, 1 with an unrecognised structure (V 220/2025: first heading "1. Anträge" instead of "I. Antrag").
+  - Proposed outcomes of the 49: 22 unlawful, 7 partly unlawful, 20 dismissed. The majority class is therefore much weaker than the 63 % of the StVO cases since 2018.
+  - Every application asks for annulment or for a declaration that the regulation was unlawful. At case level, "follow the application" is therefore the same as "always unlawful"; it differs only per provision and in the form of the outcome (annulled vs. was unlawful).
+  - Embedded images: 8 of the 49 have images in the input.
+  - 127 stored documents (XML, PDF, images) take 21 MB.
+- **Condition B norms:** stage 2 stores the norms from the RIS metadata (*Normen*) as the proposal. Resolving them to texts valid on the reference date moves to stage 4, together with the ris-mcp port that provides the same RIS norm lookup.
 
 ### Study tables (overview)
 
@@ -278,7 +286,7 @@ Each stage runs and is tested on its own.
 | Stage | Content |
 | --- | --- |
 | 1 Skeleton | Settings and secrets, `providers.yaml` loader, httpx client with retries and raw capture, SQLModel and Alembic, OIDC and dev login, providers page with Test button, Containerfile, compose |
-| 2 Cases | Port `ris/` with tests; `SourceDocument`, `ExtractedText`, `CaseParse`; batch import with XML, PDF and attachments; outcome per provision; flags; condition B norm list |
+| 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A/B | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Condition C | Port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule |
 | 5 Evaluation | Reference checklists, opposing reasonings and assessment, judges, citation check, calibration queue, contamination probe |
@@ -297,6 +305,7 @@ Each stage runs and is tested on its own.
 - Running open models on MBI GPUs via vLLM as another OpenAI-compatible provider (free and fully reproducible).
 - Name and owner of the study repository; whether to publish raw responses; the OSF embargo (see [publication.md](publication.md)).
 - Paper text to adjust:
-  - the case estimate (about 50 usable cases rather than 80–90);
+  - the case estimate (49 usable judgments since mid-2025 rather than 80–90);
+  - the baseline (majority class about 45–60 %, not 63 %; "follow the application" equals "always unlawful" at case level);
   - the pilot size;
   - "a proxy emulates tool calling for all models" → condition C only with native tool calling.

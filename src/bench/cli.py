@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import time
+from datetime import date
 from pathlib import Path
 
 os.environ.setdefault("PYDANTIC_AI_NO_BANNER", "1")
@@ -46,6 +47,42 @@ def _backup(args: argparse.Namespace) -> int:
     target = args.target or settings.data_dir / "backups"
     print(backup_sqlite(settings.db_url, target, args.label))
     return 0
+
+
+def _import_cases(args: argparse.Namespace) -> int:
+    from sqlmodel import Session
+
+    from bench import cases
+    from bench.db import make_engine, migrate
+    from bench.models import ImportRun
+    from bench.ris.client import RisClient
+    from bench.settings import get_settings
+
+    engine = make_engine(get_settings().db_url)
+    migrate(engine)
+    with Session(engine) as db:
+        run = ImportRun(params={"date_from": args.date_from.isoformat(), "cli": True})
+        db.add(run)
+        db.commit()
+        assert run.id is not None
+        run_id = run.id
+
+    async def go() -> None:
+        ris = RisClient()
+        try:
+            await cases.run_import(
+                engine, ris, run_id, args.date_from, args.date_to, args.procedural, None
+            )
+        finally:
+            await ris.aclose()
+
+    asyncio.run(go())
+    with Session(engine) as db:
+        done = db.get(ImportRun, run_id)
+        assert done is not None
+        print("\n".join(done.log))
+        print(f"{done.imported} imported, {done.skipped} skipped, {done.failed} failed")
+        return 0 if done.status == "done" and not done.failed else 1
 
 
 def _check_providers(args: argparse.Namespace) -> int:
@@ -102,6 +139,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--target", type=Path)
     p.add_argument("--label")
     p.set_defaults(func=_backup)
+
+    p = sub.add_parser("import-cases", help="import VfGH regulation reviews from the RIS")
+    p.add_argument("--from", dest="date_from", type=date.fromisoformat, required=True)
+    p.add_argument("--to", dest="date_to", type=date.fromisoformat)
+    p.add_argument("--procedural", action="store_true", help="also procedural rulings")
+    p.set_defaults(func=_import_cases)
 
     p = sub.add_parser("check-providers", help="send a short test prompt to each model")
     p.add_argument("model", nargs="*", help="model keys (default: all)")

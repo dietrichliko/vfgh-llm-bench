@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Fälle · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Fälle</h1>
+<p class="lead">Verordnungsprüfungen des VfGH (Art 139 B-VG) aus dem RIS. Beschlüsse, Prüfungen
+von Amts wegen und andere Verfahren werden beim Import automatisch ausgeschlossen. Nur
+freigegebene Fälle gehen später an Modelle.</p>
+
+<section class="panel no-print">
+  <h2 style="margin-top: 0">Im RIS suchen und importieren</h2>
+  <form hx-post="/cases/import" hx-target="#import-run" hx-swap="innerHTML">
+    <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
+      <label>Entscheidungen ab<br><input type="date" name="date_from" value="2025-07-01" required></label>
+      <label>bis (optional)<br><input type="date" name="date_to" max="{{ today.isoformat() }}"></label>
+      <label><input type="checkbox" name="include_procedural" value="true"> auch Beschlüsse</label>
+      <button type="submit">Importieren</button>
+    </p>
+  </form>
+  <p class="lead" style="margin: 0">Bereits importierte Entscheidungen werden übersprungen. Zwischen
+  zwei Anfragen an das RIS liegen 1,5 Sekunden; 60 Entscheidungen dauern einige Minuten.</p>
+  <div id="import-run">{% if run %}{% include "_import_run.html" %}{% endif %}</div>
+</section>
+
+<nav class="tabs" aria-label="Filter">
+  {% for key, label in filters.items() %}
+  {% if key == filter %}<strong>{{ label }}</strong>{% else %}<a href="/cases?filter={{ key }}">{{ label }}</a>{% endif %}
+  {%- if key == "open" %} ({{ counts.get("imported", 0) + counts.get("needs_review", 0) }})
+  {%- elif key == "all" %} ({{ total }})
+  {%- else %} ({{ counts.get(key, 0) }}){% endif %}
+  {% endfor %}
+</nav>
+
+{% if cases %}
+<table>
+  <thead>
+    <tr><th>Datum</th><th>Geschäftszahl</th><th>Gebiet</th><th>Status</th><th>Ergebnis (Vorschlag)</th><th>Hinweise</th></tr>
+  </thead>
+  <tbody>
+  {% for c in cases %}
+  {% set p = parses.get(c.current_parse_id) %}
+    <tr>
+      <td>{{ c.decision_date.strftime("%d.%m.%Y") }}</td>
+      <td><a href="/cases/{{ c.id }}">{{ c.case_number }}</a><br><span class="mono">{{ c.decision_type or "" }}</span></td>
+      <td>{{ c.areas | join(", ") }}</td>
+      <td>
+        {% if c.status.value == "released" %}<span class="status ok">{{ status_labels[c.status.value] }}</span>
+        {% elif c.status.value == "needs_review" %}<span class="status bad">{{ status_labels[c.status.value] }}</span>
+        {% elif c.status.value == "excluded" %}<span class="status warn">{{ status_labels[c.status.value] }}</span>
+        {% else %}<span class="status">{{ status_labels[c.status.value] }}</span>{% endif %}
+      </td>
+      <td>
+        {% if c.outcome %}{{ outcome_labels[c.outcome.case_outcome] }}
+        {% elif p and p.case_outcome %}{{ outcome_labels[p.case_outcome] }}
+        {% else %}–{% endif %}
+      </td>
+      <td class="check">{% for f in c.flags %}{{ flag_labels[f] }}{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Keine Fälle in dieser Ansicht.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}{{ case.case_number }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/cases">← Fälle</a></p>
+<h1>VfGH {{ case.decision_date.strftime("%d.%m.%Y") }}, {{ case.case_number }}</h1>
+<p class="lead">
+  {{ case.decision_type or "Entscheidung" }} · {{ case.areas | join(", ") or "ohne Index" }} ·
+  <span class="mono">{{ case.doc_number }}</span> ·
+  Status: <strong>{{ status_labels[case.status.value] }}</strong>
+  {% if case.exclusion_reason %}({{ case.exclusion_reason }}){% endif %}
+</p>
+
+{% if case.flags %}
+<section class="{% if case.status.value == 'needs_review' %}error{% else %}notice{% endif %}">
+  <ul style="margin: 0">
+  {% for f in case.flags %}<li>{{ flag_labels[f] }}</li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+{% if parse %}
+{% if parse.problems or parse.notes %}
+<h2>Hinweise aus der Auswertung</h2>
+<ul>
+  {% for p in parse.problems %}<li><span class="status bad">Problem</span> {{ p }}</li>{% endfor %}
+  {% for n in parse.notes %}<li>{{ n }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<h2>Ergebnis laut Spruch</h2>
+<table>
+  <thead><tr><th>Punkt</th><th>Ergebnis</th><th>Text</th></tr></thead>
+  <tbody>
+  {% for i in parse.outcome_items %}
+    <tr>
+      <td>{{ i.label or "–" }}</td>
+      <td>
+        {% if i.outcome %}{{ item_labels[i.outcome] }}{% if i.statute %} (Gesetz){% endif %}
+        {% elif i.accessory %}<span class="lead">Nebenausspruch</span>
+        {% else %}<span class="status bad">nicht erkannt</span>{% endif %}
+      </td>
+      <td>{{ i.text }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p>Vorschlag für den Fall: <strong>{{ outcome_labels[parse.case_outcome] if parse.case_outcome else "keiner" }}</strong>
+{% if case.outcome %} · bestätigt: <strong>{{ outcome_labels[case.outcome.case_outcome] }}</strong>{% endif %}</p>
+
+{% if parse.application_request %}
+{% set r = parse.application_request %}
+<p>Antrag (Vorschlag aus Abschnitt I):
+  {% if r.annul %}Aufhebung{% endif %}{% if r.annul and r.declare_unlawful %} und {% endif %}{% if r.declare_unlawful %}Feststellung der Gesetzwidrigkeit{% endif %}{% if not r.annul and not r.declare_unlawful %}nicht erkannt{% endif %}
+  {% if r.alternatives %}· {{ r.alternatives }} Eventualantrag/-anträge{% endif %}</p>
+{% endif %}
+
+{% if parse.leaks %}
+<h2>Leckprüfung</h2>
+<ul>
+  {% for w in parse.leaks %}
+  <li>{% if w.kind == "date" %}Entscheidungsdatum in der Eingabe: {{ w.text }}{% else %}Gleicher Satz in Eingabe und Referenz: „{{ w.text }}“{% endif %}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+<p class="lead">Geschäftszahl in der Eingabe {{ parse.redactions }}-mal geschwärzt. Auswertung
+Version {{ parse.parser_version }} vom {{ parse.created_at.strftime("%d.%m.%Y %H:%M") }}
+({{ parse_count }} Fassung{% if parse_count != 1 %}en{% endif %}).</p>
+{% endif %}
+
+<h2>Normen laut RIS</h2>
+<p class="lead">Aus den RIS-Metadaten. Vorschlag für Bedingung B (die Normtexte zum Stichtag werden in
+Stufe 4 aus dem RIS geholt).</p>
+<ul>{% for n in case.norms %}<li>{{ n }}</li>{% endfor %}</ul>
+
+<h2>Dokumente</h2>
+<ul>
+  {% for d in docs %}
+  <li><a href="/cases/{{ case.id }}/documents/{{ d.id }}">{{ d.name }}</a> ({{ d.mime }}, {{ (d.size / 1024) | round(0) | int }} kB, abgerufen {{ d.fetched_at.strftime("%d.%m.%Y") }})</li>
+  {% endfor %}
+</ul>
+
+{% if case.headnote %}
+<details>
+  <summary>Leitsatz und Schlagworte aus dem RIS (verraten das Ergebnis)</summary>
+  <p>{{ case.headnote }}</p>
+  <p class="lead">{{ case.keywords or "" }}</p>
+</details>
+{% endif %}
+
+<section class="panel no-print" style="margin-top: 1.5rem">
+  <h2 style="margin-top: 0">Entscheidung über den Fall</h2>
+  {% if case.status.value == "released" %}
+  <p><span class="status ok">freigegeben</span> am {{ case.released_at.strftime("%d.%m.%Y") }}.
+  Die Eingabe ist eingefroren{% if case.reference_date %}, Stichtag {{ case.reference_date.strftime("%d.%m.%Y") }}{% endif %}.</p>
+  {% else %}
+    {% if case.status.value == "excluded" %}
+    <form method="post" action="/cases/{{ case.id }}/reopen"><button type="submit" class="secondary">Wieder aufnehmen</button></form>
+    {% else %}
+      {% if case.status.value == "needs_review" %}
+      <p class="error">Die Gliederung wurde nicht erkannt. Der Fall kann so nicht freigegeben werden.
+      Ausschließen oder nach einer Verbesserung der Auswertung neu auswerten.</p>
+      {% else %}
+      <form method="post" action="/cases/{{ case.id }}/release">
+        <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
+          <label>Ergebnis bestätigen<br>
+            <select name="case_outcome" required>
+              {% if not parse or not parse.case_outcome %}<option value="" selected disabled>bitte wählen</option>{% endif %}
+              {% for o in case_outcomes %}
+              <option value="{{ o.value }}" {% if parse and parse.case_outcome == o.value %}selected{% endif %}>{{ outcome_labels[o.value] }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>Stichtag der Rechtslage (optional)<br><input type="date" name="reference_date"></label>
+          <button type="submit">Freigeben</button>
+        </p>
+      </form>
+      {% endif %}
+      <form method="post" action="/cases/{{ case.id }}/exclude">
+        <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
+          <label>Grund<br><input type="text" name="reason" size="40" required></label>
+          <button type="submit" class="secondary">Ausschließen</button>
+        </p>
+      </form>
+    {% endif %}
+    {% if parse and parse.parser_version != parser_version %}
+    <form method="post" action="/cases/{{ case.id }}/reparse"><button type="submit" class="secondary">Mit Auswertung {{ parser_version }} neu auswerten</button></form>
+    {% endif %}
+  {% endif %}
+</section>
+
+{% if parse %}
+<h2>Eingabe und Referenz</h2>
+<p class="lead">Links steht, was ein Modell sieht. Rechts steht, was zurückgehalten wird.</p>
+<div class="split">
+  <section>
+    <h3>Eingabe ({{ parse.input_section_count }} Abschnitte{% if parse.images_input %}, {{ parse.images_input }} Abbildung(en) als Platzhalter{% endif %})</h3>
+    <pre class="doc">{{ parse.input_text }}</pre>
+  </section>
+  <section>
+    <h3>Referenz</h3>
+    <pre class="doc">{{ parse.reference_text }}</pre>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

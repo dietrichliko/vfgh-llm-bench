@@ -1,0 +1,20 @@
+<div class="check" {% if run.status == "running" %}hx-get="/cases/import/{{ run.id }}" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+  {% if run.status == "running" %}
+  <span class="status warn">Import läuft</span>
+  {% elif run.status == "done" %}
+  <span class="status ok">Import abgeschlossen</span>
+  {% else %}
+  <span class="status bad">Import abgebrochen</span>
+  {% endif %}
+  <dl>
+    <dt>Zeitraum</dt><dd>ab {{ run.params.get("date_from") }}{% if run.params.get("date_to") %} bis {{ run.params.get("date_to") }}{% endif %}{% if run.params.get("include_procedural") %}, mit Beschlüssen{% endif %}</dd>
+    <dt>Fortschritt</dt><dd>{{ run.done }} von {{ run.total or "?" }}: {{ run.imported }} neu, {{ run.skipped }} schon vorhanden, {{ run.failed }} Fehler</dd>
+  </dl>
+  {% if run.log %}
+  <details{% if run.status != "running" %} open{% endif %}>
+    <summary>Protokoll</summary>
+    <pre>{{ run.log | join("\n") }}</pre>
+  </details>
+  {% endif %}
+  {% if run.status != "running" %}<p><a href="/cases">Liste neu laden</a></p>{% endif %}
+</div>

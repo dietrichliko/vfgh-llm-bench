@@ -14,6 +14,7 @@
     {% if user and user.role.value != "pending" %}
     <nav aria-label="Hauptnavigation">
       {% if user.role.value == "admin" %}
+      <a href="/cases">Fälle</a>
       <a href="/admin/providers">Anbieter &amp; Modelle</a>
       <a href="/admin/users">Benutzer</a>
       {% endif %}

@@ -115,3 +115,11 @@ pre { white-space: pre-wrap; word-break: break-word; font-family: var(--mono); f
   main { max-width: none; padding: 0; }
   details > *:not(summary) { display: block; }
 }
+
+/* Cases */
+nav.tabs { display: flex; gap: 1.25rem; margin: 1.5rem 0 0.75rem; font-family: var(--sans); font-size: 0.9rem; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.split h3 { font-size: 0.95rem; }
+pre.doc { font-family: var(--serif); font-size: 0.9rem; line-height: 1.5; max-height: 70vh; background: var(--panel); border: 1px solid var(--line); padding: 0.75rem 1rem; }
+@media (max-width: 60rem) { .split { grid-template-columns: 1fr; } }
+@media print { pre.doc { max-height: none; overflow: visible; } }

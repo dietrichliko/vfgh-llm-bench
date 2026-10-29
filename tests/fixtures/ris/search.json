@@ -1,0 +1,406 @@
+{
+ "OgdSearchResult": {
+  "OgdDocumentResults": {
+   "Hits": {
+    "@pageNumber": "1",
+    "@pageSize": "100",
+    "#text": "5"
+   },
+   "OgdDocumentReference": [
+    {
+     "Data": {
+      "Metadaten": {
+       "Technisch": {
+        "ID": "JFT_20261006_26V00025_00",
+        "Applikation": "Vfgh",
+        "Organ": "Verfassungsgerichtshof (VfGH)",
+        "ImportTimestamp": {
+         "@xsi:nil": "true",
+         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
+       },
+       "Allgemein": {
+        "Geaendert": "2026-10-23",
+        "DokumentUrl": "https://ogd.ris.bka.gv.at/Dokument.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20261006_26V00025_00"
+       },
+       "Judikatur": {
+        "Dokumenttyp": "Text",
+        "Geschaeftszahl": {
+         "item": "V25/2026"
+        },
+        "Normen": {
+         "item": [
+          "B-VG Art89 Abs2, Art89 Abs3, Art139 Abs1 Z1",
+          "StVO 1960 §43",
+          "GeschwindigkeitsbeschränkungsV der Bezirkshauptmannschaft Imst vom 18.11.2021",
+          "AHG §11",
+          "VfGG §7 Abs1, §15 Abs2, §18, §57 Abs1, §57 Abs2"
+         ]
+        },
+        "Entscheidungsdatum": "2026-10-06",
+        "Schlagworte": "VfGH / Gerichtsantrag, VfGH / Formerfordernisse, VfGH / Bedenken, VfGH / Präjudizialität, Oberlandesgericht, Verwaltungsstrafrecht, Amtshaftung",
+        "EuropeanCaseLawIdentifier": "ECLI:AT:VFGH:2026:V25.2026",
+        "Vfgh": {
+         "Entscheidungsart": "Beschluss",
+         "Gericht": "Verfassungsgerichtshof (VfGH)",
+         "Indizes": {
+          "item": "90/01 Straßenverkehrsrecht"
+         },
+         "Leitsatz": "Zurückweisung eines Gerichtsantrags auf Aufhebung einer Geschwindigkeitsbeschränkungsverordnung mangels Darlegung der Bedenken und der Präjudizialität sowie mangels Stellung eines Aufhebungsbegehrens "
+        },
+        "GesamteEntscheidungUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20261006_26V00025_00&IncludeSelf=True",
+        "RechtssaetzeUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20261006_26V00025_00&IncludeSelf=False"
+       }
+      },
+      "Dokumentliste": {
+       "ContentReference": {
+        "ContentType": "MainDocument",
+        "Name": "Hauptdokument",
+        "Urls": {
+         "ContentUrl": [
+          {
+           "DataType": "Xml",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20261006_26V00025_00/JFT_20261006_26V00025_00.xml"
+          },
+          {
+           "DataType": "Html",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20261006_26V00025_00/JFT_20261006_26V00025_00.html"
+          },
+          {
+           "DataType": "Rtf",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20261006_26V00025_00/JFT_20261006_26V00025_00.rtf"
+          },
+          {
+           "DataType": "Pdf",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20261006_26V00025_00/JFT_20261006_26V00025_00.pdf"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "Data": {
+      "Metadaten": {
+       "Technisch": {
+        "ID": "JFT_20260616_25E01411_00",
+        "Applikation": "Vfgh",
+        "Organ": "Verfassungsgerichtshof (VfGH)",
+        "ImportTimestamp": {
+         "@xsi:nil": "true",
+         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
+       },
+       "Allgemein": {
+        "Geaendert": "2026-08-31",
+        "DokumentUrl": "https://ogd.ris.bka.gv.at/Dokument.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260616_25E01411_00"
+       },
+       "Judikatur": {
+        "Dokumenttyp": "Text",
+        "Geschaeftszahl": {
+         "item": "E1411/2025"
+        },
+        "Normen": {
+         "item": [
+          "B-VG Art139 Abs6",
+          "GeschwindigkeitsbeschränkungsV der Bezirkshauptmannschaft Güssing vom 31.07.1998",
+          "VfGG §7 Abs2"
+         ]
+        },
+        "Entscheidungsdatum": "2026-06-16",
+        "Schlagworte": "VfGH / Anlassfall, Geschwindigkeitsbeschränkung, Verordnung",
+        "EuropeanCaseLawIdentifier": "ECLI:AT:VFGH:2026:E1411.2025",
+        "Vfgh": {
+         "Entscheidungsart": "Erkenntnis",
+         "Gericht": "Verfassungsgerichtshof (VfGH)",
+         "Indizes": {
+          "item": "90/01 Straßenverkehrsrecht"
+         },
+         "Leitsatz": "Aufhebung des angefochtenen Erkenntnisses im Anlassfall wegen Anwendung einer gesetzwidrigen Verordnung "
+        },
+        "GesamteEntscheidungUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260616_25E01411_00&IncludeSelf=True",
+        "RechtssaetzeUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260616_25E01411_00&IncludeSelf=False"
+       }
+      },
+      "Dokumentliste": {
+       "ContentReference": {
+        "ContentType": "MainDocument",
+        "Name": "Hauptdokument",
+        "Urls": {
+         "ContentUrl": [
+          {
+           "DataType": "Xml",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260616_25E01411_00/JFT_20260616_25E01411_00.xml"
+          },
+          {
+           "DataType": "Html",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260616_25E01411_00/JFT_20260616_25E01411_00.html"
+          },
+          {
+           "DataType": "Rtf",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260616_25E01411_00/JFT_20260616_25E01411_00.rtf"
+          },
+          {
+           "DataType": "Pdf",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260616_25E01411_00/JFT_20260616_25E01411_00.pdf"
+          }
+         ]
+        }
+       }
+      }
+     }
+    },
+    {
+     "Data": {
+      "Metadaten": {
+       "Technisch": {
+        "ID": "JFT_20260303_24V00041_00",
+        "Applikation": "Vfgh",
+        "Organ": "Verfassungsgerichtshof (VfGH)",
+        "ImportTimestamp": {
+         "@xsi:nil": "true",
+         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
+       },
+       "Allgemein": {
+        "Geaendert": "2026-05-04",
+        "DokumentUrl": "https://ogd.ris.bka.gv.at/Dokument.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260303_24V00041_00"
+       },
+       "Judikatur": {
+        "Dokumenttyp": "Text",
+        "Geschaeftszahl": {
+         "item": "V41/2024 (V41/2024-14)"
+        },
+        "Normen": {
+         "item": [
+          "B-VG Art18 Abs1, Art139 Abs1 Z1",
+          "StVO 1960 §43, §52, §94, §94b",
+          "Verordnung der Bezirkshauptmannschaft Mödling vom 31.03.2022",
+          "Verordnung der Bezirkshauptmannschaft Mödling vom 08.07.2022",
+          "GeschwindigkeitsbeschränkungsV der Bundesministerin für Verkehr, Innovation und Technologie vom 02.09.2010",
+          "GeschwindigkeitsbeschränkungsV des Bundesministers für Verkehr, Innovation und Technologie vom 04.01.2006",
+          "VfGG §7 Abs2"
+         ]
+        },
+        "Entscheidungsdatum": "2026-03-03",
+        "Schlagworte": "Geschwindigkeitsbeschränkung, Verordnung Kundmachung, Geltungsbereich (örtlicher) einer Verordnung, Geltungsbereich (zeitlicher) einer Verordnung, Determinierungsgebot, Verkehrsbeschränkungen, Straßenverkehrszeichen, Straßenpolizei, VfGH / Gerichtsantrag",
+        "EuropeanCaseLawIdentifier": "ECLI:AT:VFGH:2026:V41.2024",
+        "Vfgh": {
+         "Entscheidungsart": "Erkenntnis",
+         "Gericht": "Verfassungsgerichtshof (VfGH)",
+         "Indizes": {
+          "item": "90/01 Straßenverkehrsrecht"
+         },
+         "Leitsatz": "Aufhebung von Wort- und Zeichenfolgen einer Verordnung der Bezirkshauptmannschaft Mödling betreffend einen Baustellenbereich auf der A2 Südautobahn mangels Verordnung des Geltungsendes der Geschwindigkeitsbeschränkung "
+        },
+        "GesamteEntscheidungUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260303_24V00041_00&IncludeSelf=True",
+        "RechtssaetzeUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260303_24V00041_00&IncludeSelf=False"
+       }
+      },
+      "Dokumentliste": {
+       "ContentReference": [
+        {
+         "ContentType": "MainDocument",
+         "Name": "Hauptdokument",
+         "Urls": {
+          "ContentUrl": [
+           {
+            "DataType": "Xml",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260303_24V00041_00/JFT_20260303_24V00041_00.xml"
+           },
+           {
+            "DataType": "Html",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260303_24V00041_00/JFT_20260303_24V00041_00.html"
+           },
+           {
+            "DataType": "Rtf",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260303_24V00041_00/JFT_20260303_24V00041_00.rtf"
+           },
+           {
+            "DataType": "Pdf",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260303_24V00041_00/JFT_20260303_24V00041_00.pdf"
+           }
+          ]
+         }
+        },
+        {
+         "ContentType": "EmbeddedAttachment",
+         "Name": "hauptdokument.img1is.png",
+         "Urls": {
+          "ContentUrl": {
+           "DataType": "Png",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260303_24V00041_00/hauptdokument.img1is.png"
+          }
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "Data": {
+      "Metadaten": {
+       "Technisch": {
+        "ID": "JFT_20260302_25V00251_00",
+        "Applikation": "Vfgh",
+        "Organ": "Verfassungsgerichtshof (VfGH)",
+        "ImportTimestamp": {
+         "@xsi:nil": "true",
+         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
+       },
+       "Allgemein": {
+        "Geaendert": "2026-05-05",
+        "DokumentUrl": "https://ogd.ris.bka.gv.at/Dokument.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260302_25V00251_00"
+       },
+       "Judikatur": {
+        "Dokumenttyp": "Text",
+        "Geschaeftszahl": {
+         "item": "V251/2025 (V251/2025-8)"
+        },
+        "Normen": {
+         "item": [
+          "B-VG Art139 Abs1 Z1",
+          "StVO 1960 §24, §43, §94f, §96",
+          "Halte- und ParkverbotsV des Gemeinderats der Landeshauptstadt Salzburg vom 18.07.2013",
+          "VfGG §7 Abs2"
+         ]
+        },
+        "Entscheidungsdatum": "2026-03-02",
+        "Schlagworte": "Halte(Park-)verbot, Verkehrsbeschränkungen, Verordnungserlassung, Geltungsbereich (zeitlicher) einer Verordnung, Ermittlungsverfahren, Grundlagenforschung, Straßenpolizei, Anhörungsrecht, VfGH / Gerichtsantrag",
+        "EuropeanCaseLawIdentifier": "ECLI:AT:VFGH:2026:V251.2025",
+        "Vfgh": {
+         "Entscheidungsart": "Erkenntnis",
+         "Gericht": "Verfassungsgerichtshof (VfGH)",
+         "Indizes": {
+          "item": "90/01 Straßenverkehrsrecht"
+         },
+         "Leitsatz": "Aufhebung einer Halte- und Parkverbotsverordnung der Landeshauptstadt Salzburg mangels Durchführung eines (neuen) Anhörungs- und Ermittlungsverfahrens oder – nach Auseinandersetzung mit zwischenzeitig erfolgten Änderungen – Bezugnahme auf das vorangegangene Verfahren betreffend die Erlassung einer Ladezone "
+        },
+        "GesamteEntscheidungUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260302_25V00251_00&IncludeSelf=True",
+        "RechtssaetzeUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20260302_25V00251_00&IncludeSelf=False"
+       }
+      },
+      "Dokumentliste": {
+       "ContentReference": [
+        {
+         "ContentType": "MainDocument",
+         "Name": "Hauptdokument",
+         "Urls": {
+          "ContentUrl": [
+           {
+            "DataType": "Xml",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260302_25V00251_00/JFT_20260302_25V00251_00.xml"
+           },
+           {
+            "DataType": "Html",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260302_25V00251_00/JFT_20260302_25V00251_00.html"
+           },
+           {
+            "DataType": "Rtf",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260302_25V00251_00/JFT_20260302_25V00251_00.rtf"
+           },
+           {
+            "DataType": "Pdf",
+            "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260302_25V00251_00/JFT_20260302_25V00251_00.pdf"
+           }
+          ]
+         }
+        },
+        {
+         "ContentType": "EmbeddedAttachment",
+         "Name": "hauptdokument.img1is.png",
+         "Urls": {
+          "ContentUrl": {
+           "DataType": "Png",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20260302_25V00251_00/hauptdokument.img1is.png"
+          }
+         }
+        }
+       ]
+      }
+     }
+    },
+    {
+     "Data": {
+      "Metadaten": {
+       "Technisch": {
+        "ID": "JFT_20251209_25V00228_00",
+        "Applikation": "Vfgh",
+        "Organ": "Verfassungsgerichtshof (VfGH)",
+        "ImportTimestamp": {
+         "@xsi:nil": "true",
+         "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
+        }
+       },
+       "Allgemein": {
+        "Geaendert": "2026-10-20",
+        "DokumentUrl": "https://ogd.ris.bka.gv.at/Dokument.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20251209_25V00228_00"
+       },
+       "Judikatur": {
+        "Dokumenttyp": "Text",
+        "Geschaeftszahl": {
+         "item": "V228/2025 (V228/2025-10)"
+        },
+        "Normen": {
+         "item": [
+          "B-VG Art49b",
+          "B-VG Art117 Abs8",
+          "B-VG Art139 Abs1 Z2",
+          "B-VG Art141 Abs1 lith",
+          "Sbg Landes-VerfassungsG 1999 Art5",
+          "Sbg VolksbefragungsG §2, §3, §4, §5, §6, §7, §9, §17",
+          "VolksbefragungsG 1989 §16",
+          "Verordnung der Sbg Landesregierung vom 03.09.2024 über die Ausschreibung einer Volksbefragung",
+          "VfGG §7 Abs1"
+         ]
+        },
+        "Entscheidungsdatum": "2025-12-09",
+        "Schlagworte": "Volksbefragung, Verordnung, Wirkungsbereich eigener, Landesverwaltung, Eisenbahnrecht",
+        "EuropeanCaseLawIdentifier": "ECLI:AT:VFGH:2025:V228.2025",
+        "Vfgh": {
+         "Entscheidungsart": "Erkenntnis",
+         "Gericht": "Verfassungsgerichtshof (VfGH)",
+         "Indizes": {
+          "item": "L1 Landesverfassung und Landesverwaltung"
+         },
+         "Sammlungsnummer": "20762",
+         "Leitsatz": "Gesetzwidrigkeit einer Verordnung der Salzburger Landesregierung betreffend eine Volksbefragung über Maßnahmen zur Verkehrsentlastung mangels klarer Fragestellung; Unklarheit der Formulierung \"Hinwirken des Landes\" ob bzw welche ausschließliche Angelegenheit der Landesverwaltung und/oder Landesgesetzgebung gemeint ist "
+        },
+        "GesamteEntscheidungUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20251209_25V00228_00&IncludeSelf=True",
+        "RechtssaetzeUrl": "https://ogd.ris.bka.gv.at/VfghEntscheidung.wxe?Abfrage=Vfgh&Dokumentnummer=JFT_20251209_25V00228_00&IncludeSelf=False"
+       }
+      },
+      "Dokumentliste": {
+       "ContentReference": {
+        "ContentType": "MainDocument",
+        "Name": "Hauptdokument",
+        "Urls": {
+         "ContentUrl": [
+          {
+           "DataType": "Xml",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20251209_25V00228_00/JFT_20251209_25V00228_00.xml"
+          },
+          {
+           "DataType": "Html",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20251209_25V00228_00/JFT_20251209_25V00228_00.html"
+          },
+          {
+           "DataType": "Rtf",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20251209_25V00228_00/JFT_20251209_25V00228_00.rtf"
+          },
+          {
+           "DataType": "Pdf",
+           "Url": "https://ogd.ris.bka.gv.at/Dokumente/Vfgh/JFT_20251209_25V00228_00/JFT_20251209_25V00228_00.pdf"
+          }
+         ]
+        }
+       }
+      }
+     }
+    }
+   ]
+  }
+ }
+}

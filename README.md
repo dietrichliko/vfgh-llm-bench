@@ -11,8 +11,9 @@ answers are compared with the actual decisions.
 | [docs/publication.md](docs/publication.md) | Study protocol in git, Zenodo, OSF |
 | [docs/prior-work.md](docs/prior-work.md) | The predecessor project `vfgh-llm-begruendung` |
 
-**Status:** stage 1 (skeleton): login, providers and models with test calls, users,
-container setup. Cases, runs, evaluation and dashboard follow in stages 2–6
+**Status:** stage 2 (cases): RIS import, input/reference split, outcome per provision,
+review and release. Stage 1: login, providers and models with test calls, users, container
+setup. Runs, evaluation and dashboard follow in stages 3–6
 (see the roadmap in `docs/architecture.md`).
 
 ## Configuration
@@ -57,6 +58,7 @@ uv sync
 BENCH_DATA_DIR=dev-data BENCH_CONFIG=config/providers.yaml BENCH_SECRETS_DIR=dev-secrets \
   BENCH_DEV_LOGIN=1 BENCH_ADMIN_EMAILS=you@example.org uv run bench serve
 uv run bench check-providers            # test call to every model with a key
+uv run bench import-cases --from 2025-07-01   # same as the import on the cases page
 uv run pytest && uv run ruff check && uv run mypy src
 pre-commit install --hook-type pre-commit --hook-type commit-msg
 ```

@@ -88,3 +88,30 @@ def audit(
     detail: dict[str, Any] | None = None,
 ) -> None:
     session.add(AuditLog(user_id=user_id, action=action, obj=obj, detail=detail or {}))
+
+
+# Further tables (imported here so that SQLModel.metadata knows them)
+from bench.models.cases import (  # noqa: E402
+    Case,
+    CaseParse,
+    CaseStatus,
+    DocumentKind,
+    ImportRun,
+    SourceDocument,
+)
+
+__all__ = [
+    "AuditLog",
+    "Case",
+    "CaseParse",
+    "CaseStatus",
+    "DocumentKind",
+    "ImportRun",
+    "ProviderCheck",
+    "SourceDocument",
+    "User",
+    "UserRole",
+    "UserSession",
+    "audit",
+    "utcnow",
+]
