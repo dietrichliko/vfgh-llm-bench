@@ -11,13 +11,14 @@ answers are compared with the actual decisions.
 | [docs/publication.md](docs/publication.md) | Study protocol in git, Zenodo, OSF |
 | [docs/prior-work.md](docs/prior-work.md) | The predecessor project `vfgh-llm-begruendung` |
 
-**Status:** stage 4a (condition C): the RIS legislation MCP server (`bench ris-mcp`), runs
-with tool calls at the case's Stichtag, tool limit and tool log. Stage 3 (runs, condition
+**Status:** stage 4 (conditions B and C). B: norm texts at the case's Stichtag, proposed
+from the RIS metadata, reviewed and approved per case. C: the RIS legislation MCP server
+(`bench ris-mcp`), runs with tool calls at the case's Stichtag, tool limit and tool log. Stage 3 (runs, condition
 A): versioned prompts, orders with preview, cost estimate and config snapshot, a background
 worker with progress, pause, resume, cancel, retry and cost caps, and a page per model
 call. Stage 2: RIS import, input/reference split,
 outcome per provision, review and release. Stage 1: login, providers and models with test
-calls, users, container setup. Condition B, evaluation and dashboard follow in stages 4b–6
+calls, users, container setup. Evaluation and dashboard follow in stages 5–6
 (see the roadmap in `docs/architecture.md`).
 
 ## Configuration

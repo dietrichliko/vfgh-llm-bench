@@ -236,14 +236,24 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Job status:** `done` (answer fits the schema), `not_evaluable` (answer arrived but does not fit; never re-asked), `failed` (no answer), `unknown` (worker stopped after sending), `cancelled`. Every call is stored as an immutable `Run` with the messages, raw HTTP exchanges (without keys), parsed output, outcome label, usage and cost (price list, and the provider's own figure where reported).
 - **Planning** (`bench/orders.py`): jobs are ordered repetition → phrasing → condition → case → model. A case is used for a model only if it was decided at least `cutoff_months` (default 3) after the model's training cutoff. The estimate uses 3.5 characters per input token and `expected_output_tokens`.
 - **Worker** (`bench/worker.py`): one process; jobs claimed by compare-and-set on the status in `seq` order; lease 2 min, heartbeat 30 s. Model settings come from the order's snapshot, checked against its hash; a mismatch pauses the order. An order pauses at its cost cap or the total cap (`BENCH_COST_CAP_TOTAL_USD`), and after 5 failures in a row at one provider. `BENCH_WORKER_CONCURRENCY` (default 8) limits calls in flight over all providers.
-- **Not yet:** condition B (stage 4b); the in-app notification banner; freezing the protocol.
+- **Not yet:** the in-app notification banner; freezing the protocol.
 
 ### As built in stage 4a (condition C)
 
 - **ris-mcp** (`bench/rismcp/`): ported from the old repository. `norms.py` is the RIS client for legislation (consolidated federal and state law at the Stichtag, municipal and district law announced before it; case-law applications and documents are refused before any request). `server.py` is the MCP server (`bench ris-mcp`, Streamable HTTP at `/mcp`, stateless, bearer key `RIS_MCP_API_KEY`, host check via `BENCH_RIS_MCP_ALLOWED_HOSTS`). Changes from the old server: the Stichtag comes from the `X-Stichtag` header instead of a tool argument; answers say "zum maßgeblichen Zeitpunkt" instead of the date; the MCP resources are gone (they bypassed the Stichtag check).
 - **Prompts** `decide_c.p1–p3`: the A prompts plus a paragraph on the tools; no date.
 - **Planning:** a case without a reference date is left out of B and C (listed in the preview and on the order page); the reference date can be set on the page of a released case. The order snapshot stores the reference dates, so a later change affects only new orders. The estimate for C assumes 6 rounds, each resending the context plus about 3,000 tokens of tool results.
-- **Known limit:** `hole_norm` resolves abbreviated state-law citations (e.g. "Tir JagdG 2004") only if the RIS title matches; the model can use `suche_normen` instead. Condition B needs a better resolution of the RIS norm metadata.
+- **Known limit:** `hole_norm` resolves abbreviated state-law citations (e.g. "Tir JagdG 2004") only if the RIS title matches; the model can use `suche_normen` instead.
+
+### As built in stage 4b (condition B)
+
+- **Norm sets** (`bench/normsets.py`, table `norm_sets`): per case and Stichtag, the norm texts given to the models. Each RIS norm string of the case (e.g. "Tir JagdG 2004 §2, §36") becomes one proposal per section, fetched with the ris-mcp RIS client in the version in force on the Stichtag (same blindness rules: no expiry dates, no later versions).
+  - VfGH short forms are spelled out for the title search ("JagdG" → "Jagdgesetz", "RaumOG" → "Raumordnungsgesetz", "GdO" → "Gemeindeordnung"); state prefixes (Tir, Stmk, Oö, Nö, …) select the state.
+  - If a title also matches implementing regulations, the statute is preferred (exact abbreviation, then no "Verordnung" in the title); if several statutes remain, the admin chooses.
+  - Procedural norms (VfGG, B-VG Art 139/140) are proposed but unticked. EU law, regulations and statutes without a section are listed as "not automatic"; the admin adds norms by citation or RIS document number.
+  - Measured 2026-10-29 on the 39 distinct statutes in the imported cases (at 2025-03-01): 27 resolved automatically, no wrong matches; most misses were statutes no longer in force on that date or titles that differ more ("Bauordnung für Wien").
+- **Review:** on the case page (released case with Stichtag), or for all such cases at once from the case list. A set is a draft until approved; approval fixes the text block (texts joined by `---`) and its sha256, sets `Case.norm_set_id`, and flags `norm_text_from_pdf` if a text came from a PDF. Approved sets are immutable (SQLite trigger). A set applies only while the case keeps its Stichtag.
+- **Runs:** prompts `decide_b.p1–p3` with the placeholder `{normen}` (allowed only there; `{input}` and `{normen}` are replaced in one pass). Cases without an approved set are left out of B and listed; the order snapshot stores the set per case, and each run its `norm_set_id`.
 - **Notification:** in the app only (banner on the start page). No email.
 
 ## 8 Users and screens
@@ -307,7 +317,7 @@ Each stage runs and is tested on its own.
 | 1 Skeleton | Settings and secrets, `providers.yaml` loader, httpx client with retries and raw capture, SQLModel and Alembic, OIDC and dev login, providers page with Test button, Containerfile, compose |
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
-| 4 Conditions C ✓ and B | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
+| 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
 | 5 Evaluation | Reference checklists, opposing reasonings and assessment, judges, citation check, calibration queue, contamination probe |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
