@@ -1,4 +1,4 @@
-"""Command line: ``bench serve | worker | migrate | backup | check-providers``."""
+"""Command line: ``bench serve | worker | ris-mcp | migrate | backup | check-providers``."""
 
 import argparse
 import asyncio
@@ -43,6 +43,18 @@ def _worker(args: argparse.Namespace) -> int:
         prompts.seed(db)
         db.commit()
     asyncio.run(go())
+    return 0
+
+
+def _ris_mcp(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from bench.rismcp.server import create_app
+    from bench.settings import RIS_MCP_API_KEY, get_settings
+
+    settings = get_settings()
+    app = create_app(settings.secret(RIS_MCP_API_KEY), settings.ris_mcp_allowed_hosts)
+    uvicorn.run(app, host=args.host, port=args.port)
     return 0
 
 
@@ -147,6 +159,11 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("worker", help="run the job worker")
     p.add_argument("--interval", type=float, default=2.0, help="seconds between polls")
     p.set_defaults(func=_worker)
+
+    p = sub.add_parser("ris-mcp", help="run the RIS legislation MCP server (condition C)")
+    p.add_argument("--host", default="0.0.0.0")
+    p.add_argument("--port", type=int, default=8000)
+    p.set_defaults(func=_ris_mcp)
 
     p = sub.add_parser("migrate", help="bring the database schema up to date")
     p.set_defaults(func=_migrate)

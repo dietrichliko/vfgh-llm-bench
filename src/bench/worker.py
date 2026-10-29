@@ -8,6 +8,8 @@
 - The model configuration comes from the order's snapshot, not from the current file.
 - Cost caps (per order, total) are checked before every job.
 - After ``MAX_CONSECUTIVE_FAILURES`` failures in a row for one provider, its orders pause.
+- Condition C: the model gets the ris-mcp tools over a connection fixed to the case's
+  Stichtag (from the order snapshot); only providers with native tool calling run it.
 
 Designed for one worker process (the in-memory limits are per process).
 """
@@ -21,7 +23,9 @@ from collections import defaultdict
 from datetime import timedelta
 from typing import Any
 
+import httpx
 import httpx2
+from pydantic_ai.mcp import MCPToolset
 from sqlalchemy import Engine, update
 from sqlmodel import Session, col, select
 
@@ -38,8 +42,9 @@ from bench.models import (
     Run,
     utcnow,
 )
-from bench.providers import ModelConfig, ProviderConfig, ResolvedModel, config_hash
-from bench.settings import Settings
+from bench.providers import ModelConfig, ProviderConfig, ResolvedModel, ToolMode, config_hash
+from bench.rismcp.server import STICHTAG_HEADER, TOOL_NAMES
+from bench.settings import RIS_MCP_API_KEY, Settings
 
 log = logging.getLogger(__name__)
 
@@ -75,6 +80,7 @@ class Worker:
         name: str | None = None,
         poll_seconds: float = 2.0,
         heartbeat_seconds: float = HEARTBEAT_SECONDS,
+        mcp_transport: httpx.AsyncBaseTransport | None = None,  # tests: in-process ris-mcp
     ) -> None:
         self.engine = engine
         self.settings = settings
@@ -82,6 +88,7 @@ class Worker:
         self.name = name or f"{socket.gethostname()}:{id(self):x}"
         self.poll_seconds = poll_seconds
         self.heartbeat_seconds = heartbeat_seconds
+        self.mcp_transport = mcp_transport
         self.running: dict[str, int] = defaultdict(int)  # provider → jobs in flight
         self.last_start: dict[str, float] = {}
         self.failures: dict[str, int] = defaultdict(int)  # provider → consecutive failures
@@ -128,7 +135,7 @@ class Worker:
         parse = db.get(CaseParse, job.parse_id)
         prompt = db.get(PromptVersion, job.prompt_version_id)
         next_cost = (
-            orders.estimate(rm, len(parse.input_text) + len(prompt.text))
+            orders.estimate(rm, len(parse.input_text) + len(prompt.text), job.condition)
             if parse and prompt
             else 0.0
         )
@@ -223,6 +230,12 @@ class Worker:
                 await heartbeat
             self.running[job.provider_key] -= 1
 
+    def _ris_http(self, stichtag: str) -> httpx.AsyncClient:
+        headers = {STICHTAG_HEADER: stichtag}
+        if key := self.settings.secret(RIS_MCP_API_KEY):
+            headers["Authorization"] = f"Bearer {key}"
+        return httpx.AsyncClient(headers=headers, timeout=120.0, transport=self.mcp_transport)
+
     async def _execute(self, job: Job) -> None:
         with Session(self.engine) as db:
             order = db.get(Order, job.order_id)
@@ -230,6 +243,13 @@ class Worker:
             prompt = db.get(PromptVersion, job.prompt_version_id)
             assert order is not None and parse is not None and prompt is not None
             rm = model_from_snapshot(order, job.model_key, self.settings)
+            stichtag = None
+            if job.condition == "C":
+                if rm.provider.tool_mode is not ToolMode.NATIVE:
+                    raise RuntimeError(f"{rm.key}: kein natives Tool Calling")
+                stichtag = order.snapshot.get("reference_dates", {}).get(str(job.case_id))
+                if stichtag is None:
+                    raise RuntimeError(f"Fall {job.case_id} ohne Stichtag")
             messages = prompts.render(prompt.text, parse.input_text)
             stored = db.get(Job, job.id)
             assert stored is not None
@@ -237,7 +257,22 @@ class Worker:
             db.commit()
             started = stored.sent_at
 
-        result = await run_task(rm, self.settings, self.http_client, messages, Entscheidung)
+        async with contextlib.AsyncExitStack() as stack:
+            toolset = None
+            if stichtag is not None:
+                http = await stack.enter_async_context(self._ris_http(stichtag))
+                toolset = MCPToolset[Any](
+                    self.settings.ris_mcp_url, http_client=http, tool_error_behavior="failed"
+                )
+            result = await run_task(
+                rm,
+                self.settings,
+                self.http_client,
+                messages,
+                Entscheidung,
+                toolset=toolset,
+                expected_tools=TOOL_NAMES if toolset is not None else None,
+            )
         self._record(job, rm, messages, result, started)
 
     def _record(
@@ -269,6 +304,8 @@ class Worker:
                 messages=messages,
                 exchanges=[ex.as_dict() for ex in result.exchanges],
                 response_text=result.response_text,
+                tool_calls=result.tool_calls,
+                tools_sha256=result.tools_sha256,
                 output=output.model_dump(mode="json") if output is not None else None,
                 case_outcome=outcome.value if outcome else None,
                 usage=result.usage,

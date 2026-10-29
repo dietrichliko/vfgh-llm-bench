@@ -348,6 +348,26 @@ def reopen(db: Session, case: Case, user_id: int | None) -> None:
     audit(db, "case.reopen", user_id=user_id, obj=f"case:{case.id}")
 
 
+def set_reference_date(
+    db: Session, case: Case, user_id: int | None, reference_date: date | None
+) -> None:
+    """The Stichtag of the applicable law (conditions B and C). Orders keep their own copy."""
+    if case.status != CaseStatus.RELEASED:
+        raise ValueError("Der Stichtag wird bei oder nach der Freigabe gesetzt")
+    old = case.reference_date
+    case.reference_date = reference_date
+    audit(
+        db,
+        "case.reference_date",
+        user_id=user_id,
+        obj=f"case:{case.id}",
+        detail={
+            "from": old.isoformat() if old else None,
+            "to": reference_date.isoformat() if reference_date else None,
+        },
+    )
+
+
 def background(coro: Any, tasks: set[asyncio.Task[Any]]) -> asyncio.Task[Any]:
     """Keep a reference to a background task until it is done."""
     task = asyncio.create_task(coro)

@@ -11,6 +11,7 @@
     <dt>Fall</dt><dd>{% if case %}<a href="/cases/{{ case.id }}">{{ case.case_number }}</a> vom {{ case.decision_date.strftime("%d.%m.%Y") }}{% else %}{{ run.case_id }}{% endif %}</dd>
     <dt>Bedingung</dt><dd>{{ run.condition }}: {{ conditions[run.condition] }}</dd>
     <dt>Formulierung</dt><dd>{% if prompt %}<a href="/prompts/{{ prompt.key }}?version={{ prompt.version }}" class="mono">{{ prompt.key }} v{{ prompt.version }}</a>{% else %}{{ run.phrasing }}{% endif %}</dd>
+    {% if stichtag %}<dt>Stichtag</dt><dd>{{ stichtag }} (vom Programm gesetzt, dem Modell nicht genannt)</dd>{% endif %}
     <dt>Wiederholung</dt><dd>{{ run.repetition }}</dd>
     <dt>Modell</dt><dd><span class="mono">{{ run.model_id }}</span> über {{ run.provider_key }}
       {% if run.model_reported %} · gemeldet: <span class="mono">{{ run.model_reported }}</span>{% endif %}
@@ -55,6 +56,25 @@
 
 {% if run.response_text %}
 <details><summary>Antwort im Wortlaut</summary><pre>{{ run.response_text }}</pre></details>
+{% endif %}
+
+{% if run.condition == "C" %}
+<h2>Recherche im RIS ({{ run.tool_calls | length }} Werkzeugaufrufe)</h2>
+{% if run.tools_sha256 %}<p class="lead">Angebotene Werkzeuge: <span class="mono">sha256 {{ run.tools_sha256[:12] }}</span></p>{% endif %}
+{% if run.tool_calls %}
+<ol>
+{% for c in run.tool_calls %}
+  <li>
+    <span class="mono">{{ c.name }}({% for k, v in c.args.items() %}{{ k }}={{ v | tojson }}{% if not loop.last %}, {% endif %}{% endfor %})</span>
+    {% if c.result is none %}<span class="status warn">nicht ausgeführt (Limit)</span>
+    {% elif c.error %}<span class="status bad">Fehler</span>{% endif %}
+    {% if c.result is not none %}<details><summary>{{ c.result | length }} Zeichen</summary><pre>{{ c.result }}</pre></details>{% endif %}
+  </li>
+{% endfor %}
+</ol>
+{% else %}
+<p>Keine Werkzeugaufrufe.</p>
+{% endif %}
 {% endif %}
 
 <h2>Gesendete Nachrichten</h2>

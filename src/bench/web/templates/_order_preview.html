@@ -8,6 +8,12 @@
     <dt>Kosten (geschätzt)</dt><dd><strong>{{ "%.2f" | format(plan.estimated_cost_usd) }} USD</strong></dd>
   </dl>
 </div>
+{% if plan.no_reference_date %}
+<details class="notice"><summary>{{ plan.no_reference_date | length }} Fälle ohne Stichtag: nicht in Bedingung B und C</summary>
+  {% for i in plan.no_reference_date %}{{ case_numbers.get(i, i) }}{% if not loop.last %}, {% endif %}{% endfor %}
+  <p class="lead">Der Stichtag wird auf der Seite des Falls gesetzt.</p>
+</details>
+{% endif %}
 {% if models %}
 <table>
   <thead><tr><th>Modell</th><th>Aufrufe</th><th>USD</th><th>Ausgelassen</th></tr></thead>
@@ -31,6 +37,6 @@
 </table>
 {% endif %}
 <p class="lead">Die Schätzung rechnet mit 3,5 Zeichen je Token für die Eingabe und der in der
-Konfiguration angegebenen Länge der Antwort. Die tatsächlichen Kosten stehen nach jedem Aufruf fest.</p>
+Konfiguration angegebenen Länge der Antwort; in Bedingung C mit 6 Recherche-Runden. Die tatsächlichen Kosten stehen nach jedem Aufruf fest.</p>
 <p><button type="button" hx-post="/orders" hx-target="#preview"{% if problems or not plan.jobs %} disabled{% endif %}>
   Auftrag erstellen und starten</button> <span class="spinner">wird angelegt …</span></p>

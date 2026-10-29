@@ -294,6 +294,12 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Unbekannter Lauf")
     case = db.get(Case, run.case_id)
     prompt = db.get(PromptVersion, run.prompt_version_id)
+    order = db.get(Order, run.order_id)
+    stichtag = (
+        order.snapshot.get("reference_dates", {}).get(str(run.case_id))
+        if order is not None and run.condition in orders.NEEDS_REFERENCE_DATE
+        else None
+    )
     others = db.exec(
         select(Run.id, Run.status, Run.started_at)
         .where(Run.job_id == run.job_id)
@@ -307,5 +313,6 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         case=case,
         prompt=prompt,
         attempts=others,
+        stichtag=stichtag,
         **LABELS,
     )

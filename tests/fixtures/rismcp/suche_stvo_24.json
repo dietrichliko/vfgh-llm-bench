@@ -1,0 +1,80 @@
+{
+ "OgdSearchResult": {
+  "OgdDocumentResults": {
+   "Hits": {
+    "@pageNumber": "1",
+    "@pageSize": "20",
+    "#text": "1"
+   },
+   "OgdDocumentReference": {
+    "Data": {
+     "Metadaten": {
+      "Technisch": {
+       "ID": "NOR40147678",
+       "Applikation": "BrKons",
+       "Organ": "BKA (Bundeskanzleramt)",
+       "ImportTimestamp": {
+        "@xsi:nil": "true",
+        "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance"
+       }
+      },
+      "Allgemein": {
+       "Veroeffentlicht": "2013-02-27",
+       "Geaendert": "2015-10-09",
+       "DokumentUrl": "https://ogd.ris.bka.gv.at/eli/bgbl/1960/159/P24/NOR40147678"
+      },
+      "Bundesrecht": {
+       "Kurztitel": "Straßenverkehrsordnung 1960",
+       "Eli": "https://www.ris.bka.gv.at/eli/bgbl/1960/159/P24/NOR40147678",
+       "BrKons": {
+        "Kundmachungsorgan": "BGBl. Nr. 159/1960 zuletzt geändert durch BGBl. I Nr. 39/2013 ",
+        "Typ": "BG",
+        "Dokumenttyp": "Paragraph",
+        "ArtikelParagraphAnlage": "§ 24",
+        "Paragraphnummer": "24",
+        "StammnormPublikationsorgan": "BGBl. Nr.",
+        "StammnormBgblnummer": "159/1960",
+        "NovellenPublikationsorgan": "BGBl. I Nr.",
+        "NovellenBgblnummer": "39/2013",
+        "NovellenBeziehung": "zuletzt geändert durch",
+        "Inkrafttretensdatum": "2013-03-31",
+        "Ausserkrafttretensdatum": "2015-10-05",
+        "Abkuerzung": "StVO 1960",
+        "Indizes": {
+         "item": "90/01 Straßenverkehrsrecht"
+        },
+        "Gesetzesnummer": "10011336"
+       }
+      }
+     },
+     "Dokumentliste": {
+      "ContentReference": {
+       "ContentType": "MainDocument",
+       "Name": "Hauptdokument",
+       "Urls": {
+        "ContentUrl": [
+         {
+          "DataType": "Xml",
+          "Url": "https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40147678/NOR40147678.xml"
+         },
+         {
+          "DataType": "Html",
+          "Url": "https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40147678/NOR40147678.html"
+         },
+         {
+          "DataType": "Rtf",
+          "Url": "https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40147678/NOR40147678.rtf"
+         },
+         {
+          "DataType": "Pdf",
+          "Url": "https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40147678/NOR40147678.pdf"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

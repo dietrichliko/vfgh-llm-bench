@@ -11,12 +11,13 @@ answers are compared with the actual decisions.
 | [docs/publication.md](docs/publication.md) | Study protocol in git, Zenodo, OSF |
 | [docs/prior-work.md](docs/prior-work.md) | The predecessor project `vfgh-llm-begruendung` |
 
-**Status:** stage 3 (runs, condition A): versioned prompts, orders with preview, cost
-estimate and config snapshot, a background worker with progress, pause, resume, cancel,
-retry and cost caps, and a page per model call. Stage 2: RIS import, input/reference split,
+**Status:** stage 4a (condition C): the RIS legislation MCP server (`bench ris-mcp`), runs
+with tool calls at the case's Stichtag, tool limit and tool log. Stage 3 (runs, condition
+A): versioned prompts, orders with preview, cost estimate and config snapshot, a background
+worker with progress, pause, resume, cancel, retry and cost caps, and a page per model
+call. Stage 2: RIS import, input/reference split,
 outcome per provision, review and release. Stage 1: login, providers and models with test
-calls, users, container setup. Conditions B and C, evaluation and dashboard follow in
-stages 4–6
+calls, users, container setup. Condition B, evaluation and dashboard follow in stages 4b–6
 (see the roadmap in `docs/architecture.md`).
 
 ## Configuration
@@ -31,13 +32,15 @@ stages 4–6
   | `BENCH_SESSION_SECRET` | Signs the login cookie (required unless dev login) |
   | `BENCH_OIDC_CLIENT_SECRET` | OIDC login (e.g. CERN SSO) |
   | `UAI_API_KEY`, `OPENROUTER_API_KEY`, … | Whatever `api_key_secret` names in `providers.yaml` |
+  | `RIS_MCP_API_KEY` | Shared by `bench ris-mcp` and the worker (condition C) |
 
 - **Settings** (environment, prefix `BENCH_`): `BENCH_DATA_DIR` (`/data`), `BENCH_CONFIG`
   (`/config/providers.yaml`), `BENCH_SECRETS_DIR` (`/run/secrets`), `BENCH_DATABASE_URL`
   (default SQLite in the data dir), `BENCH_PUBLIC_URL`, `BENCH_OIDC_ISSUER`,
   `BENCH_OIDC_CLIENT_ID`, `BENCH_ADMIN_EMAILS` (comma-separated), `BENCH_DEV_LOGIN`,
   `BENCH_COST_CAP_TOTAL_USD` (spending limit over all orders), `BENCH_WORKER_CONCURRENCY`
-  (LLM calls in flight, default 8).
+  (LLM calls in flight, default 8), `BENCH_RIS_MCP_URL` (default `http://ris-mcp:8000/mcp`),
+  `BENCH_RIS_MCP_ALLOWED_HOSTS` (host check of the MCP server, comma-separated).
 
 ## Run with containers
 
@@ -45,6 +48,7 @@ stages 4–6
 cp config/providers.example.yaml config/providers.yaml      # then edit
 mkdir -p deploy/secrets
 openssl rand -hex 32 > deploy/secrets/BENCH_SESSION_SECRET
+openssl rand -hex 32 > deploy/secrets/RIS_MCP_API_KEY
 for s in BENCH_OIDC_CLIENT_SECRET UAI_API_KEY OPENROUTER_API_KEY; do
   touch deploy/secrets/$s                                   # empty = not set
 done
@@ -63,6 +67,7 @@ uv sync
 BENCH_DATA_DIR=dev-data BENCH_CONFIG=config/providers.yaml BENCH_SECRETS_DIR=dev-secrets \
   BENCH_DEV_LOGIN=1 BENCH_ADMIN_EMAILS=you@example.org uv run bench serve
 uv run bench worker                     # same env as serve; runs the orders' LLM calls
+uv run bench ris-mcp --port 8001        # condition C; worker: BENCH_RIS_MCP_URL=http://localhost:8001/mcp
 uv run bench check-providers            # test call to every model with a key
 uv run bench import-cases --from 2025-07-01   # same as the import on the cases page
 uv run pytest && uv run ruff check && uv run mypy src

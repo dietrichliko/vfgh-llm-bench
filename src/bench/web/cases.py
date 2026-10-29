@@ -194,6 +194,22 @@ def release_case(
     return _back(case_id)
 
 
+@router.post("/{case_id}/reference-date")
+def set_reference_date(
+    case_id: int,
+    user: AdminDep,
+    db: DbDep,
+    reference_date: Annotated[date | None, Form()] = None,
+) -> Response:
+    case = _case(db, case_id)
+    try:
+        cases.set_reference_date(db, case, user.id, reference_date)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+    db.commit()
+    return _back(case_id)
+
+
 @router.post("/{case_id}/exclude")
 def exclude_case(
     case_id: int, user: AdminDep, db: DbDep, reason: Annotated[str, Form()] = ""

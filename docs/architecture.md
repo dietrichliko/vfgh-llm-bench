@@ -46,7 +46,7 @@ As of 2026-10-29. This describes how the study in [paper.md](paper.md) is implem
 | `web` | `bench` | UI, API, writes jobs, reads results |
 | `worker` | `bench` (`bench worker`) | Runs LLM jobs; can be restarted independently |
 | `bridge-univie` | `registry.cern.ch/mbi-vienna/aai-bridge:0.4.0` | OpenAI-compatible access to u:ai, provenance headers |
-| `ris-mcp` | ported from the old repo | Legislation only, with a reference-date filter; separate judge endpoint for case-law lookup |
+| `ris-mcp` | `bench` (`bench ris-mcp`) | Legislation only, with a reference-date filter; separate judge endpoint for case-law lookup (stage 5) |
 
 ### Code layout
 
@@ -161,9 +161,10 @@ Kept from the old project:
   - RIS metadata never enters a prompt.
   - Tested by asserting on the exact request body.
 - **Tool calling (condition C):**
-  - Pydantic AI `MCPServerStreamableHTTP` to `ris-mcp`, filtered to exactly `suche_normen` and `hole_norm`; any other tool set fails the run.
-  - `UsageLimits(tool_calls_limit=15)`.
-  - Every tool call and result is stored.
+  - Pydantic AI `MCPToolset` to `ris-mcp`; the server must offer exactly `suche_normen` and `hole_norm`, any other tool set fails the run. The sha256 of the tool definitions is stored with each run.
+  - The **Stichtag is fixed by the app**: the worker opens the connection with the header `X-Stichtag` (the case's reference date from the order snapshot). The tools take no date, and their answers never print it.
+  - `UsageLimits(tool_calls_limit=15)`; exceeding it makes the run *not evaluable*. Tool errors (e.g. a citation not found) go back to the model as failed results.
+  - Every tool call is stored with its arguments and result (`Run.tool_calls`), as is the usage of every round.
   - **Only providers with `tool_mode: native` are offered for condition C.** u:ai models (emulated tools) can be tested in conditions A and B, which use no tools; the dashboard shows their C cell as "not run: no native tool calling".
 - **Judges need no tools.** Citation existence is checked by the app beforehand (`citations.py` + ris-mcp judge endpoint), and the judges receive the results.
 
@@ -208,7 +209,7 @@ Checked against the RIS on 2026-10-29: there are 89 VfGH decisions under Art 139
 | Area | Tables |
 | --- | --- |
 | Configuration | `ModelConfigVersion`, `PromptVersion` (editable in the UI, frozen per study) |
-| Orders and runs | `Order` (with config snapshot), `Job`, `Run` (raw request/response, usage, cost, status), `ToolCall` |
+| Orders and runs | `Order` (with config snapshot), `Job`, `Run` (raw request/response, usage, cost, status, tool calls) |
 | Evaluation | `ReferenceChecklist`, `ChecklistRating` (expert), `OpposingReasoning`, `Assessment`, `JudgeScore`, `CitationCheck`, `CalibrationRating`, `ContaminationProbe` |
 | Protocol | `ProtocolSnapshot` (version, sha256, tag), `Amendment` |
 | System | `User`, `Session`, `AuditLog`, `ProviderCheck` |
@@ -235,7 +236,14 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Job status:** `done` (answer fits the schema), `not_evaluable` (answer arrived but does not fit; never re-asked), `failed` (no answer), `unknown` (worker stopped after sending), `cancelled`. Every call is stored as an immutable `Run` with the messages, raw HTTP exchanges (without keys), parsed output, outcome label, usage and cost (price list, and the provider's own figure where reported).
 - **Planning** (`bench/orders.py`): jobs are ordered repetition → phrasing → condition → case → model. A case is used for a model only if it was decided at least `cutoff_months` (default 3) after the model's training cutoff. The estimate uses 3.5 characters per input token and `expected_output_tokens`.
 - **Worker** (`bench/worker.py`): one process; jobs claimed by compare-and-set on the status in `seq` order; lease 2 min, heartbeat 30 s. Model settings come from the order's snapshot, checked against its hash; a mismatch pauses the order. An order pauses at its cost cap or the total cap (`BENCH_COST_CAP_TOTAL_USD`), and after 5 failures in a row at one provider. `BENCH_WORKER_CONCURRENCY` (default 8) limits calls in flight over all providers.
-- **Not yet:** conditions B and C (stage 4); the in-app notification banner; freezing the protocol.
+- **Not yet:** condition B (stage 4b); the in-app notification banner; freezing the protocol.
+
+### As built in stage 4a (condition C)
+
+- **ris-mcp** (`bench/rismcp/`): ported from the old repository. `norms.py` is the RIS client for legislation (consolidated federal and state law at the Stichtag, municipal and district law announced before it; case-law applications and documents are refused before any request). `server.py` is the MCP server (`bench ris-mcp`, Streamable HTTP at `/mcp`, stateless, bearer key `RIS_MCP_API_KEY`, host check via `BENCH_RIS_MCP_ALLOWED_HOSTS`). Changes from the old server: the Stichtag comes from the `X-Stichtag` header instead of a tool argument; answers say "zum maßgeblichen Zeitpunkt" instead of the date; the MCP resources are gone (they bypassed the Stichtag check).
+- **Prompts** `decide_c.p1–p3`: the A prompts plus a paragraph on the tools; no date.
+- **Planning:** a case without a reference date is left out of B and C (listed in the preview and on the order page); the reference date can be set on the page of a released case. The order snapshot stores the reference dates, so a later change affects only new orders. The estimate for C assumes 6 rounds, each resending the context plus about 3,000 tokens of tool results.
+- **Known limit:** `hole_norm` resolves abbreviated state-law citations (e.g. "Tir JagdG 2004") only if the RIS title matches; the model can use `suche_normen` instead. Condition B needs a better resolution of the RIS norm metadata.
 - **Notification:** in the app only (banner on the start page). No email.
 
 ## 8 Users and screens
@@ -299,7 +307,7 @@ Each stage runs and is tested on its own.
 | 1 Skeleton | Settings and secrets, `providers.yaml` loader, httpx client with retries and raw capture, SQLModel and Alembic, OIDC and dev login, providers page with Test button, Containerfile, compose |
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
-| 4 Condition C | Port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule |
+| 4 Conditions C ✓ and B | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
 | 5 Evaluation | Reference checklists, opposing reasonings and assessment, judges, citation check, calibration queue, contamination probe |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 

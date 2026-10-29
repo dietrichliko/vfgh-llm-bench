@@ -128,6 +128,11 @@ class Run(SQLModel, table=True):
         default_factory=list, sa_column=Column(JSON, nullable=False)
     )
     response_text: str | None = None
+    # condition C: every tool call with its arguments and result, in order
+    tool_calls: list[dict[str, Any]] = Field(
+        default_factory=list, sa_column=Column(JSON, nullable=False, server_default="[]")
+    )
+    tools_sha256: str | None = Field(default=None, max_length=64)  # tool definitions offered
     output: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     case_outcome: str | None = Field(default=None, max_length=32)
     usage: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))

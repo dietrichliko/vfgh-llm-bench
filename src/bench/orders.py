@@ -13,6 +13,7 @@ from sqlalchemy import func
 from sqlmodel import Session, col, select
 
 from bench import prompts
+from bench.llm.task import TOOL_CALL_LIMIT
 from bench.models import (
     OPEN_JOB_STATES,
     Case,
@@ -30,12 +31,16 @@ from bench.providers import ResolvedModel, Role, ToolMode
 
 CONDITIONS = {
     "A": "Modell allein",
-    "B": "mit vorgegebenen Normen (ab Stufe 4)",
-    "C": "mit eigener Recherche im RIS (ab Stufe 4)",
+    "B": "mit vorgegebenen Normen (folgt)",
+    "C": "mit eigener Recherche im RIS",
 }
-AVAILABLE_CONDITIONS = ("A",)  # B and C follow in stage 4
-TASK = "decide"
+AVAILABLE_CONDITIONS = ("A", "C")  # B follows
+TASKS = {"A": "decide", "C": "decide_c"}  # prompt task per condition
+NEEDS_REFERENCE_DATE = frozenset({"B", "C"})  # law as it stood on the case's Stichtag
 CHARS_PER_TOKEN = 3.5  # German legal text, rough estimate
+# condition C, for the estimate only: each round resends the context plus the tool results
+TOOL_ROUNDS = 6
+TOOL_RESULT_TOKENS = 3000
 
 
 def months_after(d: date, months: int) -> date:
@@ -72,6 +77,7 @@ class Plan:
     excluded: dict[str, list[int]]  # model key → case ids left out by the cutoff rule
     estimated_cost_usd: float
     cost_by_model: dict[str, float] = field(default_factory=dict)
+    no_reference_date: list[int] = field(default_factory=list)  # left out of B and C
     jobs_by_model: dict[str, int] = field(default_factory=dict)
     problems: list[str] = field(default_factory=list)
 
@@ -91,12 +97,21 @@ def plan(
     if not cases or not models or not conditions:
         problems.append("Fälle, Modelle und Bedingungen auswählen")
     prompt_versions = {}
-    for p in range(1, phrasings + 1):
-        version = prompts.latest(db, prompts.key(TASK, p))
-        if version is None:
-            problems.append(f"Prompt {prompts.key(TASK, p)} fehlt")
-        else:
-            prompt_versions[p] = version
+    for condition in conditions:
+        if condition not in TASKS:
+            continue
+        for p in range(1, phrasings + 1):
+            k = prompts.key(TASKS[condition], p)
+            version = prompts.latest(db, k)
+            if version is None:
+                problems.append(f"Prompt {k} fehlt")
+            else:
+                prompt_versions[condition, p] = version
+    no_reference_date = (
+        [c.id or 0 for c in cases if c.reference_date is None]
+        if NEEDS_REFERENCE_DATE & set(conditions)
+        else []
+    )
 
     parses = {
         p.id: p
@@ -115,15 +130,17 @@ def plan(
             for condition in conditions:
                 for case in cases:
                     parse = parses.get(case.released_parse_id)
+                    if condition in NEEDS_REFERENCE_DATE and case.reference_date is None:
+                        continue
                     for rm in models:
                         if not eligible(case, rm, cutoff_months):
                             if repetition == phrasing == 1 and condition == conditions[0]:
                                 excluded[rm.key].append(case.id or 0)
                             continue
-                        if parse is None or phrasing not in prompt_versions:
+                        if parse is None or (condition, phrasing) not in prompt_versions:
                             continue
                         seq += 1
-                        version = prompt_versions[phrasing]
+                        version = prompt_versions[condition, phrasing]
                         jobs.append(
                             Job(
                                 order_id=0,
@@ -138,13 +155,19 @@ def plan(
                                 prompt_version_id=version.id or 0,
                             )
                         )
-                        cost[rm.key] += estimate(rm, len(version.text) + len(parse.input_text))
+                        cost[rm.key] += estimate(
+                            rm, len(version.text) + len(parse.input_text), condition
+                        )
                         count[rm.key] += 1
     if not jobs and not problems:
-        problems.append("Kein Fall liegt nach dem Wissensstand der gewählten Modelle")
+        if no_reference_date and len(no_reference_date) == len(cases):
+            problems.append("Keiner der Fälle hat einen Stichtag (nötig für B und C)")
+        else:
+            problems.append("Kein Fall liegt nach dem Wissensstand der gewählten Modelle")
     return Plan(
         jobs=jobs,
         excluded=dict(excluded),
+        no_reference_date=no_reference_date,
         estimated_cost_usd=sum(cost.values()),
         cost_by_model=dict(cost),
         jobs_by_model=dict(count),
@@ -152,11 +175,14 @@ def plan(
     )
 
 
-def estimate(rm: ResolvedModel, input_chars: int) -> float:
+def estimate(rm: ResolvedModel, input_chars: int, condition: str = "A") -> float:
     price = rm.config.price
     if price is None:
         return 0.0
     tokens_in = input_chars / CHARS_PER_TOKEN
+    if condition == "C":
+        n = TOOL_ROUNDS
+        tokens_in = n * tokens_in + n * (n + 1) / 2 * TOOL_RESULT_TOKENS
     return (tokens_in * price.input + rm.config.expected_output_tokens * price.output) / 1_000_000
 
 
@@ -175,6 +201,9 @@ def snapshot(
         },
         "prompts": sorted({j.prompt_version_id for j in jobs}),
         "cases": {str(c.id): c.released_parse_id for c in cases},
+        "reference_dates": {
+            str(c.id): c.reference_date.isoformat() for c in cases if c.reference_date
+        },
         "created": utcnow().isoformat(),
     }
 
@@ -211,7 +240,11 @@ def create(
         cost_cap_usd=cost_cap_usd,
         estimated_cost_usd=p.estimated_cost_usd,
         job_count=len(p.jobs),
-        snapshot=snapshot(db, models, cases, p.jobs),
+        snapshot={
+            **snapshot(db, models, cases, p.jobs),
+            "no_reference_date": p.no_reference_date,
+            "tool_call_limit": TOOL_CALL_LIMIT if "C" in conditions else None,
+        },
         excluded=p.excluded,
     )
     db.add(order)

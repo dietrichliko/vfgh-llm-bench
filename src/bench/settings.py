@@ -16,6 +16,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 SESSION_SECRET = "BENCH_SESSION_SECRET"
 OIDC_CLIENT_SECRET = "BENCH_OIDC_CLIENT_SECRET"
+RIS_MCP_API_KEY = "RIS_MCP_API_KEY"  # shared by the ris-mcp server and the worker
 
 
 class Settings(BaseSettings):
@@ -31,12 +32,14 @@ class Settings(BaseSettings):
     cost_cap_total_usd: float | None = None  # over all orders; None = no total cap
     worker_concurrency: int = 8  # LLM calls in flight per worker, over all providers
     dev_login: bool = False
+    ris_mcp_url: str = "http://ris-mcp:8000/mcp"  # condition C
+    ris_mcp_allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
     oidc_issuer: str = ""
     oidc_client_id: str = ""
     admin_emails: Annotated[list[str], NoDecode] = Field(default_factory=list)
 
-    @field_validator("admin_emails", mode="before")
+    @field_validator("admin_emails", "ris_mcp_allowed_hosts", mode="before")
     @classmethod
     def _split_emails(cls, value: object) -> object:
         if isinstance(value, str):

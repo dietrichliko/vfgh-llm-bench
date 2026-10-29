@@ -35,8 +35,17 @@ services:
     volumes:
       - bench-data:/data
       - ../config/providers.yaml:/config/providers.yaml:ro,z
-    secrets: [UAI_API_KEY, OPENROUTER_API_KEY]
-    depends_on: [web]
+    secrets: [UAI_API_KEY, OPENROUTER_API_KEY, RIS_MCP_API_KEY]
+    depends_on: [web, ris-mcp]
+    restart: unless-stopped
+
+  ris-mcp:                        # condition C: legislation from the RIS, no case law
+    image: localhost/bench:latest
+    command: ["bench", "ris-mcp", "--port", "8000"]
+    environment:
+      BENCH_RIS_MCP_ALLOWED_HOSTS: "ris-mcp:8000"  # reachable only from the worker
+    secrets: [RIS_MCP_API_KEY]
+    depends_on: [web]             # web builds the image
     restart: unless-stopped
 
   bridge-univie:
@@ -61,3 +70,5 @@ secrets:
     file: secrets/UAI_API_KEY
   OPENROUTER_API_KEY:
     file: secrets/OPENROUTER_API_KEY
+  RIS_MCP_API_KEY:
+    file: secrets/RIS_MCP_API_KEY

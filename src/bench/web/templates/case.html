@@ -69,7 +69,7 @@ Version {{ parse.parser_version }} vom {{ parse.created_at.strftime("%d.%m.%Y %H
 
 <h2>Normen laut RIS</h2>
 <p class="lead">Aus den RIS-Metadaten. Vorschlag für Bedingung B (die Normtexte zum Stichtag werden in
-Stufe 4 aus dem RIS geholt).</p>
+einem späteren Schritt aus dem RIS geholt).</p>
 <ul>{% for n in case.norms %}<li>{{ n }}</li>{% endfor %}</ul>
 
 <h2>Dokumente</h2>
@@ -91,7 +91,16 @@ Stufe 4 aus dem RIS geholt).</p>
   <h2 style="margin-top: 0">Entscheidung über den Fall</h2>
   {% if case.status.value == "released" %}
   <p><span class="status ok">freigegeben</span> am {{ case.released_at.strftime("%d.%m.%Y") }}.
-  Die Eingabe ist eingefroren{% if case.reference_date %}, Stichtag {{ case.reference_date.strftime("%d.%m.%Y") }}{% endif %}.</p>
+  Die Eingabe ist eingefroren.</p>
+  <form method="post" action="/cases/{{ case.id }}/reference-date">
+    <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
+      <label>Stichtag der Rechtslage (nötig für Bedingung B und C)<br>
+        <input type="date" name="reference_date" value="{{ case.reference_date.isoformat() if case.reference_date else '' }}"></label>
+      <button type="submit" class="secondary">Stichtag speichern</button>
+      {% if not case.reference_date %}<span class="status warn">kein Stichtag: nicht in B und C</span>{% endif %}
+    </p>
+  </form>
+  <p class="lead">Aufträge merken sich den Stichtag beim Erstellen; eine spätere Änderung wirkt nur auf neue Aufträge.</p>
   {% else %}
     {% if case.status.value == "excluded" %}
     <form method="post" action="/cases/{{ case.id }}/reopen"><button type="submit" class="secondary">Wieder aufnehmen</button></form>
@@ -110,7 +119,7 @@ Stufe 4 aus dem RIS geholt).</p>
               {% endfor %}
             </select>
           </label>
-          <label>Stichtag der Rechtslage (optional)<br><input type="date" name="reference_date"></label>
+          <label>Stichtag der Rechtslage (nötig für B und C)<br><input type="date" name="reference_date"></label>
           <button type="submit">Freigeben</button>
         </p>
       </form>
