@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Referenzgründe · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Referenzgründe</h1>
+<p class="lead">Für jeden freigegebenen Fall stellt ein Hilfsmodell die tragenden Gründe aus den
+Erwägungen zusammen. Die Juristin oder der Jurist bewertet jede Liste als richtig, unvollständig oder
+falsch und korrigiert sie bei Bedarf. Die bestätigte Liste ist der Maßstab für Ebene 2 (tragende Gründe).</p>
+
+{% if user.role.value == "admin" %}
+<section class="panel no-print" style="margin-bottom: 1rem">
+  {% if missing and extractors %}
+  <form method="post" action="/checklists/extract" style="margin: 0">
+    <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin: 0">
+      <label>Hilfsmodell<br><select name="model_key">
+        {% for m in extractors %}<option value="{{ m.key }}"{% if not m.available %} disabled{% endif %}>{{ m.name }}{% if not m.available %} (Schlüssel fehlt){% endif %}</option>{% endfor %}
+      </select></label>
+      <button type="submit">Gründe für {{ missing }} Fälle extrahieren</button>
+      <span class="lead">legt einen Auftrag an; der Worker arbeitet ihn ab</span>
+    </p>
+  </form>
+  {% elif missing %}
+  <p class="notice" style="margin: 0">Kein Modell mit der Rolle <code>extractor</code> konfiguriert.</p>
+  {% else %}
+  <p class="lead" style="margin: 0">Alle freigegebenen Fälle haben eine Liste.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if cases %}
+<table>
+  <thead><tr><th>Datum</th><th>Geschäftszahl</th><th>Gebiet</th><th>Liste</th><th>Bewertung</th></tr></thead>
+  <tbody>
+  {% for c in cases %}
+  {% set s = states[c.id] %}
+    <tr>
+      <td>{{ c.decision_date.strftime("%d.%m.%Y") }}</td>
+      <td>{% if s != "none" %}<a href="/checklists/{{ c.id }}">{{ c.case_number }}</a>{% else %}{{ c.case_number }}{% endif %}</td>
+      <td>{{ c.areas | join(", ") }}</td>
+      <td>
+        {% if s in ("confirmed", "edited") %}<span class="status ok">{{ status_labels[s] }}</span>
+        {% elif s == "proposed" %}<span class="status warn">{{ status_labels[s] }}</span>
+        {% else %}<span class="status">{{ status_labels[s] }}</span>{% endif %}
+      </td>
+      <td>{{ rating_labels[ratings[c.id]] if c.id in ratings else "" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Noch keine freigegebenen Fälle.</p>
+{% endif %}
+{% endblock %}

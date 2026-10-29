@@ -10,12 +10,15 @@
 <div class="check">
   <dl>
     <dt>Erstellt</dt><dd>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}{% if order.finished_at %}, beendet {{ order.finished_at.strftime("%d.%m.%Y %H:%M") }}{% endif %}</dd>
+    <dt>Aufgabe</dt><dd>{{ task_labels[order.task] }}</dd>
+    {% if order.task == "decide" %}
     <dt>Bedingungen</dt><dd>{% for c in order.conditions %}{{ c }}: {{ conditions[c] }}{% if not loop.last %}; {% endif %}{% endfor %}</dd>
     <dt>Modelle</dt><dd>{% for k in order.model_keys %}<span class="mono">{{ k }}</span> ({{ order.snapshot.models[k].model_config.model }}){% if not loop.last %}, {% endif %}{% endfor %}</dd>
     <dt>Fälle</dt><dd>{{ order.case_ids | length }}</dd>
     <dt>Formulierungen</dt><dd>{{ order.phrasings }}</dd>
     <dt>Wiederholungen</dt><dd>{{ order.repetitions }}</dd>
     <dt>Abstand zum Wissensstand</dt><dd>{{ order.cutoff_months }} Monate</dd>
+    {% endif %}
     {% if order.snapshot.get("tool_call_limit") %}<dt>Werkzeugaufrufe</dt><dd>höchstens {{ order.snapshot.tool_call_limit }} je Aufruf (Bedingung C)</dd>{% endif %}
     <dt>Kostengrenze</dt><dd>{% if order.cost_cap_usd is not none %}{{ "%.2f" | format(order.cost_cap_usd) }} USD{% else %}keine{% endif %}</dd>
     <dt>Prompts</dt><dd>{% for p in prompt_versions %}<a href="/prompts/{{ p.key }}?version={{ p.version }}" class="mono">{{ p.key }} v{{ p.version }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd>

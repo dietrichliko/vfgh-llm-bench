@@ -18,6 +18,7 @@ TASKS = {
     "decide": "Entscheidung (Bedingung A)",
     "decide_b": "Entscheidung mit vorgegebenen Normen (Bedingung B)",
     "decide_c": "Entscheidung mit RIS-Recherche (Bedingung C)",
+    "extract_reasons": "Referenzgründe aus den Erwägungen (Hilfsaufgabe)",
 }
 NORMS_TASKS = frozenset({"decide_b"})  # prompts that must contain {normen}
 PHRASINGS = 3

@@ -11,12 +11,14 @@ die Projektleitung.</p>
   <li><a href="/cases">Fälle</a>: Entscheidungen aus dem RIS importieren, prüfen und freigeben</li>
   <li><a href="/prompts">Prompts</a>: Aufgabentexte für die Modelle ansehen und ändern</li>
   <li><a href="/orders">Aufträge</a>: Fälle an Modelle schicken, Fortschritt und Kosten verfolgen</li>
+  <li><a href="/checklists">Referenzgründe</a>: tragende Gründe je Fall extrahieren lassen und prüfen</li>
   <li><a href="/admin/providers">Anbieter &amp; Modelle</a>: Konfiguration prüfen und Modelle testen</li>
   <li><a href="/admin/users">Benutzer</a>: Konten freischalten und Rollen vergeben</li>
 </ul>
 {% elif user.role.value == "expert" %}
 <p class="lead">Bewertungen und Auswertung folgen in den nächsten Stufen.</p>
 <ul>
+  <li><a href="/checklists">Referenzgründe</a>: die tragenden Gründe je Fall bewerten und korrigieren</li>
   <li><a href="/prompts">Prompts</a>: die Aufgabentexte für die Modelle lesen</li>
 </ul>
 {% else %}

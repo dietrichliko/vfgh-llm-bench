@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import normsets, prompts
+from bench import normsets, prompts, tasks
 from bench.llm.task import TOOL_CALL_LIMIT
 from bench.models import (
     OPEN_JOB_STATES,
@@ -395,3 +395,100 @@ def progress(db: Session, order: Order) -> Progress:
         eta_seconds=eta,
         recent_errors=list(errors),
     )
+
+
+# ── helper tasks (e.g. reference checklists) ───────────────────────────────────
+
+
+def plan_helper(db: Session, task: str, cases: list[Case], rm: ResolvedModel) -> Plan:
+    """One job per case with the model in the task's role; no cutoff rule, one prompt."""
+    spec = tasks.HELPERS[task]
+    problems = []
+    if spec.role not in rm.config.roles:
+        problems.append(f"{rm.name} hat nicht die Rolle für „{spec.label}“")
+    if not rm.available:
+        problems.append(f"{rm.name}: Schlüssel fehlt")
+    if not cases:
+        problems.append("Keine Fälle ausgewählt")
+    if any(c.status != CaseStatus.RELEASED for c in cases):
+        problems.append("Nur freigegebene Fälle können verwendet werden")
+    prompt = prompts.latest(db, prompts.key(task, 1))
+    if prompt is None:
+        problems.append(f"Prompt {prompts.key(task, 1)} fehlt")
+    parses = {
+        p.id: p
+        for p in db.exec(
+            select(CaseParse).where(col(CaseParse.id).in_([c.released_parse_id for c in cases]))
+        ).all()
+    }
+    jobs: list[Job] = []
+    total = 0.0
+    for case in cases:
+        parse = parses.get(case.released_parse_id)
+        if parse is None or prompt is None:
+            continue
+        jobs.append(
+            Job(
+                order_id=0,
+                seq=len(jobs) + 1,
+                task=task,
+                case_id=case.id or 0,
+                parse_id=parse.id or 0,
+                model_key=rm.key,
+                provider_key=rm.provider_key,
+                condition="-",
+                phrasing=1,
+                repetition=1,
+                prompt_version_id=prompt.id or 0,
+            )
+        )
+        total += estimate(rm, len(prompt.text) + len(spec.input_text(parse)))
+    return Plan(
+        jobs=jobs,
+        excluded={},
+        estimated_cost_usd=total,
+        cost_by_model={rm.key: total},
+        jobs_by_model={rm.key: len(jobs)},
+        problems=problems,
+    )
+
+
+def create_helper(
+    db: Session,
+    task: str,
+    cases: list[Case],
+    rm: ResolvedModel,
+    user_id: int | None,
+    name: str = "",
+) -> Order:
+    p = plan_helper(db, task, cases, rm)
+    if p.problems:
+        raise ValueError("; ".join(p.problems))
+    order = Order(
+        name=name.strip() or f"{tasks.HELPERS[task].label} {utcnow():%Y-%m-%d %H:%M}",
+        created_by=user_id,
+        task=task,
+        conditions=[],
+        model_keys=[rm.key],
+        case_ids=[c.id or 0 for c in cases],
+        repetitions=1,
+        phrasings=1,
+        cutoff_months=0,
+        estimated_cost_usd=p.estimated_cost_usd,
+        job_count=len(p.jobs),
+        snapshot=snapshot(db, [rm], cases, p.jobs),
+    )
+    db.add(order)
+    db.flush()
+    assert order.id is not None
+    for job in p.jobs:
+        job.order_id = order.id
+        db.add(job)
+    audit(
+        db,
+        "order.create",
+        user_id=user_id,
+        obj=f"order:{order.id}",
+        detail={"task": task, "jobs": len(p.jobs), "estimate": round(p.estimated_cost_usd, 4)},
+    )
+    return order

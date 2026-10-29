@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Referenzgründe {{ case.case_number }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/checklists">← Referenzgründe</a></p>
+<h1>Tragende Gründe: VfGH {{ case.decision_date.strftime("%d.%m.%Y") }}, {{ case.case_number }}</h1>
+<p class="lead">{{ case.areas | join(", ") }} · Ergebnis:
+  {{ outcome_labels[case.outcome.case_outcome] if case.outcome else "–" }} · Liste: <strong>{{ status_labels[status] }}</strong></p>
+
+{% if problem %}<div class="error"><p style="margin: 0">{{ problem }}</p></div>{% endif %}
+
+<div class="split">
+  <div>
+    <h2>Leitsatz, Spruch und Erwägungen</h2>
+    <pre class="doc">{{ parse.reference_text if parse else "" }}</pre>
+  </div>
+  <div>
+    {% if proposal and not proposal.rating %}
+    <h2>Vorschlag des Hilfsmodells</h2>
+    <ol>{% for it in proposal.items %}<li>{{ it.text }}{% if it.rz %} <span class="lead">(Rz {{ it.rz | join(", ") }})</span>{% endif %}</li>{% endfor %}</ol>
+    <form method="post" action="/checklists/{{ case.id }}/review" class="panel" x-data="{ rating: '' }">
+      <input type="hidden" name="checklist_id" value="{{ proposal.id }}">
+      <fieldset>
+        <legend>Bewertung der Liste</legend>
+        <label class="choice"><input type="radio" name="rating" value="correct" x-model="rating" required> richtig: alle tragenden Gründe, nichts Falsches</label>
+        <label class="choice"><input type="radio" name="rating" value="incomplete" x-model="rating"> unvollständig: ein tragender Grund fehlt oder ist zu ungenau</label>
+        <label class="choice"><input type="radio" name="rating" value="wrong" x-model="rating"> falsch: enthält einen Grund, der die Entscheidung nicht trägt</label>
+      </fieldset>
+      <div x-show="rating && rating !== 'correct'">
+        <p><label>Richtige Liste, ein Grund je Zeile<br>
+          <textarea name="text" rows="10" style="width: 100%">{{ as_text(proposal.items) }}</textarea></label></p>
+      </div>
+      <p><label>Notiz (optional)<br><input type="text" name="note" style="width: 100%"></label></p>
+      <p><button type="submit">Bewertung speichern</button></p>
+    </form>
+    {% elif current %}
+    <h2>Bestätigte Liste (Version {{ current.version }})</h2>
+    <ol>{% for it in current.items %}<li>{{ it.text }}</li>{% endfor %}</ol>
+    {% if proposal and proposal.rating %}<p class="lead">Vorschlag des Hilfsmodells bewertet als
+      <strong>{{ rating_labels[proposal.rating.value] }}</strong>{% if proposal.note %}: {{ proposal.note }}{% endif %}.</p>{% endif %}
+    <details class="no-print"><summary>Liste überarbeiten (neue Version)</summary>
+      <form method="post" action="/checklists/{{ case.id }}/revise">
+        <p><textarea name="text" rows="10" style="width: 100%">{{ as_text(current.items) }}</textarea></p>
+        <p><button type="submit" class="secondary">als neue Version bestätigen</button></p>
+      </form>
+    </details>
+    {% else %}
+    <p>Noch keine Liste. Die Administration lässt sie auf der Übersicht extrahieren.</p>
+    {% endif %}
+
+    {% if versions | length > 1 %}
+    <h3>Versionen</h3>
+    <ul>{% for v in versions %}<li>Version {{ v.version }}: {{ "Hilfsmodell" if v.source == "model" else "Juristin/Jurist" }},
+      {{ v.created_at.strftime("%d.%m.%Y %H:%M") }}{% if v.rating %}, bewertet: {{ rating_labels[v.rating.value] }}{% endif %}{% if v.id == case.checklist_id %} (gilt){% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

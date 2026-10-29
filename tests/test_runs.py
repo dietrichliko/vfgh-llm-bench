@@ -82,6 +82,12 @@ models:
     model: claude-opus-4-8
     family: anthropic
     roles: [judge]
+  helper:
+    provider: or
+    model: vendor/helper
+    family: h
+    roles: [extractor]
+    price: {in: 1.0, out: 1.0}
 """
 
 ANSWER = {
@@ -222,6 +228,7 @@ def test_seed_is_idempotent_and_the_database_wins(engine: sa.Engine) -> None:
             "decide_c.p1",
             "decide_c.p2",
             "decide_c.p3",
+            "extract_reasons.p1",
         ]
         assert prompts.seed(db) == []
         v2 = prompts.save(db, "decide.p1", "System\n---user---\nFall: {input}", None, " neu ")

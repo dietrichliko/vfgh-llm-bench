@@ -57,6 +57,13 @@ class Case(SQLModel, table=True):
         default=None,
         sa_column=Column(Integer, ForeignKey("norm_sets.id", use_alter=True), nullable=True),
     )
+    # confirmed reference checklist (level 2)
+    checklist_id: int | None = Field(
+        default=None,
+        sa_column=Column(
+            Integer, ForeignKey("reference_checklists.id", use_alter=True), nullable=True
+        ),
+    )
     exclusion_reason: str | None = None
     admin_note: str | None = None
 

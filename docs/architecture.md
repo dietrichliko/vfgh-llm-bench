@@ -256,6 +256,12 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Runs:** prompts `decide_b.p1–p3` with the placeholder `{normen}` (allowed only there; `{input}` and `{normen}` are replaced in one pass). Cases without an approved set are left out of B and listed; the order snapshot stores the set per case, and each run its `norm_set_id`.
 - **Notification:** in the app only (banner on the start page). No email.
 
+### As built in stage 5a (reference checklists)
+
+- **Helper tasks** (`bench/tasks.py`): orders, jobs and runs carry a `task` (`decide` or a helper task). A helper task has one prompt (`<task>.p1`), an output schema, the model role it needs, the text it reads, and a hook for a valid result. Helper orders use the same queue, worker, snapshot, cost caps and pages; there is no cutoff rule for helpers.
+- **`extract_reasons`:** the extractor model (role `extractor`) reads the reference part (headnote, operative part, considerations) and returns at most eight decisive reasons with margin numbers (`Referenzgruende`). A valid answer becomes version 1 of the case's `ReferenceChecklist`.
+- **Review** (`bench/checklists.py`, page "Referenzgründe", legal expert and admin): the expert rates version 1 correct, incomplete or wrong. Correct confirms it; otherwise the expert's corrected list (one reason per line) becomes a new confirmed version. The rating of the model's list is kept for the paper. `Case.checklist_id` points at the confirmed version, which the judges use. Rated and confirmed versions are immutable (SQLite trigger); a later revision is a new version.
+
 ## 8 Users and screens
 
 | Role | Screens |

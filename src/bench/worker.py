@@ -25,6 +25,7 @@ from typing import Any
 
 import httpx
 import httpx2
+from pydantic import BaseModel
 from pydantic_ai.mcp import MCPToolset
 from sqlalchemy import Engine, update
 from sqlmodel import Session, col, select
@@ -47,6 +48,7 @@ from bench.models import (
 from bench.providers import ModelConfig, ProviderConfig, ResolvedModel, ToolMode, config_hash
 from bench.rismcp.server import STICHTAG_HEADER, TOOL_NAMES
 from bench.settings import RIS_MCP_API_KEY, Settings
+from bench.tasks import HELPERS
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +72,11 @@ def model_from_snapshot(order: Order, model_key: str, settings: Settings) -> Res
     if rm.config_hash != snap["config_hash"]:
         raise RuntimeError(f"snapshot of {model_key} does not match its hash")
     return rm
+
+
+def _input_text(job: Job, parse: CaseParse) -> str:
+    helper = HELPERS.get(job.task)
+    return helper.input_text(parse) if helper else parse.input_text
 
 
 class Worker:
@@ -137,7 +144,7 @@ class Worker:
         parse = db.get(CaseParse, job.parse_id)
         prompt = db.get(PromptVersion, job.prompt_version_id)
         next_cost = (
-            orders.estimate(rm, len(parse.input_text) + len(prompt.text), job.condition)
+            orders.estimate(rm, len(_input_text(job, parse)) + len(prompt.text), job.condition)
             if parse and prompt
             else 0.0
         )
@@ -245,6 +252,8 @@ class Worker:
             prompt = db.get(PromptVersion, job.prompt_version_id)
             assert order is not None and parse is not None and prompt is not None
             rm = model_from_snapshot(order, job.model_key, self.settings)
+            helper = HELPERS.get(job.task)
+            output_type: type[BaseModel] = helper.output_type if helper else Entscheidung
             stichtag = None
             norm_set = None
             if job.condition == "B":
@@ -258,9 +267,12 @@ class Worker:
                 stichtag = order.snapshot.get("reference_dates", {}).get(str(job.case_id))
                 if stichtag is None:
                     raise RuntimeError(f"Fall {job.case_id} ohne Stichtag")
-            messages = prompts.render(
-                prompt.text, parse.input_text, norm_set.text if norm_set else None
-            )
+            if helper is not None:
+                messages = prompts.render(prompt.text, helper.input_text(parse))
+            else:
+                messages = prompts.render(
+                    prompt.text, parse.input_text, norm_set.text if norm_set else None
+                )
             norm_set_id = norm_set.id if norm_set else None
             stored = db.get(Job, job.id)
             assert stored is not None
@@ -280,7 +292,7 @@ class Worker:
                 self.settings,
                 self.http_client,
                 messages,
-                Entscheidung,
+                output_type,
                 toolset=toolset,
                 expected_tools=TOOL_NAMES if toolset is not None else None,
             )
@@ -307,6 +319,7 @@ class Worker:
                 model_id=rm.config.model,
                 provider_key=job.provider_key,
                 config_hash=rm.config_hash,
+                task=job.task,
                 condition=job.condition,
                 phrasing=job.phrasing,
                 repetition=job.repetition,
@@ -333,6 +346,9 @@ class Worker:
             )
             db.add(run)
             db.flush()
+            helper = HELPERS.get(job.task)
+            if helper is not None and result.status is JobStatus.DONE:
+                helper.on_done(db, run)
             stored = db.get(Job, job.id)
             order = db.get(Order, job.order_id)
             assert stored is not None and order is not None

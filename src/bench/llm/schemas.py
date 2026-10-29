@@ -55,3 +55,16 @@ PROMPTED_OUTPUT_TEMPLATE = (
     "Antworte ausschließlich mit einem einzigen JSON-Objekt ohne weiteren Text, "
     "das diesem JSON-Schema entspricht:\n\n{schema}"
 )
+
+
+class TragenderGrund(BaseModel):
+    text: str = Field(description="Der Grund in einem Satz, so konkret wie in der Entscheidung")
+    randzahlen: list[str] = Field(
+        default_factory=list, description="Randzahlen der Erwägungen, in denen der Grund steht"
+    )
+
+
+class Referenzgruende(BaseModel):
+    """Die tragenden Gründe einer Entscheidung des Verfassungsgerichtshofes."""
+
+    gruende: list[TragenderGrund] = Field(min_length=1, max_length=8)

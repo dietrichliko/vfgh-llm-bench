@@ -9,7 +9,8 @@
 <div class="check">
   <dl>
     <dt>Fall</dt><dd>{% if case %}<a href="/cases/{{ case.id }}">{{ case.case_number }}</a> vom {{ case.decision_date.strftime("%d.%m.%Y") }}{% else %}{{ run.case_id }}{% endif %}</dd>
-    <dt>Bedingung</dt><dd>{{ run.condition }}: {{ conditions[run.condition] }}</dd>
+    {% if run.task == "decide" %}<dt>Bedingung</dt><dd>{{ run.condition }}: {{ conditions[run.condition] }}</dd>
+    {% else %}<dt>Aufgabe</dt><dd>{{ task_labels[run.task] }}</dd>{% endif %}
     <dt>Formulierung</dt><dd>{% if prompt %}<a href="/prompts/{{ prompt.key }}?version={{ prompt.version }}" class="mono">{{ prompt.key }} v{{ prompt.version }}</a>{% else %}{{ run.phrasing }}{% endif %}</dd>
     {% if stichtag %}<dt>Stichtag</dt><dd>{{ stichtag }} (vom Programm gesetzt, dem Modell nicht genannt)</dd>{% endif %}
     {% if run.norm_set_id %}<dt>Normen</dt><dd>freigegebener Satz {{ run.norm_set_id }} (<a href="/cases/{{ run.case_id }}">Fall</a>); der Text steht in der Benutzernachricht</dd>{% endif %}
@@ -30,7 +31,10 @@
 </div>
 
 <h2>Ergebnis</h2>
-{% if run.output %}
+{% if run.output and run.task == "extract_reasons" %}
+<p>Vorgeschlagene tragende Gründe (<a href="/checklists/{{ run.case_id }}">zur Bewertung</a>):</p>
+<ol>{% for g in run.output.gruende %}<li>{{ g.text }}{% if g.randzahlen %} <span class="lead">(Rz {{ g.randzahlen | join(", ") }})</span>{% endif %}</li>{% endfor %}</ol>
+{% elif run.output %}
 <p>Ergebnis des Modells: <strong>{{ outcome_labels[run.case_outcome] if run.case_outcome else "nicht zuordenbar" }}</strong>
 {% if case and case.outcome %} · Entscheidung des VfGH: <strong>{{ outcome_labels[case.outcome.case_outcome] }}</strong>{% endif %}</p>
 <table>

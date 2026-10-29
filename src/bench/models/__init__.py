@@ -101,6 +101,7 @@ from bench.models.cases import (  # noqa: E402
     NormSetStatus,
     SourceDocument,
 )
+from bench.models.evaluation import ChecklistRating, ReferenceChecklist  # noqa: E402
 from bench.models.runs import (  # noqa: E402
     OPEN_JOB_STATES,
     Job,
@@ -117,6 +118,7 @@ __all__ = [
     "Case",
     "CaseParse",
     "CaseStatus",
+    "ChecklistRating",
     "DocumentKind",
     "ImportRun",
     "Job",
@@ -127,6 +129,7 @@ __all__ = [
     "OrderStatus",
     "PromptVersion",
     "ProviderCheck",
+    "ReferenceChecklist",
     "Run",
     "SourceDocument",
     "User",

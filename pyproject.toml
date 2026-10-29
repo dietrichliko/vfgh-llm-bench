@@ -57,6 +57,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 [tool.ruff.lint.per-file-ignores]
 # fixtures imported from another test module are redefined as test parameters
 "tests/test_normsets.py" = ["F811"]
+"tests/test_checklists.py" = ["F811"]
 
 [tool.mypy]
 strict = true

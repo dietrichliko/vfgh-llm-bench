@@ -21,6 +21,7 @@ from bench.models import (
     Run,
 )
 from bench.providers import ResolvedModel, Role
+from bench.tasks import TASK_LABELS
 from bench.web.cases import OUTCOME_LABELS
 from bench.web.pages import render, resolved_models
 
@@ -47,6 +48,7 @@ LABELS = {
     "outcome_labels": OUTCOME_LABELS,
     "conditions": orders.CONDITIONS,
     "available_conditions": orders.AVAILABLE_CONDITIONS,
+    "task_labels": TASK_LABELS,
 }
 RECENT_RUNS = 50
 

@@ -53,6 +53,7 @@ class Order(SQLModel, table=True):
     name: str = Field(max_length=255)
     created_at: datetime = Field(default_factory=utcnow)
     created_by: int | None = Field(default=None, foreign_key="users.id")
+    task: str = Field(default="decide", max_length=32)  # see bench.tasks
     status: OrderStatus = Field(default=OrderStatus.RUNNING, max_length=16, index=True)
     status_reason: str | None = None
     finished_at: datetime | None = None
@@ -80,6 +81,7 @@ class Job(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     order_id: int = Field(foreign_key="orders.id", index=True)
     seq: int  # execution order within the order (interleaved)
+    task: str = Field(default="decide", max_length=32)
     case_id: int = Field(foreign_key="cases.id")
     parse_id: int = Field(foreign_key="case_parses.id")
     model_key: str = Field(max_length=128)
@@ -114,6 +116,7 @@ class Run(SQLModel, table=True):
     model_id: str = Field(max_length=255)
     provider_key: str = Field(max_length=128)
     config_hash: str = Field(max_length=64)
+    task: str = Field(default="decide", max_length=32)
     condition: str = Field(max_length=8)
     phrasing: int
     repetition: int

@@ -16,7 +16,7 @@ arbeitet die Aufrufe im Hintergrund ab; der Fortschritt steht auf der Seite des 
   {% for o in orders %}
     <tr>
       <td>{{ o.id }}</td>
-      <td><a href="/orders/{{ o.id }}">{{ o.name }}</a></td>
+      <td><a href="/orders/{{ o.id }}">{{ o.name }}</a>{% if o.task != "decide" %}<br><span class="lead">{{ task_labels[o.task] }}</span>{% endif %}</td>
       <td>{{ o.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
       <td>{% include "_order_status.html" %}</td>
       <td>{{ finished.get(o.id, 0) }} von {{ o.job_count }}</td>
