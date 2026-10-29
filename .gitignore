@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+dist/
+build/
+
+# Data and secrets
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.db
+data/
+dev-data/
+backups/
+deploy/secrets/
+config/providers.yaml
+
+# Editor
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}VfGH-LLM-Studie{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+  <script src="{{ url_for('static', path='htmx-2.0.4.min.js') }}" defer></script>
+  <script src="{{ url_for('static', path='alpine-3.14.8.min.js') }}" defer></script>
+</head>
+<body>
+  <header class="site">
+    <a class="brand" href="/">VfGH-LLM-Studie</a>
+    {% if user and user.role.value != "pending" %}
+    <nav aria-label="Hauptnavigation">
+      {% if user.role.value == "admin" %}
+      <a href="/admin/providers">Anbieter &amp; Modelle</a>
+      <a href="/admin/users">Benutzer</a>
+      {% endif %}
+    </nav>
+    {% endif %}
+    {% if user %}
+    <span class="who">{{ user.name }} · {{ role_labels[user.role.value] }}</span>
+    <form method="post" action="/auth/logout"><button class="secondary" type="submit">Abmelden</button></form>
+    {% endif %}
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Willkommen, {{ user.name }}</h1>
+
+{% if user.role.value == "pending" %}
+<p class="notice">Ihr Konto ist angelegt, aber noch nicht freigeschaltet. Bitte wenden Sie sich an
+die Projektleitung.</p>
+{% elif user.role.value == "admin" %}
+<p class="lead">Diese Version ist das Grundgerüst der Anwendung. Fälle, Läufe, Bewertung und
+Auswertung folgen in den nächsten Stufen.</p>
+<ul>
+  <li><a href="/admin/providers">Anbieter &amp; Modelle</a>: Konfiguration prüfen und Modelle testen</li>
+  <li><a href="/admin/users">Benutzer</a>: Konten freischalten und Rollen vergeben</li>
+</ul>
+{% else %}
+<p class="lead">Fälle, Bewertungen und Auswertung folgen in den nächsten Stufen.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,63 @@
+# Local or institute server:
+#   mkdir -p deploy/secrets && echo -n '…' > deploy/secrets/UAI_API_KEY   (one file per secret)
+#   cp config/providers.example.yaml config/providers.yaml
+#   podman compose -f deploy/compose.yaml up --build
+#
+# Secrets are files under deploy/secrets/ (git-ignored) and appear in the containers
+# as /run/secrets/<NAME>. Missing provider keys only disable that provider.
+
+name: vfgh-bench
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Containerfile
+    image: localhost/bench:latest
+    command: ["bench", "serve", "--port", "8000"]
+    ports: ["8000:8000"]
+    environment:
+      BENCH_PUBLIC_URL: ${BENCH_PUBLIC_URL:-http://localhost:8000}
+      BENCH_DEV_LOGIN: ${BENCH_DEV_LOGIN:-0}
+      BENCH_ADMIN_EMAILS: ${BENCH_ADMIN_EMAILS:-}
+      BENCH_OIDC_ISSUER: ${BENCH_OIDC_ISSUER:-}
+      BENCH_OIDC_CLIENT_ID: ${BENCH_OIDC_CLIENT_ID:-}
+    volumes:
+      - bench-data:/data
+      - ../config/providers.yaml:/config/providers.yaml:ro,z
+    secrets: [BENCH_SESSION_SECRET, BENCH_OIDC_CLIENT_SECRET, UAI_API_KEY, OPENROUTER_API_KEY]
+    depends_on: [bridge-univie]
+    restart: unless-stopped
+
+  worker:
+    image: localhost/bench:latest
+    command: ["bench", "worker"]  # placeholder until stage 3
+    volumes:
+      - bench-data:/data
+      - ../config/providers.yaml:/config/providers.yaml:ro,z
+    secrets: [UAI_API_KEY, OPENROUTER_API_KEY]
+    depends_on: [web]
+    restart: unless-stopped
+
+  bridge-univie:
+    image: registry.cern.ch/mbi-vienna/aai-bridge:0.4.0
+    environment:
+      AAI_BRIDGE_PROFILE: univie
+      AAI_BRIDGE_UPSTREAM_TIMEOUT: "600"
+    env_file:
+      - path: secrets/bridge-univie.env  # AAI_BRIDGE_CLIENT_ID, _CLIENT_SECRET, _API_KEY
+        required: false
+    restart: unless-stopped
+
+volumes:
+  bench-data:
+
+secrets:
+  BENCH_SESSION_SECRET:
+    file: secrets/BENCH_SESSION_SECRET
+  BENCH_OIDC_CLIENT_SECRET:
+    file: secrets/BENCH_OIDC_CLIENT_SECRET
+  UAI_API_KEY:
+    file: secrets/UAI_API_KEY
+  OPENROUTER_API_KEY:
+    file: secrets/OPENROUTER_API_KEY

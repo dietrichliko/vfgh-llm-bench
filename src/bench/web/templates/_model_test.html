@@ -1,0 +1,5 @@
+<button type="button" hx-post="/admin/providers/{{ m.key | urlencode }}/test"
+        hx-target="closest td" hx-swap="innerHTML"
+        {% if not m.available %}disabled{% endif %}>Testen</button>
+<span class="spinner">läuft …</span>
+{% if check %}{% include "_check.html" %}{% endif %}

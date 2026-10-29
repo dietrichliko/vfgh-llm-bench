@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Benutzer · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Benutzer</h1>
+<p class="lead">Neue Konten warten auf Freischaltung. Die Rolle bestimmt, was jemand sieht und tun darf.</p>
+<table>
+  <thead><tr><th>Name</th><th>E-Mail</th><th>Letzte Anmeldung</th><th>Rolle</th></tr></thead>
+  <tbody>
+  {% for u in users %}
+    <tr>
+      <td>{{ u.name }}</td>
+      <td>{{ u.email }}</td>
+      <td>{{ u.last_login_at.strftime("%d.%m.%Y %H:%M") if u.last_login_at else "–" }}</td>
+      <td>
+        {% if u.id == user.id %}
+          {{ role_labels[u.role.value] }} (Sie)
+        {% else %}
+        <form hx-post="/admin/users/{{ u.id }}/role" hx-trigger="change" hx-target="find .saved" hx-swap="innerHTML">
+          <label class="no-print" for="role-{{ u.id }}" hidden>Rolle von {{ u.name }}</label>
+          <select id="role-{{ u.id }}" name="role">
+            {% for value, label in role_labels.items() %}
+            <option value="{{ value }}" {% if u.role.value == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <span class="saved" aria-live="polite"></span>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

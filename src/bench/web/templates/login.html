@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Anmelden · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Anmelden</h1>
+<p class="lead">Untersuchung, ob Sprachmodelle Verordnungsprüfungen des Verfassungsgerichtshofs
+(Art 139 B-VG) so begründen wie der VfGH.</p>
+
+{% if sso %}
+<p><a class="button" href="/auth/login">Mit SSO anmelden</a></p>
+{% endif %}
+
+{% if dev_login %}
+<section class="panel" style="max-width: 28rem">
+  <h2 style="margin-top: 0">Entwicklungsanmeldung</h2>
+  <p class="notice">Nur für die lokale Entwicklung. Im Betrieb ist diese Anmeldung abgeschaltet.</p>
+  <form method="post" action="/auth/dev-login">
+    <p><label>E-Mail-Adresse<br><input type="email" name="email" required autocomplete="email"></label></p>
+    <p><label>Name<br><input type="text" name="name" autocomplete="name"></label></p>
+    <button type="submit">Anmelden</button>
+  </form>
+</section>
+{% endif %}
+
+{% if not sso and not dev_login %}
+<p class="error">Es ist keine Anmeldung konfiguriert (BENCH_OIDC_ISSUER und BENCH_OIDC_CLIENT_ID
+oder BENCH_DEV_LOGIN).</p>
+{% endif %}
+{% endblock %}

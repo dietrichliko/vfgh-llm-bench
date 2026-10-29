@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Anbieter &amp; Modelle · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Anbieter &amp; Modelle</h1>
+<p class="lead">Aus der Konfigurationsdatei <code>{{ config_path }}</code>. Sie wird vom Betrieb
+gepflegt und hier nur angezeigt. Schlüssel stehen nie in der Datei, nur ihre Namen.</p>
+
+{% if config_error %}
+<div class="error">
+  <p><strong>Die Konfiguration ist ungültig oder fehlt.</strong></p>
+  <pre>{{ config_error }}</pre>
+</div>
+{% else %}
+
+<h2>Anbieter</h2>
+<table>
+  <thead>
+    <tr><th>Anbieter</th><th>Adresse</th><th>Schlüssel</th><th>Ausgabe</th><th>Werkzeuge</th><th>Parallel</th></tr>
+  </thead>
+  <tbody>
+  {% for key, p in providers %}
+    <tr>
+      <td><strong>{{ key }}</strong></td>
+      <td class="mono">{{ p.base_url }}</td>
+      <td>
+        <code>{{ p.api_key_secret }}</code><br>
+        {% if secrets[key] %}<span class="status ok">gesetzt</span>{% else %}<span class="status bad">fehlt</span>{% endif %}
+      </td>
+      <td>{{ output_labels[p.output_mode.value] }}</td>
+      <td>
+        {{ tool_labels[p.tool_mode.value] }}
+        {% if p.tool_mode.value != "native" %}<br><span class="status warn">nicht für Bedingung C</span>{% endif %}
+      </td>
+      <td>{{ p.max_concurrency }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Modelle</h2>
+<table>
+  <thead>
+    <tr><th>Modell</th><th>Anbieter</th><th>Familie</th><th>Rollen</th><th>Wissensstand</th><th>Status</th><th>Test</th></tr>
+  </thead>
+  <tbody>
+  {% for m in models %}
+    <tr>
+      <td><strong>{{ m.name }}</strong><br><span class="mono">{{ m.config.model }}</span></td>
+      <td>{{ m.provider_key }}</td>
+      <td>{{ m.config.family }}</td>
+      <td>{% for r in m.config.roles %}{{ role_names[r.value] }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+      <td>{{ m.config.cutoff or "–" }}</td>
+      <td>
+        {% if m.available %}<span class="status ok">verfügbar</span>
+        {% else %}<span class="status bad">Schlüssel fehlt</span>{% endif %}
+      </td>
+      <td>
+        {% with check = last_checks.get(m.key) %}{% include "_model_test.html" %}{% endwith %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

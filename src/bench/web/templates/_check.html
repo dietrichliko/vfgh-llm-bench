@@ -1,0 +1,25 @@
+<div class="check">
+  {% if check.ok %}
+  <span class="status ok">Antwort erhalten</span>
+  {% else %}
+  <span class="status bad">Fehler</span>
+  {% endif %}
+  {% if check.model_mismatch %}<span class="status warn">anderes Modell gemeldet</span>{% endif %}
+  <dl>
+    <dt>Zeit</dt><dd>{{ check.at.strftime("%d.%m.%Y %H:%M") }} UTC, {{ "%.1f" | format(check.duration_ms / 1000) }} s</dd>
+    {% if check.answer is not none %}<dt>Antwort</dt><dd>{{ check.answer }}</dd>{% endif %}
+    {% if check.error %}<dt>Fehler</dt><dd class="mono">{{ check.error }}</dd>{% endif %}
+    {% if check.model_reported %}<dt>Modell laut Antwort</dt><dd class="mono">{{ check.model_reported }}</dd>{% endif %}
+    {% if check.provider_reported %}<dt>Anbieter laut Antwort</dt><dd>{{ check.provider_reported }}</dd>{% endif %}
+    {% if check.bridge_version %}<dt>Bridge</dt><dd>{{ check.bridge_version }}</dd>{% endif %}
+    {% if check.usage %}<dt>Tokens</dt><dd>{{ check.usage.get("input_tokens", 0) }} ein / {{ check.usage.get("output_tokens", 0) }} aus</dd>{% endif %}
+  </dl>
+  <details>
+    <summary>Rohdaten ({{ check.exchanges | length }} Anfrage{% if check.exchanges | length != 1 %}n{% endif %})</summary>
+    {% for ex in check.exchanges %}
+    <p class="mono">Versuch {{ ex.attempt }}: {{ ex.method }} {{ ex.url }} → {{ ex.status or ex.error }} ({{ ex.duration_ms }} ms)</p>
+    <pre>{{ ex.request_body }}</pre>
+    <pre>{{ ex.response_body or "" }}</pre>
+    {% endfor %}
+  </details>
+</div>

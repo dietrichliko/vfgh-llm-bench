@@ -1,0 +1,43 @@
+# Temporary deployment on fly.io. Secrets arrive as environment variables:
+#   fly secrets set --app vfgh-bench BENCH_SESSION_SECRET=… BENCH_OIDC_CLIENT_SECRET=… \
+#       UAI_API_KEY=… OPENROUTER_API_KEY=…
+#   fly deploy --config deploy/fly/web.toml --dockerfile deploy/Containerfile
+# The provider config is baked in via [[files]] from config/providers.yaml.
+
+app = "vfgh-bench"
+primary_region = "fra"
+
+[env]
+BENCH_PUBLIC_URL = "https://vfgh-bench.fly.dev"
+BENCH_OIDC_ISSUER = "https://auth.cern.ch/auth/realms/cern"
+BENCH_SECRETS_DIR = "/nonexistent"
+
+[[files]]
+guest_path = "/config/providers.yaml"
+local_path = "config/providers.yaml"
+
+[mounts]
+source = "bench_data"
+destination = "/data"
+
+[processes]
+web = "bench serve --port 8000"
+# worker = "bench worker"   # stage 3; must not auto-stop while jobs are queued
+
+[http_service]
+internal_port = 8000
+force_https = true
+processes = ["web"]
+auto_stop_machines = "stop"
+auto_start_machines = true
+min_machines_running = 0
+
+[[http_service.checks]]
+interval = "60s"
+method = "GET"
+path = "/health"
+timeout = "5s"
+
+[[vm]]
+size = "shared-cpu-1x"
+memory = "512mb"

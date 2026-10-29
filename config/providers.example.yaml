@@ -1,0 +1,97 @@
+# Providers and models for vfgh-llm-bench (see docs/architecture.md §3).
+#
+# Copy to providers.yaml and mount it read-only into the container
+# (default /config/providers.yaml, or set BENCH_CONFIG).
+#
+# Secrets never go into this file. `api_key_secret` names a secret that is read from
+# /run/secrets/<NAME> or the environment variable <NAME>.
+#
+# Before a study: check every model id (admin page "Testen" or `bench check-providers`),
+# take the training cutoff from the model card, and pin the OpenRouter provider and
+# quantization after checking which providers serve the model.
+
+providers:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_secret: OPENROUTER_API_KEY
+    output_mode: native        # JSON schema via response_format
+    tool_mode: native          # the only mode allowed in condition C
+    max_concurrency: 8
+    extra_body:
+      provider:
+        allow_fallbacks: false # no silent switch to another provider
+
+  uai:                         # University of Vienna u:ai, via academic-ai-bridge
+    base_url: http://bridge-univie:8000/v1
+    api_key_secret: UAI_API_KEY
+    headers:
+      X-Bridge-Raw: "1"        # bridge returns the unchanged upstream response
+    output_mode: prompted      # no JSON schema support: JSON is requested in the prompt
+    tool_mode: emulated        # never offered for condition C
+    max_concurrency: 4
+
+models:
+  # --- Tested: open-weight models on OpenRouter (conference scope) -------------------
+  # cutoff: PLACEHOLDER dates. Replace with the model card's training cutoff before use.
+  glm-5.3:
+    provider: openrouter
+    model: z-ai/glm-5.3
+    display_name: GLM-5.3
+    family: zhipu
+    cutoff: 2026-01-01
+    roles: [tested]
+    price: {in: 0.07, out: 1.4}
+    # extra_body:
+    #   provider: {order: [z-ai], allow_fallbacks: false, quantizations: [bf16]}
+
+  deepseek-v4-pro:
+    provider: openrouter
+    model: deepseek/deepseek-v4-pro
+    display_name: DeepSeek V4 Pro
+    family: deepseek
+    cutoff: 2026-01-01
+    roles: [tested]
+    price: {in: 0.88, out: 1.75}
+
+  qwen3.8-27b:
+    provider: openrouter
+    model: qwen/qwen3.8-27b
+    display_name: Qwen3.8 27B
+    family: qwen
+    cutoff: 2026-01-01
+    roles: [tested]
+    price: {in: 0.04, out: 1.25}
+
+  gemma-4-31b:
+    provider: openrouter
+    model: google/gemma-4-31b-it
+    display_name: Gemma 4 31B
+    family: google
+    cutoff: 2026-01-01
+    roles: [tested]
+    price: {in: 0.2, out: 0.4}
+
+  # --- Judges and helpers: frontier models on u:ai (paid by the university) ----------
+  claude-opus:
+    provider: uai
+    model: claude-opus-4-8
+    display_name: Claude Opus 4.8
+    family: anthropic
+    roles: [judge]
+    price: {in: 5.0, out: 25.0}
+
+  gpt-5.5:
+    provider: uai
+    model: gpt-5.5
+    display_name: GPT-5.5
+    family: openai
+    roles: [judge]
+    price: {in: 5.0, out: 30.0}
+
+  gemini-pro:
+    provider: uai
+    model: gemini-3.1-pro-preview
+    display_name: Gemini 3.1 Pro Preview
+    family: google               # same family as Gemma: never judges a Gemma output
+    roles: [extractor, writer]
+    price: {in: 2.0, out: 12.0}
