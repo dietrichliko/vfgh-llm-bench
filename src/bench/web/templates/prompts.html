@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Prompts · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Prompts</h1>
+<p class="lead">Die Aufgabentexte, die die Modelle erhalten. Jede Änderung legt eine neue Version an;
+Aufträge merken sich die Version, mit der sie erstellt wurden, und jeder Lauf speichert den
+gesendeten Text vollständig. Über der Zeile <code>{{ marker }}</code> steht die Systemnachricht,
+darunter die Nachricht mit dem Fall; <code>{input}</code> wird durch den Fall ersetzt.</p>
+
+{% if prompts %}
+<table>
+  <thead><tr><th>Prompt</th><th>Aufgabe</th><th>Version</th><th>Geändert</th><th>Notiz</th></tr></thead>
+  <tbody>
+  {% for p in prompts %}
+    <tr>
+      <td><a href="/prompts/{{ p.key }}" class="mono">{{ p.key }}</a></td>
+      <td>{{ label(p.key) }}</td>
+      <td>{{ p.version }}{% if p.source == "file" %} <span class="lead">(Vorlage)</span>{% endif %}</td>
+      <td>{{ p.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+      <td>{{ p.note or "" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Keine Prompts vorhanden.</p>
+{% endif %}
+{% endblock %}

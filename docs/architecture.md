@@ -86,11 +86,13 @@ providers:
     tool_mode: native
     max_concurrency: 8
     requests_per_minute: 60
+    extra_body: {usage: {include: true}}       # OpenRouter reports the billed cost
   uai:
     base_url: http://bridge-univie:8000/v1
     api_key_secret: UAI_API_KEY
     headers: {X-Bridge-Raw: "1"}
     output_mode: prompted                      # JSON requested in the prompt
+    json_object: false                         # also send response_format json_object
     tool_mode: emulated                        # never offered for condition C
     max_concurrency: 4
 
@@ -102,6 +104,7 @@ models:
     cutoff: 2026-03-01                         # from the model card; required for "tested"
     roles: [tested]
     price: {in: 0.07, out: 1.4}                # USD per 1M tokens, for estimates
+    expected_output_tokens: 8000               # incl. thinking, for estimates (default 6000)
     extra_body:
       provider: {order: [z-ai], allow_fallbacks: false, quantizations: [bf16]}
   claude-opus:
@@ -127,7 +130,7 @@ models:
   - unknown providers, duplicate keys and missing fields are rejected;
   - a `tested` model needs a `cutoff`;
   - a judge must not share a family with any model it scores.
-- **Pydantic AI:** each entry becomes `OpenAIChatModel(model, provider=OpenAIProvider(openai_client=AsyncOpenAI(base_url, api_key, max_retries=0, http_client=…)))`. `output_mode` selects `NativeOutput` or `PromptedOutput`.
+- **Pydantic AI:** each entry becomes `OpenAIChatModel(model, provider=OpenAIProvider(openai_client=AsyncOpenAI(base_url, api_key, max_retries=0, http_client=…)))`. `output_mode` selects `NativeOutput` or `PromptedOutput`. The model profile (JSON schema / JSON object support) is set from our config, not guessed from the model name.
 - **Provenance:** each run stores a hash of its resolved provider and model entry.
 - **Admin page:**
   - shows every model with its status (available, or secret missing), cutoff, roles and the number of cases that pass its cutoff rule;
@@ -224,7 +227,15 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Throttling** per provider (`max_concurrency`, `requests_per_minute`), with backoff on 429. A provider that keeps failing pauses its jobs.
 - **Interleaved order:** case by case across models, so a partial run already gives comparable, preliminary results.
 - **Controls:** pause, resume, cancel, "retry failed" (earlier attempts are kept), and cost caps per order and in total, checked before each job.
-- **Progress page,** refreshed by htmx polling every 5–10 s: done/total per model and condition, elapsed time, time left, cost, recent errors.
+- **Progress page,** refreshed by htmx polling every 3 s: done/total per model and status, time left, cost, recent errors.
+
+### As built in stage 3
+
+- **Prompts** (`bench/prompts.py`): `decide.p1–p3` are seeded from `bench/prompts/*.md` at start-up (web and worker) when the key has no version yet; afterwards the database wins. A prompt holds the system message, the line `---user---`, and the user message with `{input}`, the only placeholder. Every edit on the prompts page is a new `PromptVersion`; the legal expert can read the prompts.
+- **Job status:** `done` (answer fits the schema), `not_evaluable` (answer arrived but does not fit; never re-asked), `failed` (no answer), `unknown` (worker stopped after sending), `cancelled`. Every call is stored as an immutable `Run` with the messages, raw HTTP exchanges (without keys), parsed output, outcome label, usage and cost (price list, and the provider's own figure where reported).
+- **Planning** (`bench/orders.py`): jobs are ordered repetition → phrasing → condition → case → model. A case is used for a model only if it was decided at least `cutoff_months` (default 3) after the model's training cutoff. The estimate uses 3.5 characters per input token and `expected_output_tokens`.
+- **Worker** (`bench/worker.py`): one process; jobs claimed by compare-and-set on the status in `seq` order; lease 2 min, heartbeat 30 s. Model settings come from the order's snapshot, checked against its hash; a mismatch pauses the order. An order pauses at its cost cap or the total cap (`BENCH_COST_CAP_TOTAL_USD`), and after 5 failures in a row at one provider. `BENCH_WORKER_CONCURRENCY` (default 8) limits calls in flight over all providers.
+- **Not yet:** conditions B and C (stage 4); the in-app notification banner; freezing the protocol.
 - **Notification:** in the app only (banner on the start page). No email.
 
 ## 8 Users and screens
@@ -287,7 +298,7 @@ Each stage runs and is tested on its own.
 | --- | --- |
 | 1 Skeleton | Settings and secrets, `providers.yaml` loader, httpx client with retries and raw capture, SQLModel and Alembic, OIDC and dev login, providers page with Test button, Containerfile, compose |
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
-| 3 Runs A/B | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
+| 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Condition C | Port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule |
 | 5 Evaluation | Reference checklists, opposing reasonings and assessment, judges, citation check, calibration queue, contamination probe |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |

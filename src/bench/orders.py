@@ -106,7 +106,7 @@ def plan(
     }
     excluded: dict[str, list[int]] = defaultdict(list)
     jobs: list[Job] = []
-    cost: Counter[str] = Counter()
+    cost: defaultdict[str, float] = defaultdict(float)
     count: Counter[str] = Counter()
     seq = 0
     # repetition and phrasing outermost, then cases, then models: interleaved
@@ -196,7 +196,8 @@ def create(
         raise ValueError("; ".join(p.problems))
     if cost_cap_usd is not None and p.estimated_cost_usd > cost_cap_usd:
         raise ValueError(
-            f"Geschätzte Kosten {p.estimated_cost_usd:.2f} USD über der Obergrenze {cost_cap_usd:.2f} USD"
+            f"Geschätzte Kosten {p.estimated_cost_usd:.2f} USD "
+            f"über der Obergrenze {cost_cap_usd:.2f} USD"
         )
     order = Order(
         name=name.strip() or f"Auftrag {utcnow():%Y-%m-%d %H:%M}",
@@ -233,7 +234,7 @@ def spent(db: Session, order_id: int | None = None) -> float:
     query = select(func.coalesce(func.sum(Run.cost_usd), 0.0))
     if order_id is not None:
         query = query.where(Run.order_id == order_id)
-    return float(db.exec(query).one())
+    return float(db.exec(query).one() or 0.0)
 
 
 def set_status(
@@ -318,8 +319,8 @@ def progress(db: Session, order: Order) -> Progress:
     by_status: Counter[str] = Counter()
     by_model: dict[str, dict[str, int]] = defaultdict(dict)
     for model_key, status, n in rows:
-        by_status[status.value] += n
-        by_model[model_key][status.value] = n
+        by_status[str(status)] += n
+        by_model[model_key][str(status)] = n
     finished = sum(n for s, n in by_status.items() if s not in ("queued", "running"))
     eta = None
     if finished and order.status is OrderStatus.RUNNING:

@@ -1,0 +1,1 @@
+{% set s = o.status.value %}<span class="status{% if s == 'done' %} ok{% elif s == 'cancelled' %} bad{% elif s == 'paused' %} warn{% endif %}">{{ order_status_labels[s] }}</span>

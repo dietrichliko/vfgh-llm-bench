@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Lauf {{ run.id }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/orders/{{ run.order_id }}">← Auftrag {{ run.order_id }}</a></p>
+<h1>Lauf {{ run.id }}: {{ case.case_number if case else run.case_id }} · <span class="mono">{{ run.model_key }}</span></h1>
+{% set r = run %}
+<p class="lead">Status: {% include "_job_status.html" %}{% if run.error %} · {{ run.error }}{% endif %}</p>
+
+<div class="check">
+  <dl>
+    <dt>Fall</dt><dd>{% if case %}<a href="/cases/{{ case.id }}">{{ case.case_number }}</a> vom {{ case.decision_date.strftime("%d.%m.%Y") }}{% else %}{{ run.case_id }}{% endif %}</dd>
+    <dt>Bedingung</dt><dd>{{ run.condition }}: {{ conditions[run.condition] }}</dd>
+    <dt>Formulierung</dt><dd>{% if prompt %}<a href="/prompts/{{ prompt.key }}?version={{ prompt.version }}" class="mono">{{ prompt.key }} v{{ prompt.version }}</a>{% else %}{{ run.phrasing }}{% endif %}</dd>
+    <dt>Wiederholung</dt><dd>{{ run.repetition }}</dd>
+    <dt>Modell</dt><dd><span class="mono">{{ run.model_id }}</span> über {{ run.provider_key }}
+      {% if run.model_reported %} · gemeldet: <span class="mono">{{ run.model_reported }}</span>{% endif %}
+      {% if run.provider_reported %} · Anbieter: {{ run.provider_reported }}{% endif %}
+      {% if run.model_mismatch %} <span class="status bad">anderes Modell gemeldet</span>{% endif %}</dd>
+    <dt>Konfiguration</dt><dd class="mono">{{ run.config_hash[:12] }}{% if run.bridge_version %} · Bridge {{ run.bridge_version }}{% endif %}</dd>
+    <dt>Gestartet</dt><dd>{{ run.started_at.strftime("%d.%m.%Y %H:%M:%S") }} · {{ (run.duration_ms / 1000) | round(1) }} s</dd>
+    <dt>Tokens</dt><dd>{{ run.usage.get("input_tokens", "–") }} ein, {{ run.usage.get("output_tokens", "–") }} aus</dd>
+    <dt>Kosten</dt><dd>{% if run.cost_usd is not none %}{{ "%.4f" | format(run.cost_usd) }} USD (nach Preisliste){% else %}–{% endif %}
+      {% if run.cost_reported_usd is not none %} · {{ "%.4f" | format(run.cost_reported_usd) }} USD laut Anbieter{% endif %}</dd>
+    {% if attempts | length > 1 %}
+    <dt>Versuche</dt><dd>{% for a in attempts %}{% if a.id == run.id %}<strong>{{ a.id }}</strong>{% else %}<a href="/runs/{{ a.id }}">{{ a.id }}</a>{% endif %} ({{ job_status_labels[a.status] }}){% if not loop.last %}, {% endif %}{% endfor %}</dd>
+    {% endif %}
+  </dl>
+</div>
+
+<h2>Ergebnis</h2>
+{% if run.output %}
+<p>Ergebnis des Modells: <strong>{{ outcome_labels[run.case_outcome] if run.case_outcome else "nicht zuordenbar" }}</strong>
+{% if case and case.outcome %} · Entscheidung des VfGH: <strong>{{ outcome_labels[case.outcome.case_outcome] }}</strong>{% endif %}</p>
+<table>
+  <thead><tr><th>Bestimmung</th><th>Antrag</th><th>Ergebnis</th></tr></thead>
+  <tbody>
+  {% for s in run.output.spruch %}
+    <tr><td>{{ s.bestimmung }}</td><td>{{ s.antrag }}</td><td>{{ s.ergebnis }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<h3>Tragende Gründe</h3>
+<ol>{% for g in run.output.tragende_gruende %}<li>{{ g }}</li>{% endfor %}</ol>
+<h3>Begründung</h3>
+<pre class="doc">{{ run.output.begruendung }}</pre>
+<h3>Zitate</h3>
+{% if run.output.zitate %}
+<ul>{% for z in run.output.zitate %}<li>{{ z.text }} <span class="lead">({{ z.art }})</span></li>{% endfor %}</ul>
+{% else %}<p>keine</p>{% endif %}
+{% elif run.response_text %}
+<p>Die Antwort passt nicht zum verlangten Format.</p>
+{% else %}
+<p>Keine Antwort erhalten.</p>
+{% endif %}
+
+{% if run.response_text %}
+<details><summary>Antwort im Wortlaut</summary><pre>{{ run.response_text }}</pre></details>
+{% endif %}
+
+<h2>Gesendete Nachrichten</h2>
+{% for m in run.messages %}
+<details{% if m.role == "system" %} open{% endif %}><summary>{{ "System" if m.role == "system" else "Fall (Benutzernachricht)" }} · {{ m.content | length }} Zeichen</summary>
+  <pre>{{ m.content }}</pre>
+</details>
+{% endfor %}
+
+<h2>HTTP-Austausch</h2>
+<p class="lead">Wie gesendet und empfangen, ohne Schlüssel. Wiederholungen bei vorübergehenden Fehlern stehen einzeln da.</p>
+{% for ex in run.exchanges %}
+<details><summary>Versuch {{ ex.attempt }} · {{ ex.method }} {{ ex.url }} · {{ ex.status or ex.error }} · {{ ex.duration_ms }} ms</summary>
+  <h3>Anfrage</h3>
+  <pre>{{ ex.request_headers | tojson(indent=2) }}</pre>
+  <pre>{{ ex.request_body }}</pre>
+  <h3>Antwort</h3>
+  <pre>{{ ex.response_headers | tojson(indent=2) }}</pre>
+  <pre>{{ ex.response_body or ex.error }}</pre>
+</details>
+{% else %}
+<p>Keine Anfrage aufgezeichnet.</p>
+{% endfor %}
+{% endblock %}

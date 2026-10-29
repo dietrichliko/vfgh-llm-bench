@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ key }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/prompts">← Prompts</a></p>
+<h1>{{ label }} <span class="mono">({{ key }})</span></h1>
+
+{% if user.role.value == "admin" %}
+<section class="panel">
+  <h2 style="margin-top: 0">Neue Version (aktuell: Version {{ latest.version }})</h2>
+  {% if problems %}
+  <div class="error"><ul style="margin: 0">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>
+  {% endif %}
+  <form method="post" action="/prompts/{{ key }}">
+    <p><textarea name="text" rows="20" style="width: 100%" required>{{ text }}</textarea></p>
+    <p><label>Notiz zur Änderung<br><input type="text" name="note" value="{{ note or '' }}" style="width: 100%"></label></p>
+    <p><button type="submit">Als neue Version speichern</button>
+    <span class="lead">Unveränderter Text legt keine neue Version an. Laufende Aufträge behalten ihre Version.</span></p>
+  </form>
+</section>
+{% endif %}
+
+<h2>Version {{ shown.version }}{% if shown.version == latest.version %} (aktuell){% endif %}</h2>
+<p class="lead">{{ shown.created_at.strftime("%d.%m.%Y %H:%M") }} ·
+  {% if shown.source == "file" %}Vorlage aus dem Code{% else %}im Browser geändert{% endif %}
+  {% if shown.note %} · {{ shown.note }}{% endif %} · <span class="mono">sha256 {{ shown.sha256[:12] }}</span></p>
+<pre>{{ shown.text }}</pre>
+
+<h2>Verlauf</h2>
+<table>
+  <thead><tr><th>Version</th><th>Datum</th><th>Herkunft</th><th>Notiz</th></tr></thead>
+  <tbody>
+  {% for v in versions %}
+    <tr>
+      <td>{% if v.version == shown.version %}<strong>{{ v.version }}</strong>{% else %}<a href="/prompts/{{ key }}?version={{ v.version }}">{{ v.version }}</a>{% endif %}</td>
+      <td>{{ v.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+      <td>{% if v.source == "file" %}Vorlage{% else %}Browser{% endif %}</td>
+      <td>{{ v.note or "" }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

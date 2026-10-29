@@ -18,6 +18,7 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_ai import NativeOutput, PromptedOutput
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIChatModelSettings
+from pydantic_ai.profiles import ModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from bench.llm.schemas import PROMPTED_OUTPUT_TEMPLATE
@@ -193,15 +194,15 @@ def build_model(
     )
     provider = OpenAIProvider(openai_client=client)
     # what the endpoint supports comes from our config, not from guesses by model name
-    profile = {
-        **provider.model_profile(rm.config.model),
+    profile: ModelProfile = {
+        **(provider.model_profile(rm.config.model) or {}),
         "supports_json_schema_output": rm.provider.output_mode is OutputMode.NATIVE,
         "supports_json_object_output": rm.provider.json_object,
     }
     return OpenAIChatModel(
         rm.config.model,
         provider=provider,
-        profile=profile,  # type: ignore[arg-type]
+        profile=profile,
         settings=model_settings(rm),
     )
 

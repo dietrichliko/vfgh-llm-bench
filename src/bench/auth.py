@@ -121,6 +121,7 @@ def require_roles(*roles: UserRole) -> Callable[..., User]:
 
 
 AdminDep = Annotated[User, Depends(require_roles(UserRole.ADMIN))]
+StaffDep = Annotated[User, Depends(require_roles(UserRole.ADMIN, UserRole.EXPERT))]
 
 
 @router.get("/login")

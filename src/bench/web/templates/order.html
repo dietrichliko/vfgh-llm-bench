@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ order.name }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/orders">← Aufträge</a></p>
+<h1>Auftrag {{ order.id }}: {{ order.name }}</h1>
+
+<div id="progress">{% include "_order_progress.html" %}</div>
+
+<h2>Einstellungen</h2>
+<div class="check">
+  <dl>
+    <dt>Erstellt</dt><dd>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}{% if order.finished_at %}, beendet {{ order.finished_at.strftime("%d.%m.%Y %H:%M") }}{% endif %}</dd>
+    <dt>Bedingungen</dt><dd>{% for c in order.conditions %}{{ c }}: {{ conditions[c] }}{% if not loop.last %}; {% endif %}{% endfor %}</dd>
+    <dt>Modelle</dt><dd>{% for k in order.model_keys %}<span class="mono">{{ k }}</span> ({{ order.snapshot.models[k].model_config.model }}){% if not loop.last %}, {% endif %}{% endfor %}</dd>
+    <dt>Fälle</dt><dd>{{ order.case_ids | length }}</dd>
+    <dt>Formulierungen</dt><dd>{{ order.phrasings }}</dd>
+    <dt>Wiederholungen</dt><dd>{{ order.repetitions }}</dd>
+    <dt>Abstand zum Wissensstand</dt><dd>{{ order.cutoff_months }} Monate</dd>
+    <dt>Kostengrenze</dt><dd>{% if order.cost_cap_usd is not none %}{{ "%.2f" | format(order.cost_cap_usd) }} USD{% else %}keine{% endif %}</dd>
+    <dt>Prompts</dt><dd>{% for p in prompt_versions %}<a href="/prompts/{{ p.key }}?version={{ p.version }}" class="mono">{{ p.key }} v{{ p.version }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd>
+  </dl>
+</div>
+{% if order.excluded %}
+<details><summary>Fälle vor dem Wissensstand eines Modells (ausgelassen)</summary>
+  <ul>
+  {% for k, ids in order.excluded.items() %}
+    <li><span class="mono">{{ k }}</span>: {% for i in ids %}{{ cases[i].case_number if i in cases else i }}{% if not loop.last %}, {% endif %}{% endfor %}</li>
+  {% endfor %}
+  </ul>
+</details>
+{% endif %}
+
+<h2>Letzte Aufrufe</h2>
+{% if runs %}
+<p class="lead">Die {{ recent_runs }} neuesten; die Seite lädt sie nicht automatisch nach.</p>
+<table>
+  <thead><tr><th>Lauf</th><th>Fall</th><th>Modell</th><th>Bed. / Form. / Wdh.</th><th>Status</th><th>Ergebnis</th><th>USD</th><th>Dauer</th></tr></thead>
+  <tbody>
+  {% for r in runs %}
+    <tr>
+      <td><a href="/runs/{{ r.id }}">{{ r.id }}</a></td>
+      <td>{{ cases[r.case_id].case_number if r.case_id in cases else r.case_id }}</td>
+      <td class="mono">{{ r.model_key }}</td>
+      <td>{{ r.condition }} / {{ r.phrasing }} / {{ r.repetition }}</td>
+      <td>{% include "_job_status.html" %}</td>
+      <td>{{ outcome_labels[r.case_outcome] if r.case_outcome else "–" }}</td>
+      <td>{{ "%.4f" | format(r.cost_usd) if r.cost_usd is not none else "–" }}</td>
+      <td>{{ (r.duration_ms / 1000) | round(1) }} s</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Noch keine Aufrufe abgeschlossen.</p>
+{% endif %}
+{% endblock %}

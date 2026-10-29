@@ -17,9 +17,12 @@ providers:
     output_mode: native        # JSON schema via response_format
     tool_mode: native          # the only mode allowed in condition C
     max_concurrency: 8
+    requests_per_minute: 60
+    timeout_seconds: 600
     extra_body:
       provider:
         allow_fallbacks: false # no silent switch to another provider
+      usage: {include: true}   # OpenRouter reports the billed cost per call
 
   uai:                         # University of Vienna u:ai, via academic-ai-bridge
     base_url: http://bridge-univie:8000/v1
@@ -27,6 +30,7 @@ providers:
     headers:
       X-Bridge-Raw: "1"        # bridge returns the unchanged upstream response
     output_mode: prompted      # no JSON schema support: JSON is requested in the prompt
+    json_object: false         # true: also send response_format {"type": "json_object"}
     tool_mode: emulated        # never offered for condition C
     max_concurrency: 4
 
@@ -41,6 +45,7 @@ models:
     cutoff: 2026-01-01
     roles: [tested]
     price: {in: 0.07, out: 1.4}
+    expected_output_tokens: 8000 # answer incl. thinking, only for the cost estimate (default 6000)
     # extra_body:
     #   provider: {order: [z-ai], allow_fallbacks: false, quantizations: [bf16]}
 

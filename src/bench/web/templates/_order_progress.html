@@ -1,0 +1,51 @@
+{% set o = order %}{% set p = progress %}
+<section class="panel"{% if order.status.value == "running" %} hx-get="/orders/{{ order.id }}/progress" hx-trigger="every 3s" hx-target="#progress" hx-swap="innerHTML"{% endif %}>
+  <p style="margin-top: 0">Status: {% include "_order_status.html" %}
+    {% if order.status_reason %} · {{ order.status_reason }}{% endif %}</p>
+
+  {% set finished = p.total - p.by_status.get("queued", 0) - p.by_status.get("running", 0) %}
+  <p><progress max="{{ p.total or 1 }}" value="{{ finished }}" style="width: 100%"></progress><br>
+    {{ finished }} von {{ p.total }} Aufrufen abgeschlossen
+    {% if p.by_status.get("running") %}, {{ p.by_status["running"] }} laufen gerade{% endif %}
+    {% if p.eta_seconds is not none %} · noch etwa {{ (p.eta_seconds / 60) | round(0, "ceil") | int }} Minuten{% endif %}</p>
+  <p>Kosten bisher: <strong>{{ "%.2f" | format(p.spent_usd) }} USD</strong> (geschätzt {{ "%.2f" | format(order.estimated_cost_usd) }} USD)</p>
+
+  <table>
+    <thead><tr><th>Modell</th>{% for s in job_status_labels %}<th>{{ job_status_labels[s] }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for model, counts in p.by_model.items() | sort %}
+      <tr><td class="mono">{{ model }}</td>{% for s in job_status_labels %}<td>{{ counts.get(s, 0) or "" }}</td>{% endfor %}</tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  {% if p.recent_errors %}
+  <h3>Probleme</h3>
+  <ul class="check">
+  {% for j in p.recent_errors %}
+    {% set r = j %}
+    <li>{% include "_job_status.html" %} <span class="mono">{{ j.model_key }}</span>, Aufruf {{ j.seq }}:
+      {{ j.error or "" }}{% if j.last_run_id %} · <a href="/runs/{{ j.last_run_id }}">Lauf ansehen</a>{% endif %}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p class="no-print" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0">
+    {% if order.status.value == "running" %}
+    <form method="post" action="/orders/{{ order.id }}/pause"><button type="submit" class="secondary">Anhalten</button></form>
+    {% elif order.status.value == "paused" %}
+    <form method="post" action="/orders/{{ order.id }}/resume"><button type="submit">Fortsetzen</button></form>
+    {% endif %}
+    {% set retryable = p.by_status.get("failed", 0) + p.by_status.get("not_evaluable", 0) + p.by_status.get("unknown", 0) %}
+    {% if retryable and order.status.value != "cancelled" %}
+    <form method="post" action="/orders/{{ order.id }}/retry"
+      onsubmit="return confirm('{{ retryable }} Aufrufe erneut senden? Das kann zusätzliche Kosten verursachen.')">
+      <button type="submit" class="secondary">{{ retryable }} Aufrufe wiederholen</button></form>
+    {% endif %}
+    {% if order.status.value in ("running", "paused") %}
+    <form method="post" action="/orders/{{ order.id }}/cancel"
+      onsubmit="return confirm('Auftrag abbrechen? Wartende Aufrufe werden nicht mehr gesendet.')">
+      <button type="submit" class="secondary">Abbrechen</button></form>
+    {% endif %}
+  </p>
+</section>

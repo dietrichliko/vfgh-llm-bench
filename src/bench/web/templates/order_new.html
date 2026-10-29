@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Neuer Auftrag · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/orders">← Aufträge</a></p>
+<h1>Neuer Auftrag</h1>
+<p class="lead">Die Vorschau rechts zeigt bei jeder Änderung, wie viele Aufrufe entstehen, welche Fälle
+wegen des Wissensstands eines Modells wegfallen und was der Auftrag ungefähr kostet.</p>
+
+{% if config_error %}
+<div class="error"><p><strong>Die Modellkonfiguration ist ungültig oder fehlt.</strong></p><pre>{{ config_error }}</pre></div>
+{% endif %}
+
+<form id="order-form" hx-post="/orders/preview" hx-trigger="load, change, input delay:500ms" hx-target="#preview">
+<div class="split">
+  <div>
+    <p><label>Name<br><input type="text" name="name" placeholder="z.B. Pilot Bedingung A" style="width: 100%"></label></p>
+
+    <fieldset>
+      <legend>Modelle (Prüflinge)</legend>
+      {% for m in models %}
+      <label class="choice"><input type="checkbox" name="model_keys" value="{{ m.key }}"{% if not m.available %} disabled{% endif %}>
+        {{ m.name }} <span class="lead">· Wissensstand {{ m.config.cutoff }}{% if not m.available %} · Schlüssel fehlt{% endif %}</span></label>
+      {% else %}
+      <p>Keine Prüflinge konfiguriert.</p>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Bedingungen</legend>
+      {% for c, label in conditions.items() %}
+      <label class="choice"><input type="checkbox" name="conditions" value="{{ c }}"
+        {% if c in available_conditions %}{% if loop.first %} checked{% endif %}{% else %} disabled{% endif %}>
+        {{ c }}: {{ label }}</label>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Umfang</legend>
+      <p style="display: flex; gap: 1rem; flex-wrap: wrap">
+        <label>Formulierungen<br><select name="phrasings">{% for n in range(1, phrasings + 1) %}<option{% if n == phrasings %} selected{% endif %}>{{ n }}</option>{% endfor %}</select></label>
+        <label>Wiederholungen<br><input type="number" name="repetitions" value="1" min="1" max="10"></label>
+        <label>Abstand zum Wissensstand (Monate)<br><input type="number" name="cutoff_months" value="3" min="0" max="24"></label>
+        <label>Kostengrenze (USD, optional)<br><input type="text" name="cost_cap_usd" inputmode="decimal"></label>
+      </p>
+    </fieldset>
+
+    <fieldset x-data>
+      <legend>Fälle ({{ cases | length }} freigegeben)</legend>
+      {% if cases %}
+      <p><button type="button" class="secondary" @click="$root.querySelectorAll('input[name=case_ids]').forEach(e => e.checked = true); htmx.trigger('#order-form', 'change')">alle</button>
+         <button type="button" class="secondary" @click="$root.querySelectorAll('input[name=case_ids]').forEach(e => e.checked = false); htmx.trigger('#order-form', 'change')">keine</button></p>
+      <div class="case-choices">
+      {% for c in cases %}
+      <label class="choice"><input type="checkbox" name="case_ids" value="{{ c.id }}" checked>
+        {{ c.decision_date.strftime("%d.%m.%Y") }} · {{ c.case_number }}</label>
+      {% endfor %}
+      </div>
+      {% else %}
+      <p>Noch keine freigegebenen Fälle. <a href="/cases">Fälle prüfen und freigeben</a></p>
+      {% endif %}
+    </fieldset>
+  </div>
+  <div>
+    <section class="panel" style="position: sticky; top: 1rem">
+      <h2 style="margin-top: 0">Vorschau</h2>
+      <div id="preview"><p class="lead">wird berechnet …</p></div>
+    </section>
+  </div>
+</div>
+</form>
+{% endblock %}

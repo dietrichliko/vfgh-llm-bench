@@ -162,13 +162,17 @@ class Worker:
                     continue
                 if not self._capacity(order, job.provider_key):
                     continue
-                if reason := self._over_cap(db, order, job):
+                try:
+                    reason = self._over_cap(db, order, job)
+                except RuntimeError as exc:  # e.g. a snapshot that fails its hash check
+                    reason = f"Auftrag fehlerhaft: {exc}"
+                if reason:
                     order.status, order.status_reason = OrderStatus.PAUSED, reason
                     db.commit()
                     log.warning("order %s paused: %s", order.id, reason)
                     continue
                 now = utcnow()
-                claimed = db.exec(  # type: ignore[call-overload]
+                claimed = db.exec(
                     update(Job)
                     .where(col(Job.id) == job.id, col(Job.status) == JobStatus.QUEUED)
                     .values(

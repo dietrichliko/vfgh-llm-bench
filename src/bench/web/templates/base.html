@@ -15,8 +15,12 @@
     <nav aria-label="Hauptnavigation">
       {% if user.role.value == "admin" %}
       <a href="/cases">Fälle</a>
+      <a href="/prompts">Prompts</a>
+      <a href="/orders">Aufträge</a>
       <a href="/admin/providers">Anbieter &amp; Modelle</a>
       <a href="/admin/users">Benutzer</a>
+      {% elif user.role.value == "expert" %}
+      <a href="/prompts">Prompts</a>
       {% endif %}
     </nav>
     {% endif %}

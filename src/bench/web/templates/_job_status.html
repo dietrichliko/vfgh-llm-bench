@@ -1,0 +1,1 @@
+{% set s = r.status.value if r.status.value is defined else r.status %}<span class="status{% if s == 'done' %} ok{% elif s in ('failed', 'unknown') %} bad{% elif s == 'not_evaluable' %} warn{% endif %}">{{ job_status_labels[s] }}</span>

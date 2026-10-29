@@ -11,9 +11,12 @@ answers are compared with the actual decisions.
 | [docs/publication.md](docs/publication.md) | Study protocol in git, Zenodo, OSF |
 | [docs/prior-work.md](docs/prior-work.md) | The predecessor project `vfgh-llm-begruendung` |
 
-**Status:** stage 2 (cases): RIS import, input/reference split, outcome per provision,
-review and release. Stage 1: login, providers and models with test calls, users, container
-setup. Runs, evaluation and dashboard follow in stages 3–6
+**Status:** stage 3 (runs, condition A): versioned prompts, orders with preview, cost
+estimate and config snapshot, a background worker with progress, pause, resume, cancel,
+retry and cost caps, and a page per model call. Stage 2: RIS import, input/reference split,
+outcome per provision, review and release. Stage 1: login, providers and models with test
+calls, users, container setup. Conditions B and C, evaluation and dashboard follow in
+stages 4–6
 (see the roadmap in `docs/architecture.md`).
 
 ## Configuration
@@ -32,7 +35,9 @@ setup. Runs, evaluation and dashboard follow in stages 3–6
 - **Settings** (environment, prefix `BENCH_`): `BENCH_DATA_DIR` (`/data`), `BENCH_CONFIG`
   (`/config/providers.yaml`), `BENCH_SECRETS_DIR` (`/run/secrets`), `BENCH_DATABASE_URL`
   (default SQLite in the data dir), `BENCH_PUBLIC_URL`, `BENCH_OIDC_ISSUER`,
-  `BENCH_OIDC_CLIENT_ID`, `BENCH_ADMIN_EMAILS` (comma-separated), `BENCH_DEV_LOGIN`.
+  `BENCH_OIDC_CLIENT_ID`, `BENCH_ADMIN_EMAILS` (comma-separated), `BENCH_DEV_LOGIN`,
+  `BENCH_COST_CAP_TOTAL_USD` (spending limit over all orders), `BENCH_WORKER_CONCURRENCY`
+  (LLM calls in flight, default 8).
 
 ## Run with containers
 
@@ -57,6 +62,7 @@ fly.io (temporary): see `deploy/fly/web.toml`.
 uv sync
 BENCH_DATA_DIR=dev-data BENCH_CONFIG=config/providers.yaml BENCH_SECRETS_DIR=dev-secrets \
   BENCH_DEV_LOGIN=1 BENCH_ADMIN_EMAILS=you@example.org uv run bench serve
+uv run bench worker                     # same env as serve; runs the orders' LLM calls
 uv run bench check-providers            # test call to every model with a key
 uv run bench import-cases --from 2025-07-01   # same as the import on the cases page
 uv run pytest && uv run ruff check && uv run mypy src

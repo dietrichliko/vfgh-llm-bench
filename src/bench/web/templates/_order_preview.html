@@ -1,0 +1,36 @@
+{% if problems %}
+<div class="error"><ul style="margin: 0">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>
+{% endif %}
+<div class="check">
+  <dl>
+    <dt>Fälle</dt><dd>{{ case_count }}</dd>
+    <dt>Aufrufe</dt><dd><strong>{{ plan.jobs | length }}</strong></dd>
+    <dt>Kosten (geschätzt)</dt><dd><strong>{{ "%.2f" | format(plan.estimated_cost_usd) }} USD</strong></dd>
+  </dl>
+</div>
+{% if models %}
+<table>
+  <thead><tr><th>Modell</th><th>Aufrufe</th><th>USD</th><th>Ausgelassen</th></tr></thead>
+  <tbody>
+  {% for key, m in models.items() %}
+  {% set excluded = plan.excluded.get(key, []) %}
+    <tr>
+      <td>{{ m.name }}{% if not m.config.price %}<br><span class="status warn">kein Preis</span>{% endif %}</td>
+      <td>{{ plan.jobs_by_model.get(key, 0) }}</td>
+      <td>{{ "%.2f" | format(plan.cost_by_model.get(key, 0)) }}</td>
+      <td>
+        {% if excluded %}
+        <details><summary>{{ excluded | length }} Fälle vor dem Wissensstand</summary>
+          {% for i in excluded %}{{ case_numbers.get(i, i) }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </details>
+        {% else %}–{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+<p class="lead">Die Schätzung rechnet mit 3,5 Zeichen je Token für die Eingabe und der in der
+Konfiguration angegebenen Länge der Antwort. Die tatsächlichen Kosten stehen nach jedem Aufruf fest.</p>
+<p><button type="button" hx-post="/orders" hx-target="#preview"{% if problems or not plan.jobs %} disabled{% endif %}>
+  Auftrag erstellen und starten</button> <span class="spinner">wird angelegt …</span></p>

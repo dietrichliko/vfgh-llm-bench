@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Aufträge · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Aufträge</h1>
+<p class="lead">Ein Auftrag schickt freigegebene Fälle an die gewählten Modelle. Der Worker
+arbeitet die Aufrufe im Hintergrund ab; der Fortschritt steht auf der Seite des Auftrags.</p>
+<p><a class="button" href="/orders/new">Neuer Auftrag</a></p>
+
+<p>Bisher ausgegeben: <strong>{{ "%.2f" | format(total_spent) }} USD</strong>
+{% if cost_cap_total %} von höchstens {{ "%.2f" | format(cost_cap_total) }} USD{% endif %}</p>
+
+{% if orders %}
+<table>
+  <thead><tr><th>Nr.</th><th>Name</th><th>Erstellt</th><th>Status</th><th>Aufrufe</th><th>Kosten (USD)</th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+    <tr>
+      <td>{{ o.id }}</td>
+      <td><a href="/orders/{{ o.id }}">{{ o.name }}</a></td>
+      <td>{{ o.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+      <td>{% include "_order_status.html" %}</td>
+      <td>{{ finished.get(o.id, 0) }} von {{ o.job_count }}</td>
+      <td>{{ "%.2f" | format(spent.get(o.id, 0)) }} (geschätzt {{ "%.2f" | format(o.estimated_cost_usd) }})</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Noch keine Aufträge.</p>
+{% endif %}
+{% endblock %}

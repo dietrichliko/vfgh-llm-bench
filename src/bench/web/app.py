@@ -11,15 +11,17 @@ from fastapi.responses import RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
+from sqlmodel import Session
 from starlette.middleware.sessions import SessionMiddleware
 
-from bench import __version__, auth
+from bench import __version__, auth, prompts
 from bench.db import make_engine, migrate
 from bench.llm.http import make_http_client
 from bench.providers import StudyConfig, load_config
 from bench.ris.client import RisClient
 from bench.settings import SESSION_SECRET, Settings, get_settings
-from bench.web import cases, pages
+from bench.web import cases, orders, pages
+from bench.web import prompts as prompt_pages
 
 log = logging.getLogger(__name__)
 HERE = Path(__file__).parent
@@ -54,6 +56,10 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         migrate(engine)
+        with Session(engine) as db:
+            if added := prompts.seed(db):
+                log.info("prompts seeded: %s", ", ".join(added))
+            db.commit()
         yield
         for task in list(app.state.tasks):
             task.cancel()
@@ -104,4 +110,6 @@ def create_app(
     app.include_router(auth.router)
     app.include_router(pages.router)
     app.include_router(cases.router)
+    app.include_router(prompt_pages.router)
+    app.include_router(orders.router)
     return app

@@ -72,7 +72,7 @@ button, .button {
 }
 button.secondary { background: transparent; color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-input[type="email"], input[type="text"], select {
+input[type="email"], input[type="text"], input[type="number"], select, textarea {
   padding: 0.35rem 0.5rem;
   border: 1px solid var(--line);
   border-radius: 4px;
@@ -123,3 +123,12 @@ nav.tabs { display: flex; gap: 1.25rem; margin: 1.5rem 0 0.75rem; font-family: v
 pre.doc { font-family: var(--serif); font-size: 0.9rem; line-height: 1.5; max-height: 70vh; background: var(--panel); border: 1px solid var(--line); padding: 0.75rem 1rem; }
 @media (max-width: 60rem) { .split { grid-template-columns: 1fr; } }
 @media print { pre.doc { max-height: none; overflow: visible; } }
+
+/* Prompts and orders */
+textarea { font-family: var(--mono); font-size: 0.85rem; line-height: 1.45; }
+input[type="number"] { width: 6rem; }
+fieldset { border: 1px solid var(--line); border-radius: 6px; margin: 0 0 1rem; padding: 0.5rem 1rem 0.75rem; background: var(--panel); }
+legend { font-family: var(--sans); font-weight: 600; font-size: 0.9rem; padding: 0 0.3rem; }
+label.choice { display: block; font-size: 0.92rem; }
+.case-choices { max-height: 24rem; overflow: auto; }
+a.button { display: inline-block; text-decoration: none; font-family: var(--sans); }

@@ -31,7 +31,7 @@ services:
 
   worker:
     image: localhost/bench:latest
-    command: ["bench", "worker"]  # placeholder until stage 3
+    command: ["bench", "worker"]  # runs the queued LLM calls of all orders
     volumes:
       - bench-data:/data
       - ../config/providers.yaml:/config/providers.yaml:ro,z
