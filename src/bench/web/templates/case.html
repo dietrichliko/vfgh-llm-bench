@@ -67,10 +67,13 @@ Version {{ parse.parser_version }} vom {{ parse.created_at.strftime("%d.%m.%Y %H
 ({{ parse_count }} Fassung{% if parse_count != 1 %}en{% endif %}).</p>
 {% endif %}
 
-<h2>Normen laut RIS</h2>
-<p class="lead">Aus den RIS-Metadaten. Vorschlag für Bedingung B (die Normtexte zum Stichtag werden in
-einem späteren Schritt aus dem RIS geholt).</p>
-<ul>{% for n in case.norms %}<li>{{ n }}</li>{% endfor %}</ul>
+<h2>Normen für Bedingung B</h2>
+<p class="lead">Vorschläge aus den RIS-Metadaten des Falls, jeweils in der Fassung zum Stichtag.
+Verfahrensrecht (VfGG, Art 139/140 B-VG) ist vorgeschlagen, aber nicht angekreuzt; Unionsrecht,
+Verordnungen und ganze Gesetze werden nicht automatisch geholt und können unten ergänzt werden.</p>
+<details><summary>{{ case.norms | length }} Einträge in den RIS-Metadaten</summary>
+<ul>{% for n in case.norms %}<li>{{ n }}</li>{% endfor %}</ul></details>
+{% include "_norm_set.html" %}
 
 <h2>Dokumente</h2>
 <ul>

@@ -133,6 +133,7 @@ class Run(SQLModel, table=True):
         default_factory=list, sa_column=Column(JSON, nullable=False, server_default="[]")
     )
     tools_sha256: str | None = Field(default=None, max_length=64)  # tool definitions offered
+    norm_set_id: int | None = Field(default=None, foreign_key="norm_sets.id")  # condition B
     output: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     case_outcome: str | None = Field(default=None, max_length=32)
     usage: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))

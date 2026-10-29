@@ -30,6 +30,21 @@ freigegebene Fälle gehen später an Modelle.</p>
   {% endfor %}
 </nav>
 
+{% if filter == "released" %}
+<section class="panel no-print" style="margin-bottom: 1rem">
+  {% if norm_drafts.values() | selectattr("status.value", "equalto", "fetching") | list %}
+  <p style="margin: 0"><span class="status warn">Normen werden aus dem RIS geholt</span> ({{ norm_drafts.values() | selectattr("status.value", "equalto", "fetching") | list | length }} Fälle offen). <a href="/cases?filter=released">neu laden</a></p>
+  {% elif norms_missing %}
+  <form method="post" action="/cases/norms/propose-all" style="margin: 0">
+    <button type="submit" class="secondary">Normen für {{ norms_missing }} Fälle vorschlagen</button>
+    <span class="lead">alle freigegebenen Fälle mit Stichtag, die noch keine Normen haben; danach je Fall prüfen und freigeben</span>
+  </form>
+  {% else %}
+  <p class="lead" style="margin: 0">Alle freigegebenen Fälle mit Stichtag haben Normen oder einen Entwurf.</p>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if cases %}
 <table>
   <thead>

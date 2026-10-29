@@ -97,6 +97,8 @@ from bench.models.cases import (  # noqa: E402
     CaseStatus,
     DocumentKind,
     ImportRun,
+    NormSet,
+    NormSetStatus,
     SourceDocument,
 )
 from bench.models.runs import (  # noqa: E402
@@ -119,6 +121,8 @@ __all__ = [
     "ImportRun",
     "Job",
     "JobStatus",
+    "NormSet",
+    "NormSetStatus",
     "Order",
     "OrderStatus",
     "PromptVersion",

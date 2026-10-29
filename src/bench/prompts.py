@@ -4,6 +4,7 @@ A prompt is ``<task>.p<N>`` (N = phrasing). Every edit creates a new version; or
 snapshot the version ids they use, and runs store the full text sent.
 """
 
+import re
 from pathlib import Path
 
 from sqlmodel import Session, col, select
@@ -13,7 +14,12 @@ from bench.models import PromptVersion, audit
 
 PROMPT_DIR = Path(__file__).parent / "prompts"
 USER_MARKER = "---user---"
-TASKS = {"decide": "Entscheidung (Bedingung A)"}
+TASKS = {
+    "decide": "Entscheidung (Bedingung A)",
+    "decide_b": "Entscheidung mit vorgegebenen Normen (Bedingung B)",
+    "decide_c": "Entscheidung mit RIS-Recherche (Bedingung C)",
+}
+NORMS_TASKS = frozenset({"decide_b"})  # prompts that must contain {normen}
 PHRASINGS = 3
 
 
@@ -56,18 +62,23 @@ def history(db: Session, k: str) -> list[PromptVersion]:
     )
 
 
-def validate(text: str) -> list[str]:
+def validate(text: str, k: str = "") -> list[str]:
     problems = []
     if USER_MARKER not in text:
         problems.append(f"Trennzeile „{USER_MARKER}“ fehlt")
     if "{input}" not in text:
         problems.append("Platzhalter {input} fehlt")
+    needs_norms = k.partition(".")[0] in NORMS_TASKS
+    if needs_norms and "{normen}" not in text:
+        problems.append("Platzhalter {normen} fehlt")
+    if not needs_norms and "{normen}" in text:
+        problems.append("Platzhalter {normen} gibt es nur in Bedingung B")
     return problems
 
 
 def save(db: Session, k: str, text: str, user_id: int | None, note: str | None) -> PromptVersion:
     text = text.replace("\r\n", "\n").strip() + "\n"
-    if problems := validate(text):
+    if problems := validate(text, k):
         raise ValueError("; ".join(problems))
     current = latest(db, k)
     if current is not None and current.text == text:
@@ -89,10 +100,13 @@ def save(db: Session, k: str, text: str, user_id: int | None, note: str | None) 
     return version
 
 
-def render(text: str, input_text: str) -> list[dict[str, str]]:
-    """System and user message; only ``{input}`` is replaced (no other formatting)."""
+def render(text: str, input_text: str, norms: str | None = None) -> list[dict[str, str]]:
+    """System and user message; only ``{input}`` and ``{normen}`` are replaced (in one pass,
+    so text inside the case or the norms is never treated as a placeholder)."""
+    values = {"{input}": input_text.strip(), "{normen}": (norms or "").strip()}
     system, _, user = text.partition(USER_MARKER)
+    filled = re.sub(r"\{input\}|\{normen\}", lambda m: values[m.group(0)], user.strip())
     return [
         {"role": "system", "content": system.strip()},
-        {"role": "user", "content": user.strip().replace("{input}", input_text.strip())},
+        {"role": "user", "content": filled},
     ]

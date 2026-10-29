@@ -216,6 +216,9 @@ def test_seed_is_idempotent_and_the_database_wins(engine: sa.Engine) -> None:
             "decide.p1",
             "decide.p2",
             "decide.p3",
+            "decide_b.p1",
+            "decide_b.p2",
+            "decide_b.p3",
             "decide_c.p1",
             "decide_c.p2",
             "decide_c.p3",
@@ -300,7 +303,7 @@ def test_plan_problems(engine: sa.Engine, models: dict[str, ResolvedModel]) -> N
             db,
             [draft],
             [models["gamma"], models["judge"], models["beta"]],
-            ["A", "B", "C"],
+            ["A", "C", "D"],
             1,
             1,
             3,
@@ -309,7 +312,7 @@ def test_plan_problems(engine: sa.Engine, models: dict[str, ResolvedModel]) -> N
     assert "gamma: Schlüssel fehlt" in text
     assert "ist kein Prüfling" in text
     assert "nicht für Bedingung C" in text
-    assert "Bedingung B ist noch nicht verfügbar" in text
+    assert "Bedingung D ist noch nicht verfügbar" in text
     assert "Nur freigegebene Fälle" in text
 
 

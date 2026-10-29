@@ -12,7 +12,7 @@ from typing import Any
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import prompts
+from bench import normsets, prompts
 from bench.llm.task import TOOL_CALL_LIMIT
 from bench.models import (
     OPEN_JOB_STATES,
@@ -31,11 +31,11 @@ from bench.providers import ResolvedModel, Role, ToolMode
 
 CONDITIONS = {
     "A": "Modell allein",
-    "B": "mit vorgegebenen Normen (folgt)",
+    "B": "mit vorgegebenen Normen",
     "C": "mit eigener Recherche im RIS",
 }
-AVAILABLE_CONDITIONS = ("A", "C")  # B follows
-TASKS = {"A": "decide", "C": "decide_c"}  # prompt task per condition
+AVAILABLE_CONDITIONS = ("A", "B", "C")
+TASKS = {"A": "decide", "B": "decide_b", "C": "decide_c"}  # prompt task per condition
 NEEDS_REFERENCE_DATE = frozenset({"B", "C"})  # law as it stood on the case's Stichtag
 CHARS_PER_TOKEN = 3.5  # German legal text, rough estimate
 # condition C, for the estimate only: each round resends the context plus the tool results
@@ -78,6 +78,8 @@ class Plan:
     estimated_cost_usd: float
     cost_by_model: dict[str, float] = field(default_factory=dict)
     no_reference_date: list[int] = field(default_factory=list)  # left out of B and C
+    no_norms: list[int] = field(default_factory=list)  # with a Stichtag, but left out of B
+    norm_sets: dict[int, int] = field(default_factory=dict)  # case id → norm set id (B)
     jobs_by_model: dict[str, int] = field(default_factory=dict)
     problems: list[str] = field(default_factory=list)
 
@@ -112,6 +114,12 @@ def plan(
         if NEEDS_REFERENCE_DATE & set(conditions)
         else []
     )
+    norm_sets = normsets.approved_for(db, cases) if "B" in conditions else {}
+    no_norms = (
+        [c.id or 0 for c in cases if c.reference_date is not None and c.id not in norm_sets]
+        if "B" in conditions
+        else []
+    )
 
     parses = {
         p.id: p
@@ -132,6 +140,10 @@ def plan(
                     parse = parses.get(case.released_parse_id)
                     if condition in NEEDS_REFERENCE_DATE and case.reference_date is None:
                         continue
+                    norm_set = norm_sets.get(case.id or 0)
+                    if condition == "B" and norm_set is None:
+                        continue
+                    norm_chars = len(norm_set.text or "") if norm_set and condition == "B" else 0
                     for rm in models:
                         if not eligible(case, rm, cutoff_months):
                             if repetition == phrasing == 1 and condition == conditions[0]:
@@ -156,18 +168,22 @@ def plan(
                             )
                         )
                         cost[rm.key] += estimate(
-                            rm, len(version.text) + len(parse.input_text), condition
+                            rm, len(version.text) + len(parse.input_text) + norm_chars, condition
                         )
                         count[rm.key] += 1
     if not jobs and not problems:
         if no_reference_date and len(no_reference_date) == len(cases):
             problems.append("Keiner der Fälle hat einen Stichtag (nötig für B und C)")
+        elif conditions == ["B"] and not norm_sets:
+            problems.append("Keiner der Fälle hat freigegebene Normen (nötig für B)")
         else:
             problems.append("Kein Fall liegt nach dem Wissensstand der gewählten Modelle")
     return Plan(
         jobs=jobs,
         excluded=dict(excluded),
         no_reference_date=no_reference_date,
+        no_norms=no_norms,
+        norm_sets={k: v.id or 0 for k, v in norm_sets.items()},
         estimated_cost_usd=sum(cost.values()),
         cost_by_model=dict(cost),
         jobs_by_model=dict(count),
@@ -243,6 +259,8 @@ def create(
         snapshot={
             **snapshot(db, models, cases, p.jobs),
             "no_reference_date": p.no_reference_date,
+            "no_norms": p.no_norms,
+            "norm_sets": {str(k): v for k, v in p.norm_sets.items()},
             "tool_call_limit": TOOL_CALL_LIMIT if "C" in conditions else None,
         },
         excluded=p.excluded,

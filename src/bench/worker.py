@@ -36,6 +36,8 @@ from bench.models import (
     CaseParse,
     Job,
     JobStatus,
+    NormSet,
+    NormSetStatus,
     Order,
     OrderStatus,
     PromptVersion,
@@ -244,13 +246,22 @@ class Worker:
             assert order is not None and parse is not None and prompt is not None
             rm = model_from_snapshot(order, job.model_key, self.settings)
             stichtag = None
+            norm_set = None
+            if job.condition == "B":
+                set_id = order.snapshot.get("norm_sets", {}).get(str(job.case_id))
+                norm_set = db.get(NormSet, set_id) if set_id else None
+                if norm_set is None or norm_set.status is not NormSetStatus.APPROVED:
+                    raise RuntimeError(f"Fall {job.case_id} ohne freigegebene Normen")
             if job.condition == "C":
                 if rm.provider.tool_mode is not ToolMode.NATIVE:
                     raise RuntimeError(f"{rm.key}: kein natives Tool Calling")
                 stichtag = order.snapshot.get("reference_dates", {}).get(str(job.case_id))
                 if stichtag is None:
                     raise RuntimeError(f"Fall {job.case_id} ohne Stichtag")
-            messages = prompts.render(prompt.text, parse.input_text)
+            messages = prompts.render(
+                prompt.text, parse.input_text, norm_set.text if norm_set else None
+            )
+            norm_set_id = norm_set.id if norm_set else None
             stored = db.get(Job, job.id)
             assert stored is not None
             stored.sent_at = utcnow()
@@ -273,7 +284,7 @@ class Worker:
                 toolset=toolset,
                 expected_tools=TOOL_NAMES if toolset is not None else None,
             )
-        self._record(job, rm, messages, result, started)
+        self._record(job, rm, messages, result, started, norm_set_id)
 
     def _record(
         self,
@@ -282,6 +293,7 @@ class Worker:
         messages: list[dict[str, str]],
         result: TaskResult,
         started: Any,
+        norm_set_id: int | None = None,
     ) -> None:
         output = result.output
         outcome = output.outcome() if isinstance(output, Entscheidung) else None
@@ -306,6 +318,7 @@ class Worker:
                 response_text=result.response_text,
                 tool_calls=result.tool_calls,
                 tools_sha256=result.tools_sha256,
+                norm_set_id=norm_set_id,
                 output=output.model_dump(mode="json") if output is not None else None,
                 case_outcome=outcome.value if outcome else None,
                 usage=result.usage,

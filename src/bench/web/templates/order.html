@@ -26,6 +26,11 @@
   <p>{% for i in order.snapshot.no_reference_date %}{{ cases[i].case_number if i in cases else i }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
 </details>
 {% endif %}
+{% if order.snapshot.get("no_norms") %}
+<details><summary>Fälle ohne freigegebene Normen (nicht in B)</summary>
+  <p>{% for i in order.snapshot.no_norms %}{{ cases[i].case_number if i in cases else i }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+</details>
+{% endif %}
 {% if order.excluded %}
 <details><summary>Fälle vor dem Wissensstand eines Modells (ausgelassen)</summary>
   <ul>

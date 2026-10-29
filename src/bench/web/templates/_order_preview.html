@@ -14,6 +14,12 @@
   <p class="lead">Der Stichtag wird auf der Seite des Falls gesetzt.</p>
 </details>
 {% endif %}
+{% if plan.no_norms %}
+<details class="notice"><summary>{{ plan.no_norms | length }} Fälle ohne freigegebene Normen: nicht in Bedingung B</summary>
+  {% for i in plan.no_norms %}{{ case_numbers.get(i, i) }}{% if not loop.last %}, {% endif %}{% endfor %}
+  <p class="lead">Die Normen werden auf der Seite des Falls vorgeschlagen und freigegeben.</p>
+</details>
+{% endif %}
 {% if models %}
 <table>
   <thead><tr><th>Modell</th><th>Aufrufe</th><th>USD</th><th>Ausgelassen</th></tr></thead>

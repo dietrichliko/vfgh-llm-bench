@@ -61,6 +61,7 @@ INFO = {
     "images_in_reference": "Abbildungen in der Referenz",
     "leak_warnings": "Leckprüfung meldet Übereinstimmungen",
     "date_in_input": "Entscheidungsdatum steht in der Eingabe",
+    "norm_text_from_pdf": "Normtext für Bedingung B aus einem PDF",
 }
 FLAG_LABELS = {**AUTO_EXCLUDE, **BLOCKING, **INFO}
 

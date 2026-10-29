@@ -19,6 +19,7 @@ from bench.db import make_engine, migrate
 from bench.llm.http import make_http_client
 from bench.providers import StudyConfig, load_config
 from bench.ris.client import RisClient
+from bench.rismcp.norms import RisClient as NormsRisClient
 from bench.settings import SESSION_SECRET, Settings, get_settings
 from bench.web import cases, orders, pages
 from bench.web import prompts as prompt_pages
@@ -49,6 +50,7 @@ def create_app(
     *,
     http_client: httpx2.AsyncClient | None = None,
     ris: RisClient | None = None,
+    norms_ris: NormsRisClient | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     engine = make_engine(settings.db_url)
@@ -64,6 +66,7 @@ def create_app(
         for task in list(app.state.tasks):
             task.cancel()
         await app.state.ris.aclose()
+        await app.state.norms_ris.aclose()
         await app.state.http_client.aclose()
         engine.dispose()
 
@@ -73,7 +76,8 @@ def create_app(
     app.state.oauth = auth.make_oauth(settings)
     app.state.config, app.state.config_error = read_config(settings)
     app.state.http_client = http_client or make_http_client()
-    app.state.ris = ris or RisClient()
+    app.state.ris = ris or RisClient()  # case law: decisions to import (admin only)
+    app.state.norms_ris = norms_ris or NormsRisClient()  # legislation: norms for condition B
     app.state.tasks = set()
 
     templates = Jinja2Templates(directory=HERE / "templates")

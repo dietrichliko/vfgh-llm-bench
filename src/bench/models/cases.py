@@ -52,6 +52,11 @@ class Case(SQLModel, table=True):
     # confirmed by the admin at release: {"items": [...], "case_outcome": "..."}
     outcome: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
     reference_date: date | None = None  # Stichtag for the applicable law (condition B/C)
+    # approved norm texts for condition B (valid only while its Stichtag is the case's)
+    norm_set_id: int | None = Field(
+        default=None,
+        sa_column=Column(Integer, ForeignKey("norm_sets.id", use_alter=True), nullable=True),
+    )
     exclusion_reason: str | None = None
     admin_note: str | None = None
 
@@ -137,3 +142,34 @@ class ImportRun(SQLModel, table=True):
     skipped: int = 0
     failed: int = 0
     log: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+
+
+class NormSetStatus(StrEnum):
+    FETCHING = "fetching"  # proposals are being fetched from the RIS
+    DRAFT = "draft"  # the admin reviews it
+    APPROVED = "approved"  # frozen; used in condition B
+
+
+class NormSet(SQLModel, table=True):
+    """The norm texts given to the models in condition B, for one case and Stichtag.
+
+    Drafts change while the admin reviews them; an approved set is immutable (trigger).
+    ``items`` keeps every proposal, including the ones left out, with the reason.
+    """
+
+    __tablename__ = "norm_sets"
+
+    id: int | None = Field(default=None, primary_key=True)
+    case_id: int = Field(foreign_key="cases.id", index=True)
+    reference_date: date
+    status: NormSetStatus = Field(default=NormSetStatus.FETCHING, max_length=16)
+    items: list[dict[str, Any]] = Field(
+        default_factory=list, sa_column=Column(JSON, nullable=False)
+    )
+    log: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    text: str | None = None  # the block given to the models, fixed on approval
+    sha256: str | None = Field(default=None, max_length=64)
+    created_at: datetime = Field(default_factory=utcnow)
+    created_by: int | None = Field(default=None, foreign_key="users.id")
+    approved_at: datetime | None = None
+    approved_by: int | None = Field(default=None, foreign_key="users.id")

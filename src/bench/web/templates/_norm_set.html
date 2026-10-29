@@ -1,0 +1,84 @@
+<div id="norms"{% if draft and draft.status.value == "fetching" %} hx-get="/cases/{{ case.id }}/norms" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+{% if case.status.value != "released" %}
+<p class="lead">Normen für Bedingung B werden nach der Freigabe zusammengestellt.</p>
+{% elif not case.reference_date %}
+<p class="notice">Ohne Stichtag gibt es keine Normen für Bedingung B. Zuerst oben den Stichtag setzen.</p>
+{% else %}
+
+{% if approved %}
+<p><span class="status ok">freigegeben</span> am {{ approved.approved_at.strftime("%d.%m.%Y") }}, Fassung zum
+{{ approved.reference_date.strftime("%d.%m.%Y") }}: {{ approved.items | selectattr("included") | list | length }} Normen,
+{{ approved.text | length }} Zeichen, <span class="mono">sha256 {{ approved.sha256[:12] }}</span>.
+Diese Fassung erhalten die Modelle in Bedingung B.</p>
+<ul>{% for it in approved.items if it.included %}<li>{{ it.citation }}{% if it.title %} <span class="lead">({{ it.title }})</span>{% endif %}</li>{% endfor %}</ul>
+<details><summary>Text, wie ihn die Modelle erhalten</summary><pre>{{ approved.text }}</pre></details>
+{% elif case.norm_set_id %}
+<p class="notice">Die freigegebenen Normen gelten für einen anderen Stichtag. Bitte neu vorschlagen und freigeben.</p>
+{% endif %}
+
+{% if draft and draft.status.value == "fetching" %}
+<p><span class="status warn">wird aus dem RIS geholt</span> {{ draft.items | length }} von
+{{ case.norms | length }}+ Vorschlägen … <span class="lead">(zwischen zwei Anfragen liegen 1,5 Sekunden)</span></p>
+
+{% elif draft %}
+<h3>Entwurf vom {{ draft.created_at.strftime("%d.%m.%Y %H:%M") }}, Fassung zum {{ draft.reference_date.strftime("%d.%m.%Y") }}</h3>
+{% for line in draft.log %}<p class="lead">{{ line }}</p>{% endfor %}
+<form id="norms-select" method="post" action="/cases/{{ case.id }}/norms/{{ draft.id }}/select"></form>
+<table>
+  <thead><tr><th>Mit</th><th>Vorschlag</th><th>Art</th><th>Ergebnis</th></tr></thead>
+  <tbody>
+  {% for it in draft.items %}
+    <tr>
+      <td><input type="checkbox" form="norms-select" name="included" value="{{ it.id }}" aria-label="{{ it.citation }} mitgeben"
+        {% if it.included %}checked{% endif %}{% if it.state != "ok" %} disabled{% endif %}></td>
+      <td>{{ it.citation }}{% if it.entry != it.citation %}<br><span class="lead">{{ it.entry }}</span>{% endif %}</td>
+      <td>{{ norm_kind_labels[it.kind] }}</td>
+      <td>
+        {% if it.state == "ok" %}<span class="status ok">{{ norm_state_labels[it.state] }}</span>
+        {% elif it.state in ("not_found", "error") %}<span class="status bad">{{ norm_state_labels[it.state] }}</span>
+        {% elif it.state == "ambiguous" %}<span class="status warn">{{ norm_state_labels[it.state] }}</span>
+        {% else %}<span class="status">{{ norm_state_labels[it.state] }}</span>{% endif %}
+        {% if it.title %}{{ it.title }}{% if it.section %}, {{ it.section }}{% endif %}{% endif %}
+        {% if it.note %}<br><span class="lead">{{ it.note }}</span>{% endif %}
+        {% if it.state == "ambiguous" %}
+        <form method="post" action="/cases/{{ case.id }}/norms/{{ draft.id }}/choose" style="margin-top: 0.3rem">
+          <input type="hidden" name="item_id" value="{{ it.id }}">
+          <select name="document_number" aria-label="Rechtsvorschrift wählen">
+            {% for c in it.candidates %}<option value="{{ c.document_number }}">{{ c.title }} ({{ c.document_number }})</option>{% endfor %}
+          </select>
+          <button type="submit" class="secondary">übernehmen</button>
+        </form>
+        {% endif %}
+        {% if it.text %}<details><summary>{{ it.text | length }} Zeichen{% if it.url %} · <a href="{{ it.url }}" target="_blank" rel="noopener">RIS</a>{% endif %}</summary><pre>{{ it.text }}</pre></details>{% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4">Keine Normen in den RIS-Metadaten.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<p style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+  <button type="submit" form="norms-select" class="secondary">Auswahl speichern</button>
+  <button type="submit" form="norms-select" name="approve" value="1"
+    onclick="return confirm('Die angekreuzten Normen freigeben? Danach sind sie für diesen Stichtag eingefroren.')">Auswahl freigeben</button>
+</p>
+
+<form method="post" action="/cases/{{ case.id }}/norms/{{ draft.id }}/add">
+  <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
+    <label>Norm ergänzen: Zitat oder RIS-Dokumentnummer<br>
+      <input type="text" name="reference" size="36" placeholder="§ 2 TJG 2004 oder NOR40147678" required></label>
+    <label>Geltungsbereich (für Zitate)<br>
+      <select name="state">{% for s in states %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
+    <button type="submit" class="secondary">ergänzen</button>
+  </p>
+</form>
+{% endif %}
+
+{% if not draft or draft.status.value != "fetching" %}
+<form method="post" action="/cases/{{ case.id }}/norms">
+  <p><button type="submit" class="secondary">{% if draft or approved %}Neu aus dem RIS vorschlagen{% else %}Normen aus dem RIS vorschlagen{% endif %}</button>
+  {% if draft %}<span class="lead">ersetzt den Entwurf</span>{% endif %}</p>
+</form>
+{% endif %}
+{% endif %}
+</div>
