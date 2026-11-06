@@ -1,5 +1,8 @@
 # bench: web application and worker (same image)
-#   podman build -f deploy/Containerfile -t localhost/bench .
+#   podman build --format docker -f deploy/Containerfile \
+#     --build-arg GIT_COMMIT=$(git rev-parse HEAD) -t localhost/bench .
+# (--format docker keeps the HEALTHCHECK; the OCI format has none. compose.yaml defines
+# the same check, so it applies there either way.)
 
 FROM docker.io/library/python:3.13-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.13 /uv /usr/local/bin/uv
@@ -11,7 +14,11 @@ COPY src/ ./src/
 RUN uv sync --frozen --no-dev --no-editable
 
 FROM docker.io/library/python:3.13-slim
-# git: the app pushes frozen study protocols to the study repository (stage 3)
+# commit of the code in the image; recorded in the frozen protocol (environment.yaml)
+ARG GIT_COMMIT=""
+LABEL org.opencontainers.image.source="https://github.com/dietrichliko/vfgh-llm-bench" \
+      org.opencontainers.image.revision="${GIT_COMMIT}"
+# git, ssh: the app pushes frozen protocols and results to the study repository (stage 6d)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git openssh-client \
     && rm -rf /var/lib/apt/lists/* \
@@ -24,7 +31,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYDANTIC_AI_NO_BANNER=1 \
     BENCH_DATA_DIR=/data \
     BENCH_CONFIG=/config/providers.yaml \
-    BENCH_SECRETS_DIR=/run/secrets
+    BENCH_SECRETS_DIR=/run/secrets \
+    BENCH_GIT_COMMIT=${GIT_COMMIT}
 USER bench
 VOLUME /data
 EXPOSE 8000

@@ -1,7 +1,10 @@
 # Temporary deployment on fly.io. Secrets arrive as environment variables:
 #   fly secrets set --app vfgh-bench BENCH_SESSION_SECRET=… BENCH_OIDC_CLIENT_SECRET=… \
 #       UAI_API_KEY=… OPENROUTER_API_KEY=…
-#   fly deploy --config deploy/fly/web.toml --dockerfile deploy/Containerfile
+#   fly deploy --config deploy/fly/web.toml --dockerfile deploy/Containerfile \
+#       --build-arg GIT_COMMIT=$(git rev-parse HEAD)
+# Study repository (Freeze protocol / Publish results): set BENCH_STUDY_REPO_URL below and
+#   fly secrets set --app vfgh-bench STUDY_REPO_DEPLOY_KEY="$(cat deploy-key)"
 # The provider config is baked in via [[files]] from config/providers.yaml.
 
 app = "vfgh-bench"

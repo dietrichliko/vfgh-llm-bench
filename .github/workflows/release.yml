@@ -1,0 +1,70 @@
+name: Release
+
+# A release is `uv run cz bump && git push --follow-tags` (see README): the tag vX.Y.Z
+# runs the checks, pushes the image to ghcr.io and creates the GitHub release with the
+# changelog section and the image digest.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Image and GitHub release
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # the GitHub release
+      packages: write  # ghcr.io
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tag matches the version in pyproject.toml
+        run: |
+          version=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          test "v$version" = "$GITHUB_REF_NAME" || {
+            echo "tag $GITHUB_REF_NAME, pyproject.toml $version"; exit 1; }
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
+      - id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Containerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: GIT_COMMIT=${{ github.sha }}
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE: ghcr.io/${{ github.repository }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          # the section of this version in CHANGELOG.md (written by cz bump)
+          awk -v tag="$GITHUB_REF_NAME" '
+            /^## / { if (found) exit; if (index($0, "## " tag " ") == 1) { found = 1; next } }
+            found' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "**Image:** \`$IMAGE:${GITHUB_REF_NAME#v}\`"
+            echo "(\`$IMAGE@$DIGEST\`; set \`BENCH_IMAGE_DIGEST=$DIGEST\` when deploying)"
+          } >> notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md

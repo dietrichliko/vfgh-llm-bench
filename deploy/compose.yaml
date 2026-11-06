@@ -13,6 +13,8 @@ services:
     build:
       context: ..
       dockerfile: deploy/Containerfile
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-}   # GIT_COMMIT=$(git rev-parse HEAD) podman compose … --build
     image: localhost/bench:latest
     command: ["bench", "serve", "--port", "8000"]
     ports: ["8000:8000"]
@@ -22,10 +24,20 @@ services:
       BENCH_ADMIN_EMAILS: ${BENCH_ADMIN_EMAILS:-}
       BENCH_OIDC_ISSUER: ${BENCH_OIDC_ISSUER:-}
       BENCH_OIDC_CLIENT_ID: ${BENCH_OIDC_CLIENT_ID:-}
+      BENCH_STUDY_REPO_URL: ${BENCH_STUDY_REPO_URL:-}      # empty: protocol and results as ZIP
+      BENCH_STUDY_REPO_BRANCH: ${BENCH_STUDY_REPO_BRANCH:-main}
+      BENCH_IMAGE_DIGEST: ${BENCH_IMAGE_DIGEST:-}           # from the GitHub release
     volumes:
       - bench-data:/data
       - ../config/providers.yaml:/config/providers.yaml:ro,z
-    secrets: [BENCH_SESSION_SECRET, BENCH_OIDC_CLIENT_SECRET, UAI_API_KEY, OPENROUTER_API_KEY]
+    secrets:
+      [BENCH_SESSION_SECRET, BENCH_OIDC_CLIENT_SECRET, UAI_API_KEY, OPENROUTER_API_KEY,
+       STUDY_REPO_DEPLOY_KEY]
+    healthcheck:                  # also in the Containerfile, which podman's OCI format drops
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 60s
+      timeout: 5s
     depends_on: [bridge-univie]
     restart: unless-stopped
 
@@ -72,3 +84,5 @@ secrets:
     file: secrets/OPENROUTER_API_KEY
   RIS_MCP_API_KEY:
     file: secrets/RIS_MCP_API_KEY
+  STUDY_REPO_DEPLOY_KEY:          # SSH key with write access to the study repository only
+    file: secrets/STUDY_REPO_DEPLOY_KEY
