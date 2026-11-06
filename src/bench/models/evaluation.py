@@ -145,3 +145,46 @@ class CalibrationRating(SQLModel, table=True):
     )
     note: str | None = None
     created_at: datetime = Field(default_factory=utcnow)
+
+
+class OpposingReasoning(SQLModel, table=True):
+    """One side of a pair of opposing reasonings, written by the writer model from the case
+    input alone (level 5); immutable (trigger).
+
+    ``side``: ``unlawful`` argues that the challenged provisions are unlawful, ``lawful``
+    that they are not. Which side matches the VfGH is decided in the analysis (partly
+    unlawful cases included).
+    """
+
+    __tablename__ = "opposing_reasonings"
+    __table_args__ = (UniqueConstraint("run_id", "side"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    case_id: int = Field(foreign_key="cases.id", index=True)
+    run_id: int = Field(foreign_key="runs.id")  # the writer run
+    side: str = Field(max_length=16)  # unlawful | lawful
+    text: str
+    words: int
+    writer_model_key: str = Field(max_length=128)
+    writer_family: str = Field(max_length=64)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class Assessment(SQLModel, table=True):
+    """A tested model's assessment of one opposing reasoning, in a fresh context;
+    immutable (trigger). ``value``: tragfaehig | eher_tragfaehig | eher_nicht_tragfaehig |
+    nicht_tragfaehig."""
+
+    __tablename__ = "assessments"
+    __table_args__ = (UniqueConstraint("run_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    run_id: int = Field(foreign_key="runs.id")  # the assess run
+    reasoning_id: int = Field(foreign_key="opposing_reasonings.id", index=True)
+    case_id: int = Field(foreign_key="cases.id", index=True)
+    model_key: str = Field(max_length=128, index=True)
+    condition: str = Field(max_length=8)
+    repetition: int
+    side: str = Field(max_length=16)
+    value: str = Field(max_length=32)
+    created_at: datetime = Field(default_factory=utcnow)

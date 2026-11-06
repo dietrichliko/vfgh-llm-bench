@@ -102,12 +102,14 @@ from bench.models.cases import (  # noqa: E402
     SourceDocument,
 )
 from bench.models.evaluation import (  # noqa: E402
+    Assessment,
     CalibrationItem,
     CalibrationRating,
     ChecklistRating,
     CitationCheck,
     CitationResult,
     JudgeScore,
+    OpposingReasoning,
     ReferenceChecklist,
 )
 from bench.models.runs import (  # noqa: E402
@@ -122,6 +124,7 @@ from bench.models.runs import (  # noqa: E402
 
 __all__ = [
     "OPEN_JOB_STATES",
+    "Assessment",
     "AuditLog",
     "CalibrationItem",
     "CalibrationRating",
@@ -138,6 +141,7 @@ __all__ = [
     "JudgeScore",
     "NormSet",
     "NormSetStatus",
+    "OpposingReasoning",
     "Order",
     "OrderStatus",
     "PromptVersion",

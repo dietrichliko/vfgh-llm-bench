@@ -11,7 +11,7 @@
   <dl>
     <dt>Erstellt</dt><dd>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}{% if order.finished_at %}, beendet {{ order.finished_at.strftime("%d.%m.%Y %H:%M") }}{% endif %}</dd>
     <dt>Aufgabe</dt><dd>{{ task_labels[order.task] }}</dd>
-    {% if order.task == "decide" %}
+    {% if order.task in ("decide", "assess") %}
     <dt>Bedingungen</dt><dd>{% for c in order.conditions %}{{ c }}: {{ conditions[c] }}{% if not loop.last %}; {% endif %}{% endfor %}</dd>
     <dt>Modelle</dt><dd>{% for k in order.model_keys %}<span class="mono">{{ k }}</span> ({{ order.snapshot.models[k].model_config.model }}){% if not loop.last %}, {% endif %}{% endfor %}</dd>
     <dt>Fälle</dt><dd>{{ order.case_ids | length }}</dd>
@@ -29,6 +29,12 @@
   <p>Aus Auftrag {% for i in order.snapshot.get("source_orders", []) %}<a href="/orders/{{ i }}">{{ i }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.
   Richter: {% for k in order.model_keys %}<span class="mono">{{ k }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>
   {% if order.snapshot.get("skipped") %}<p>Ausgelassen: {% for k, n in order.snapshot.skipped.items() %}{{ n }} × {{ skipped_labels.get(k, k) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+</details>
+{% endif %}
+{% if order.task == "assess" %}
+<details open><summary>Eingeschätzte Begründungen</summary>
+  <p>Je Fall die Gegenbegründungen auf der Seite <a href="/opposing">Gegenbegründungen</a>; jede Begründung in einem eigenen Aufruf.</p>
+  {% if order.snapshot.get("skipped") %}<p>Ausgelassen: {% for k, n in order.snapshot.skipped.items() %}{{ n }} × {{ assess_skipped_labels.get(k, k) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
 </details>
 {% endif %}
 {% if order.snapshot.get("no_reference_date") %}

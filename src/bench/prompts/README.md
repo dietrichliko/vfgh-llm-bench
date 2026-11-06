@@ -17,3 +17,8 @@ DRAFT: to be read and approved by the legal expert before the study (see docs/pa
   approved for the case); `{checkliste}`, `{antwort}` and `{zitate}` only in `judge` (the
   confirmed reference reasons, the answer judged, its citations with the RIS check).
 - No prompt may hint at the actual outcome.
+- Level 5 (opposing reasonings): `write_opposing` (the writer model reads the case input,
+  like the tested models, and writes one reasoning for and one against unlawfulness, of
+  equal length) and `assess` (a tested model rates one reasoning in a fresh context;
+  placeholder `{begruendung}`, only there). Neither prompt may say which side the VfGH
+  took, and the assess prompt never asks for an outcome.

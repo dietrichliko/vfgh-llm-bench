@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Gegenbegründungen {{ case.case_number }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/opposing">← Gegenbegründungen</a></p>
+<h1>Gegenbegründungen: VfGH {{ case.decision_date.strftime("%d.%m.%Y") }}, {{ case.case_number }}</h1>
+<p class="lead">{{ case.areas | join(", ") }} · VfGH: {{ outcome_labels[case.outcome.case_outcome] if case.outcome else "–" }}
+  · geschrieben von <span class="mono">{{ pair[0].writer_model_key }}</span> (<a href="/runs/{{ pair[0].run_id }}">Lauf {{ pair[0].run_id }}</a>)</p>
+
+<div class="split">
+  {% for r in pair %}
+  <div>
+    <h2>{{ sides[r.side] | capitalize }} ({{ r.words }} Wörter)</h2>
+    <pre class="doc">{{ r.text }}</pre>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>Einschätzungen</h2>
+{% if assessments %}
+<table>
+  <thead><tr><th>Modell</th><th>Wdh.</th><th>Begründung</th><th>Einschätzung</th><th>Lauf</th></tr></thead>
+  <tbody>{% for a in assessments %}<tr><td class="mono">{{ a.model_key }}</td><td>{{ a.repetition }}</td><td>{{ sides[a.side] }}</td>
+    <td>{{ value_labels[a.value] }}</td><td><a href="/runs/{{ a.run_id }}">{{ a.run_id }}</a></td></tr>{% endfor %}</tbody>
+</table>
+{% else %}
+<p>Noch keine.</p>
+{% endif %}
+{% endblock %}

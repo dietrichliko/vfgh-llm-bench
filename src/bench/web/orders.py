@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import citations, judges, orders, prompts
+from bench import citations, judges, opposing, orders, prompts
 from bench.auth import AdminDep, DbDep
 from bench.models import (
     Case,
@@ -17,6 +17,7 @@ from bench.models import (
     CitationCheck,
     Job,
     JobStatus,
+    OpposingReasoning,
     Order,
     OrderStatus,
     PromptVersion,
@@ -55,11 +56,18 @@ LABELS = {
     "kind_labels": citations.KIND_LABELS,
     "result_labels": citations.RESULT_LABELS,
     "value_labels": judges.VALUE_LABELS,
+    "assess_labels": opposing.VALUE_LABELS,
+    "side_labels": opposing.SIDES,
 }
 SKIPPED_LABELS = {
     "no_checklist": "Fall ohne bestätigte Referenzgründe",
     "same_family": "Richter aus derselben Modellfamilie",
     "already": "schon bewertet oder beauftragt",
+}
+ASSESS_SKIPPED_LABELS = {
+    "no_pair": "Fall ohne Gegenbegründungen",
+    "same_family": "Begründung aus der Modellfamilie des Prüflings",
+    "already": "schon eingeschätzt oder beauftragt",
 }
 RECENT_RUNS = 50
 
@@ -285,6 +293,7 @@ def order_detail(request: Request, order_id: int, user: AdminDep, db: DbDep) -> 
         recent_runs=RECENT_RUNS,
         judge_plans=_judge_plans(request, db, order),
         skipped_labels=SKIPPED_LABELS,
+        assess_skipped_labels=ASSESS_SKIPPED_LABELS,
         problem=request.query_params.get("problem"),
         **_progress_context(db, order),
     )
@@ -397,5 +406,6 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         checklists=checklists,
         reasons_share=judges.reasons_share,
         target=target,
+        reasoning=db.get(OpposingReasoning, run.reasoning_id) if run.reasoning_id else None,
         **LABELS,
     )

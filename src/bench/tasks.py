@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from bench.llm.schemas import Bewertung, Referenzgruende
+from bench.llm.schemas import Bewertung, Einschaetzung, Gegenbegruendungen, Referenzgruende
 from bench.models import CaseParse, Job, Order, Run
 from bench.providers import Role
 
@@ -55,6 +55,32 @@ def _score_from_run(db: Session, run: Run) -> None:
     judges.from_run(db, run)
 
 
+def _pair_validate(db: Session, order: Order, job: Job, output: BaseModel) -> str | None:
+    from bench import opposing
+
+    return opposing.validate_pair(db, order, job, output)
+
+
+def _pair_from_run(db: Session, run: Run) -> None:
+    from bench import opposing
+
+    opposing.from_writer_run(db, run)
+
+
+def _assess_messages(
+    db: Session, order: Order, job: Job, prompt: str, parse: CaseParse
+) -> list[dict[str, str]]:
+    from bench import opposing
+
+    return opposing.messages(db, order, job, prompt, parse)
+
+
+def _assessment_from_run(db: Session, run: Run) -> None:
+    from bench import opposing
+
+    opposing.from_assess_run(db, run)
+
+
 HELPERS: dict[str, HelperTask] = {
     "extract_reasons": HelperTask(
         key="extract_reasons",
@@ -74,6 +100,24 @@ HELPERS: dict[str, HelperTask] = {
         on_done=_score_from_run,
         messages=_judge_messages,
         validate=_judge_validate,
+    ),
+    "write_opposing": HelperTask(
+        key="write_opposing",
+        label="Gegenbegründungen schreiben",
+        role=Role.WRITER,
+        output_type=Gegenbegruendungen,
+        input_text=lambda parse: parse.input_text,  # the case input only, never the decision
+        on_done=_pair_from_run,
+        validate=_pair_validate,
+    ),
+    "assess": HelperTask(
+        key="assess",
+        label="Einschätzung von Gegenbegründungen",
+        role=Role.TESTED,
+        output_type=Einschaetzung,
+        input_text=lambda parse: parse.input_text,  # plus one reasoning
+        on_done=_assessment_from_run,
+        messages=_assess_messages,
     ),
 }
 TASK_LABELS = {"decide": "Entscheidung", **{k: t.label for k, t in HELPERS.items()}}

@@ -380,6 +380,7 @@ class Worker:
                 repetition=job.repetition,
                 prompt_version_id=job.prompt_version_id,
                 target_run_id=job.target_run_id,
+                reasoning_id=job.reasoning_id,
                 status=status,
                 error=error,
                 messages=messages,

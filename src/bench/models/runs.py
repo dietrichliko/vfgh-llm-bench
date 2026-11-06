@@ -92,6 +92,8 @@ class Job(SQLModel, table=True):
     prompt_version_id: int = Field(foreign_key="prompt_versions.id")
     # judge jobs: the decide run to be judged
     target_run_id: int | None = Field(default=None, foreign_key="runs.id", index=True)
+    # assess jobs: the opposing reasoning to be assessed
+    reasoning_id: int | None = Field(default=None, foreign_key="opposing_reasonings.id")
 
     status: JobStatus = Field(default=JobStatus.QUEUED, max_length=16, index=True)
     attempts: int = 0
@@ -124,6 +126,7 @@ class Run(SQLModel, table=True):
     repetition: int
     prompt_version_id: int = Field(foreign_key="prompt_versions.id")
     target_run_id: int | None = Field(default=None, foreign_key="runs.id")  # judge: run judged
+    reasoning_id: int | None = Field(default=None, foreign_key="opposing_reasonings.id")  # assess
 
     status: JobStatus = Field(max_length=16)
     error: str | None = None

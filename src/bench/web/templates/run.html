@@ -45,6 +45,16 @@
   <tbody>{% for z in run.output.zitate %}<tr><td>{{ z.nr }}</td><td>{{ value_labels[z.traegt] }}</td><td>{{ z.begruendung }}</td></tr>{% endfor %}</tbody>
 </table>
 {% else %}<p>keine</p>{% endif %}
+{% elif run.output and run.task == "write_opposing" %}
+<p>Gegenbegründungen (<a href="/opposing/{{ run.case_id }}">zum Fall</a>){% if run.status != "done" %}; nicht übernommen{% endif %}.</p>
+<h3>Gesetzwidrig</h3>
+<pre class="doc">{{ run.output.gesetzwidrig }}</pre>
+<h3>Nicht gesetzwidrig</h3>
+<pre class="doc">{{ run.output.gesetzmaessig }}</pre>
+{% elif run.output and run.task == "assess" %}
+<p>Einschätzung einer <a href="/opposing/{{ run.case_id }}">Gegenbegründung</a>{% if reasoning %} ({{ side_labels[reasoning.side] }}){% endif %}:
+  <strong>{{ assess_labels[run.output.urteil] }}</strong></p>
+<pre class="doc">{{ run.output.begruendung }}</pre>
 {% elif run.output and run.task == "extract_reasons" %}
 <p>Vorgeschlagene tragende Gründe (<a href="/checklists/{{ run.case_id }}">zur Bewertung</a>):</p>
 <ol>{% for g in run.output.gruende %}<li>{{ g.text }}{% if g.randzahlen %} <span class="lead">(Rz {{ g.randzahlen | join(", ") }})</span>{% endif %}</li>{% endfor %}</ol>

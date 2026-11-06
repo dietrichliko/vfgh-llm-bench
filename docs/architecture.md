@@ -283,6 +283,14 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Blind:** the rating page shows no model, provider, condition, run id or judge score (a test checks the HTML). The stratum is shown to the admin only, on the overview.
 - `CalibrationItem` and `CalibrationRating` are immutable (SQLite trigger, migration 0008). Judge–human and human–human agreement (κ per criterion and condition) and the PPI correction follow in stage 6.
 
+### As built in stage 5d (opposing reasonings)
+
+- **Writing** (`bench/opposing.py`, helper task `write_opposing`, role `writer`, page "Gegenbegründungen", admin): per released case without a pair, the writer model reads the **case input only** (as the tested models do, never the decision) and writes two reasonings in the style of the VfGH's considerations: one concluding that the challenged provisions are unlawful, one that they are not. An answer whose shorter side has fewer than 80 % of the longer side's words, or fewer than 150 words, is *not evaluable*. A valid answer becomes two `OpposingReasoning` rows (side `unlawful` / `lawful`, word count, writer model and family); the latest pair of a case is the one assessed.
+- **Assessment** (task `assess`, prompt `assess.p1` with `{input}` and `{begruendung}`): the tested models, **condition A only**. One job per reasoning, model and repetition, each a fresh call with the case input and one reasoning; the model never sees the other side, the writer or the outcome, and is never asked for an outcome. It rates the reasoning on four levels: *tragfähig / eher tragfähig / eher nicht tragfähig / nicht tragfähig* (sound = the first two; the ordinal scale gives the AUC). Cutoff rule as for deciding; **family rule**: no tested model assesses reasonings written by its own family. Reasonings already assessed or planned per model and repetition are not planned again. A valid answer becomes an `Assessment` (immutable), storing the side.
+- **Partly unlawful cases** are written and assessed like the others; which side counts as the VfGH's is decided in the analysis (stage 6).
+- Pages: the overview lists per case the word counts and the number of assessments per side; the case page shows both texts and every assessment (admin only, not blind). Migration 0009 adds the tables and `reasoning_id` on jobs and runs.
+- Not built: the optional expert rating of ~10 pairs (open point in §13).
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -345,7 +353,7 @@ Each stage runs and is tested on its own.
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
-| 5 Evaluation | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment, 5e contamination probe |
+| 5 Evaluation | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points

@@ -91,3 +91,23 @@ class Bewertung(BaseModel):
 
     gruende: list[GrundBewertung] = Field(description="Ein Eintrag je Referenzgrund")
     zitate: list[ZitatBewertung] = Field(description="Ein Eintrag je Zitat; leer ohne Zitate")
+
+
+class Gegenbegruendungen(BaseModel):
+    """Zwei gleich lange Begründungen zum selben Antrag mit entgegengesetztem Ergebnis."""
+
+    gesetzwidrig: str = Field(
+        description="Begründung, warum die angefochtenen Bestimmungen gesetzwidrig sind"
+    )
+    gesetzmaessig: str = Field(
+        description="Begründung, warum die angefochtenen Bestimmungen nicht gesetzwidrig sind"
+    )
+
+
+class Einschaetzung(BaseModel):
+    """Die Einschätzung einer Begründung."""
+
+    begruendung: str = Field(description="Kurz, worauf sich die Einschätzung stützt")
+    urteil: Literal[
+        "tragfaehig", "eher_tragfaehig", "eher_nicht_tragfaehig", "nicht_tragfaehig"
+    ] = Field(description="Ob die Begründung rechtlich tragfähig ist")

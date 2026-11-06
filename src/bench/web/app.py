@@ -21,7 +21,7 @@ from bench.providers import StudyConfig, load_config
 from bench.ris.client import RisClient
 from bench.rismcp.norms import RisClient as NormsRisClient
 from bench.settings import SESSION_SECRET, Settings, get_settings
-from bench.web import calibration, cases, checklists, orders, pages
+from bench.web import calibration, cases, checklists, opposing, orders, pages
 from bench.web import prompts as prompt_pages
 
 log = logging.getLogger(__name__)
@@ -118,4 +118,5 @@ def create_app(
     app.include_router(orders.router)
     app.include_router(checklists.router)
     app.include_router(calibration.router)
+    app.include_router(opposing.router)
     return app

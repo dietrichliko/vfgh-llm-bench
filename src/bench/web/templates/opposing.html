@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Gegenbegründungen · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Gegenbegründungen</h1>
+<p class="lead">Ebene 5: Ein Hilfsmodell schreibt zu jedem Fall aus dem Sachverhalt, ohne die
+Entscheidung zu kennen, zwei gleich lange Begründungen, eine für und eine gegen die Gesetzwidrigkeit.
+Die getesteten Modelle schätzen jede Begründung einzeln und ohne Vorgeschichte ein (Bedingung A).
+Welche Seite dem VfGH entspricht, wertet die Analyse aus.</p>
+
+{% if problem %}<div class="error"><p style="margin: 0">{{ problem }}</p></div>{% endif %}
+
+<section class="panel no-print" style="margin-bottom: 1rem">
+  <h2 style="margin-top: 0">Begründungen schreiben</h2>
+  {% if missing and writers %}
+  <form method="post" action="/opposing/write" style="margin: 0">
+    <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin: 0">
+      <label>Hilfsmodell<br><select name="model_key">
+        {% for m in writers %}<option value="{{ m.key }}"{% if not m.available %} disabled{% endif %}>{{ m.name }} ({{ m.config.family }}){% if not m.available %} (Schlüssel fehlt){% endif %}</option>{% endfor %}
+      </select></label>
+      <button type="submit">Begründungen für {{ missing }} Fälle schreiben</button>
+      <span class="lead">Prüflinge derselben Modellfamilie werden bei der Einschätzung ausgelassen</span>
+    </p>
+  </form>
+  {% elif missing %}
+  <p class="notice" style="margin: 0">Kein Modell mit der Rolle <code>writer</code> konfiguriert.</p>
+  {% else %}
+  <p class="lead" style="margin: 0">Alle freigegebenen Fälle haben Begründungen.</p>
+  {% endif %}
+</section>
+
+{% if pairs %}
+<section class="panel no-print" style="margin-bottom: 1rem">
+  <h2 style="margin-top: 0">Einschätzung durch die Prüflinge</h2>
+  <form method="post" action="/opposing/assess" style="margin: 0">
+    <fieldset><legend>Modelle</legend>
+      {% for m in tested %}<label class="choice"><input type="checkbox" name="model_keys" value="{{ m.key }}"{% if not m.available %} disabled{% endif %}>
+        <span class="mono">{{ m.key }}</span> ({{ m.config.family }}){% if not m.available %} – Schlüssel fehlt{% endif %}</label>{% endfor %}
+    </fieldset>
+    <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
+      <label>Wiederholungen<br><input type="number" name="repetitions" min="1" max="10" value="1"></label>
+      <label>Abstand zum Wissensstand (Monate)<br><input type="number" name="cutoff_months" min="0" value="3"></label>
+      <label>Kostenobergrenze USD (optional)<br><input type="text" name="cost_cap_usd" inputmode="decimal"></label>
+      <button type="submit">Auftrag anlegen</button>
+    </p>
+    <p class="lead" style="margin: 0">Je Fall, Modell und Wiederholung zwei Aufrufe, einer je Begründung.
+      Schon eingeschätzte oder geplante Begründungen werden nicht noch einmal angelegt.</p>
+  </form>
+</section>
+{% endif %}
+
+{% if cases %}
+<table>
+  <thead><tr><th>Datum</th><th>Geschäftszahl</th><th>VfGH</th><th>Wörter (gesetzwidrig / nicht)</th><th>Hilfsmodell</th><th>Einschätzungen</th></tr></thead>
+  <tbody>
+  {% for c in cases %}{% set pair = pairs.get(c.id) %}
+    <tr>
+      <td>{{ c.decision_date.strftime("%d.%m.%Y") }}</td>
+      <td>{% if pair %}<a href="/opposing/{{ c.id }}">{{ c.case_number }}</a>{% else %}{{ c.case_number }}{% endif %}</td>
+      <td>{{ outcome_labels[c.outcome.case_outcome] if c.outcome else "–" }}</td>
+      {% if pair %}
+      <td>{{ pair[0].words }} / {{ pair[1].words }}</td>
+      <td class="mono"><a href="/runs/{{ pair[0].run_id }}">{{ pair[0].writer_model_key }}</a></td>
+      <td>{{ counts[pair[0].id] }} / {{ counts[pair[1].id] }}</td>
+      {% else %}<td colspan="3" class="lead">keine</td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Noch keine freigegebenen Fälle.</p>
+{% endif %}
+{% endblock %}

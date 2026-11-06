@@ -22,11 +22,15 @@ TASKS = {
     "decide_c": "Entscheidung mit RIS-Recherche (Bedingung C)",
     "extract_reasons": "Referenzgründe aus den Erwägungen (Hilfsaufgabe)",
     "judge": "Bewertung von Gründen und Zitaten (Richtermodell)",
+    "write_opposing": "Zwei Begründungen mit entgegengesetztem Ergebnis (Hilfsaufgabe)",
+    "assess": "Einschätzung einer Begründung (Prüfling, Ebene 5)",
 }
 PLACEHOLDERS = {
     "decide_b": ("input", "normen"),
     "judge": ("input", "checkliste", "antwort", "zitate"),
+    "assess": ("input", "begruendung"),
 }
+WHERE = {"normen": "in Bedingung B", "begruendung": "bei der Einschätzung einer Begründung"}
 ALL_PLACEHOLDERS = frozenset({"input"} | {p for ps in PLACEHOLDERS.values() for p in ps})
 PHRASINGS = 3
 
@@ -81,7 +85,7 @@ def validate(text: str, k: str = "") -> list[str]:
             problems.append(f"Platzhalter {{{name}}} fehlt")
     for name in sorted(ALL_PLACEHOLDERS - set(needed)):
         if f"{{{name}}}" in text:
-            where = "in Bedingung B" if name == "normen" else "bei der Bewertung"
+            where = WHERE.get(name, "bei der Bewertung")
             problems.append(f"Platzhalter {{{name}}} gibt es nur {where}")
     return problems
 
