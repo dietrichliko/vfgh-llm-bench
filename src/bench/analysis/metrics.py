@@ -209,7 +209,9 @@ def compare(results: Sequence[OutcomeResult], truth: dict[int, str]) -> list[Com
 # ── judges ──────────────────────────────────────────────────────────────────────
 
 
-def judge_scores(db: Session, run_ids: Iterable[int]) -> dict[int, list[JudgeScore]]:
+def judge_scores(
+    db: Session, run_ids: Iterable[int], allowed: set[int] | None = None
+) -> dict[int, list[JudgeScore]]:
     out: defaultdict[int, list[JudgeScore]] = defaultdict(list)
     ids = list(run_ids)
     for s in db.exec(
@@ -217,7 +219,8 @@ def judge_scores(db: Session, run_ids: Iterable[int]) -> dict[int, list[JudgeSco
         .where(col(JudgeScore.target_run_id).in_(ids))
         .order_by(col(JudgeScore.id))
     ).all():
-        out[s.target_run_id].append(s)
+        if allowed is None or s.run_id in allowed:
+            out[s.target_run_id].append(s)
     return dict(out)
 
 
@@ -428,7 +431,10 @@ class OpposingResult:
 
 
 def opposing(
-    db: Session, truth: dict[int, str], exclude: Exclude | None = None
+    db: Session,
+    truth: dict[int, str],
+    exclude: Exclude | None = None,
+    allowed: set[int] | None = None,
 ) -> list[OpposingResult]:
     sides = {r.id: r for r in db.exec(select(OpposingReasoning)).all()}
     values: defaultdict[str, defaultdict[int, defaultdict[str, list[int]]]] = defaultdict(
@@ -436,6 +442,8 @@ def opposing(
     )
     for a in db.exec(select(Assessment).where(Assessment.condition == "A")).all():
         if a.reasoning_id not in sides or a.case_id not in truth:
+            continue
+        if allowed is not None and a.run_id not in allowed:
             continue
         if exclude and a.case_id in exclude.get(a.model_key, set()):
             continue
@@ -501,8 +509,18 @@ def _pairs(expert: list[dict[str, object]], judge: dict[int, float]) -> list[tup
     return out
 
 
-def calibration(db: Session, conditions_run: Iterable[str] = ()) -> CalibrationReport:
-    items = db.exec(select(CalibrationItem).order_by(col(CalibrationItem.id))).all()
+def _items(db: Session, allowed: set[int] | None) -> list[CalibrationItem]:
+    return [
+        i
+        for i in db.exec(select(CalibrationItem).order_by(col(CalibrationItem.id))).all()
+        if allowed is None or i.target_run_id in allowed
+    ]
+
+
+def calibration(
+    db: Session, conditions_run: Iterable[str] = (), allowed: set[int] | None = None
+) -> CalibrationReport:
+    items = _items(db, allowed)
     ratings: defaultdict[int, list[CalibrationRating]] = defaultdict(list)
     for r in db.exec(select(CalibrationRating).order_by(col(CalibrationRating.id))).all():
         ratings[r.item_id].append(r)
@@ -510,7 +528,7 @@ def calibration(db: Session, conditions_run: Iterable[str] = ()) -> CalibrationR
         r.id: r
         for r in db.exec(select(Run).where(col(Run.id).in_([i.target_run_id for i in items]))).all()
     }
-    scores = judge_scores(db, [i.target_run_id for i in items])
+    scores = judge_scores(db, [i.target_run_id for i in items], allowed)
     data: defaultdict[tuple[str, str, str], list[tuple[float, float]]] = defaultdict(list)
     for item in items:
         rs = ratings.get(item.id or 0, [])
@@ -579,12 +597,13 @@ def ppi(
     runs: Sequence[DecideRun],
     scores: dict[int, list[JudgeScore]],
     run_checks: dict[int, list[CitationCheck]],
+    allowed: set[int] | None = None,
 ) -> list[PPIResult]:
-    items = db.exec(select(CalibrationItem)).all()
+    items = _items(db, allowed)
     first: dict[int, CalibrationRating] = {}
     for r in db.exec(select(CalibrationRating).order_by(col(CalibrationRating.id))).all():
         first.setdefault(r.item_id, r)
-    cal_scores = judge_scores(db, [i.target_run_id for i in items])
+    cal_scores = judge_scores(db, [i.target_run_id for i in items], allowed)
     cal_checks = checks(db, [i.target_run_id for i in items])
     cal_runs = {
         r.id: r
@@ -659,10 +678,10 @@ def ppi(
 # ── contamination ──────────────────────────────────────────────────────────────
 
 
-def recalled(db: Session) -> Exclude:
+def recalled(db: Session, allowed: set[int] | None = None) -> Exclude:
     """Per model the cases it recalls after its cutoff (for the sensitivity table)."""
     out: defaultdict[str, set[int]] = defaultdict(set)
-    for row in contamination.rows(db):
+    for row in contamination.rows(db, allowed):
         if row.recalled and not row.probe.before_cutoff:
             out[row.probe.model_key].add(row.probe.case_id)
     return dict(out)
@@ -686,23 +705,34 @@ class Report:
     reasons_without_recalled: list[ReasonsResult]
 
 
+def allowed_runs(db: Session, order_ids: Iterable[int] | None) -> set[int] | None:
+    """All runs of these orders (decide, judge, assess, probe …); None = no filter."""
+    if order_ids is None:
+        return None
+    ids = list(order_ids)
+    return {i for i in db.exec(select(Run.id).where(col(Run.order_id).in_(ids))).all() if i}
+
+
 def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
+    """The report; with ``order_ids`` only runs of these orders count (the study protocol)."""
+    order_ids = None if order_ids is None else list(order_ids)
+    allowed = allowed_runs(db, order_ids)
     runs = decide_runs(db, order_ids)
     t = truth(db)
     run_ids = [r.id for r in runs]
-    scores = judge_scores(db, run_ids)
+    scores = judge_scores(db, run_ids, allowed)
     run_checks = checks(db, run_ids)
     out = outcome(runs, t)
-    gone = recalled(db)
+    gone = recalled(db, allowed)
     return Report(
         outcome=out,
         comparisons=compare(out, t),
         reasons=reasons(runs, scores),
         citations=citations(runs, run_checks, scores),
         stability=stability(runs),
-        opposing=opposing(db, t),
-        calibration=calibration(db, {r.condition for r in runs}),
-        ppi=ppi(db, runs, scores, run_checks),
+        opposing=opposing(db, t, allowed=allowed),
+        calibration=calibration(db, {r.condition for r in runs}, allowed),
+        ppi=ppi(db, runs, scores, run_checks, allowed),
         recalled=gone,
         outcome_without_recalled=outcome(runs, t, gone),
         reasons_without_recalled=reasons(runs, scores, gone),

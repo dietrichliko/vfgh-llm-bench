@@ -11,6 +11,9 @@
   <dl>
     <dt>Erstellt</dt><dd>{{ order.created_at.strftime("%d.%m.%Y %H:%M") }}{% if order.finished_at %}, beendet {{ order.finished_at.strftime("%d.%m.%Y %H:%M") }}{% endif %}</dd>
     <dt>Aufgabe</dt><dd>{{ task_labels[order.task] }}</dd>
+    {% if protocol_status %}{% set tag, devs = protocol_status %}
+    <dt>Protokoll</dt><dd>{% if devs %}<span class="status warn">Abweichung von {{ tag }}</span>: {{ devs | join("; ") }} – zählt nicht für die Studie{% else %}<span class="status ok">passt zu {{ tag }}</span>{% endif %}</dd>
+    {% endif %}
     {% if order.task in ("decide", "assess") %}
     <dt>Bedingungen</dt><dd>{% for c in order.conditions %}{{ c }}: {{ conditions[c] }}{% if not loop.last %}; {% endif %}{% endfor %}</dd>
     <dt>Modelle</dt><dd>{% for k in order.model_keys %}<span class="mono">{{ k }}</span> ({{ order.snapshot.models[k].model_config.model }}){% if not loop.last %}, {% endif %}{% endfor %}</dd>

@@ -286,12 +286,12 @@ def slopes(report: metrics.Report, models: list[str]) -> dict[str, Any]:
     return {"conditions": conds, "xs": xs, "series": series, "ticks": ticks, "geo": g}
 
 
-def recall_bars(db: Session) -> list[dict[str, Any]]:
+def recall_bars(db: Session, allowed: set[int] | None = None) -> list[dict[str, Any]]:
     """Per model the share of probed cases it recalls, before and after its cutoff."""
     from bench import contamination
 
     out = []
-    for s in contamination.summary(contamination.rows(db)):
+    for s in contamination.summary(contamination.rows(db, allowed)):
         out.append(
             {
                 "model": s.model_key,
@@ -361,11 +361,13 @@ def context(
     condition: str = "A",
     model: str = "",
     report: metrics.Report | None = None,
+    order_ids: list[int] | None = None,
 ) -> dict[str, Any]:
-    """Everything the dashboard template needs (also used by the static export)."""
+    """Everything the dashboard template needs (also used by the static export).
+    ``order_ids``: only these orders count (the study protocol); None: all."""
     condition = condition if condition in CONDITIONS else "A"
-    report = report or metrics.analyse(db)
-    runs = metrics.decide_runs(db)
+    report = report or metrics.analyse(db, order_ids)
+    runs = metrics.decide_runs(db, order_ids)
     names = {k: rm.name for k, rm in config.items()}
     cutoffs = {k: rm.config.cutoff for k, rm in config.items()}
     models = sorted({o.model_key for o in report.outcome})
@@ -383,7 +385,7 @@ def context(
         "profiles": profiles(report, models),
         "grid": grid(db, runs, report, condition),
         "slopes": slopes(report, models),
-        "recall": recall_bars(db),
+        "recall": recall_bars(db, metrics.allowed_runs(db, order_ids)),
         "scatter": scatter(report),
         "confusion": confusion(report, chosen, condition),
         "chosen": chosen,
@@ -396,6 +398,11 @@ def context(
         "series": SERIES,
         "outcome_labels": {**OUTCOME_LABELS, "none": "keins / Gleichstand"},
         "static_export": False,
+        "protocol_label": "noch nicht eingefroren",
+        "frozen": False,
+        "alle": False,
+        "deviating": 0,
+        "filtered": order_ids is not None,
     }
 
 
@@ -406,23 +413,36 @@ def dashboard(
     db: DbDep,
     bedingung: str = "A",
     modell: str = "",
+    alle: bool = False,
 ) -> HTMLResponse:
-    return render(
-        request,
-        "dashboard.html",
-        user=user,
-        **context(db, resolved_models(request), bedingung, modell),
-    )
+    from bench import protocol
+
+    c = protocol.conformance(db)
+    order_ids = None if alle or c.protocol is None else c.orders
+    ctx = context(db, resolved_models(request), bedingung, modell, order_ids=order_ids)
+    ctx["protocol_label"] = protocol.label(c.protocol)
+    ctx["frozen"] = c.protocol is not None
+    ctx["alle"] = alle
+    ctx["deviating"] = len(c.deviations)
+    return render(request, "dashboard.html", user=user, **ctx)
 
 
 @router.get("/export.zip")
-def export_zip(request: Request, user: ViewerDep, db: DbDep, raw: bool = False) -> Response:
-    """Data, metrics and the dashboard as one ZIP; raw exchanges for admins only."""
-    from bench import export
+def export_zip(
+    request: Request, user: ViewerDep, db: DbDep, raw: bool = False, alle: bool = False
+) -> Response:
+    """Data, metrics and the dashboard as one ZIP; raw exchanges for admins only.
+    Once a protocol is frozen, only its orders count unless ``alle``."""
+    from bench import export, protocol
 
     if raw and user.role is not UserRole.ADMIN:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Roh-Antworten nur für die Administration")
-    content = export.build(db, resolved_models(request), raw=raw)
+    c = protocol.conformance(db)
+    order_ids = None if alle or c.protocol is None else c.orders
+    label = protocol.label(c.protocol) + (" (alle Aufträge)" if alle and c.protocol else "")
+    content = export.build(
+        db, resolved_models(request), raw=raw, protocol=label, order_ids=order_ids
+    )
     name = f"vfgh-llm-studie-{datetime.now(UTC):%Y%m%d-%H%M}{'-roh' if raw else ''}.zip"
     audit(db, "export", user_id=user.id, detail={"raw": raw, "bytes": len(content)})
     db.commit()

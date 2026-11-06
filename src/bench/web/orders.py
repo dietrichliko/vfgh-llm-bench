@@ -283,10 +283,18 @@ def order_detail(request: Request, order_id: int, user: AdminDep, db: DbDep) -> 
     prompt_versions = db.exec(
         select(PromptVersion).where(col(PromptVersion.id).in_(order.snapshot.get("prompts", [])))
     ).all()
+    from bench import protocol
+
+    study, frozen = protocol.latest(db)
+    protocol_status = None
+    if study is not None and frozen is not None:
+        started = protocol.versions(db, study.id or 0)[0].created_at
+        protocol_status = (frozen.tag, protocol.deviations(order, frozen.config, started))
     return render(
         request,
         "order.html",
         user=user,
+        protocol_status=protocol_status,
         runs=runs,
         cases=cases,
         prompt_versions=prompt_versions,

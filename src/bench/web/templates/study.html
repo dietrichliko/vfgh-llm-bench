@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Studie · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Studie und Protokoll</h1>
+<p class="lead">Vor dem Lauf der Studie wird ihr Aufbau eingefroren: Fälle, Modelle je Rolle, Bedingungen,
+Wiederholungen, die Stichtagsregel, die aktuellen Prompt-Versionen und der Auswertungsplan. Danach zählen
+für Ergebnisse und Veröffentlichung nur Aufträge, die zum Protokoll passen; Änderungen brauchen eine neue
+Protokollversion mit Begründung.</p>
+
+{% if problem %}<div class="error"><p style="margin: 0">{{ problem }}</p></div>{% endif %}
+{% if notice %}<p class="notice">{{ notice }}</p>{% endif %}
+
+<p>Studien-Repository: {% if repo %}<span class="mono">{{ repo }}</span>{% else %}<strong>nicht konfiguriert</strong> –
+  Protokoll und Ergebnisse als ZIP herunterladen und von Hand committen (<code>BENCH_STUDY_REPO_URL</code>, Schlüssel <code>STUDY_REPO_DEPLOY_KEY</code>).{% endif %}</p>
+
+{% if not study %}
+<form method="post" action="/study/create" class="panel">
+  <h2 style="margin-top: 0">Studie anlegen</h2>
+  <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin: 0">
+    <label>Kürzel<br><input type="text" name="slug" placeholder="conference-2026" required pattern="[a-z0-9-]+"></label>
+    <label>Name<br><input type="text" name="name" style="width: 24rem"></label>
+    <button type="submit">anlegen</button></p>
+</form>
+{% else %}
+<h2>{{ study.name }} <span class="mono lead">{{ study.slug }}</span></h2>
+
+{% set frozen = versions | length > 0 %}
+<details{% if not frozen %} open{% endif %} class="panel" style="margin-bottom: 1rem">
+<summary><strong>{% if frozen %}Entwurf für eine neue Protokollversion{% else %}Aufbau der Studie (Entwurf){% endif %}</strong></summary>
+<form method="post" action="/study/draft">
+  <h3>Bedingungen</h3>
+  <table style="width: auto">
+    <thead><tr><th></th><th>Bedingung</th><th>Wiederholungen</th><th>Formulierungen</th></tr></thead>
+    <tbody>{% for c, label in (("A", "Modell allein"), ("B", "vorgegebene Normen"), ("C", "eigene RIS-Recherche")) %}{% set d = draft.get("conditions", {}).get(c) %}
+      <tr><td><input type="checkbox" name="cond_{{ c }}" id="cond_{{ c }}"{% if d %} checked{% endif %}></td><td><label for="cond_{{ c }}">{{ c }}: {{ label }}</label></td>
+        <td><input type="number" name="rep_{{ c }}" min="1" max="20" value="{{ d.repetitions if d else (5 if c == 'A' else 1) }}" style="width: 5rem"></td>
+        <td><input type="number" name="phr_{{ c }}" min="1" max="3" value="{{ d.phrasings if d else (3 if c == 'A' else 1) }}" style="width: 5rem"></td></tr>{% endfor %}</tbody>
+  </table>
+  <p><label>Abstand zum Wissensstand (Monate) <input type="number" name="cutoff_months" min="0" value="{{ draft.get('cutoff_months', 3) }}" style="width: 5rem"></label></p>
+
+  <h3>Modelle</h3>
+  {% for role, label in (("tested", "Prüflinge"), ("judge", "Richter"), ("writer", "Gegenbegründungen"), ("extractor", "Referenzgründe")) %}
+  <fieldset><legend>{{ label }}</legend>
+    {% for m in roles[role] %}<label class="choice"><input type="checkbox" name="m_{{ role }}" value="{{ m.key }}"{% if m.key in draft.get("models", {}).get(role, []) %} checked{% endif %}>
+      <span class="mono">{{ m.key }}</span> ({{ m.config.model }}{% if m.config.cutoff %}, Stand {{ m.config.cutoff.strftime("%m/%Y") }}{% endif %})</label>
+    {% else %}<span class="lead">kein Modell mit dieser Rolle</span>{% endfor %}
+  </fieldset>
+  {% endfor %}
+
+  <h3>Fälle</h3>
+  <p class="lead">Freigegebene Fälle; markiert: R = bestätigte Referenzgründe, S = Stichtag, N = freigegebene Normen.</p>
+  <table>
+    <thead><tr><th></th><th>Datum</th><th>Geschäftszahl</th><th>Gebiet</th><th>R</th><th>S</th><th>N</th></tr></thead>
+    <tbody>{% for c in cases %}<tr>
+      <td><input type="checkbox" name="cases" value="{{ c.id }}" id="case-{{ c.id }}"{% if c.id in draft.get("cases", []) %} checked{% endif %}></td>
+      <td>{{ c.decision_date.strftime("%d.%m.%Y") }}</td><td><label for="case-{{ c.id }}">{{ c.case_number }}</label></td><td>{{ c.areas | join(", ") }}</td>
+      <td>{{ "✓" if c.checklist_id else "–" }}</td><td>{{ "✓" if c.reference_date else "–" }}</td><td>{{ "✓" if c.norm_set_id else "–" }}</td></tr>{% endfor %}</tbody>
+  </table>
+  <p><button type="submit" class="secondary">Entwurf speichern</button></p>
+</form>
+</details>
+
+<section class="panel" style="margin-bottom: 1rem">
+  <h3 style="margin-top: 0">{% if frozen %}Neue Protokollversion (Änderung){% else %}Protokoll einfrieren{% endif %}</h3>
+  {% if resolved.problems %}<p><strong>Noch nicht möglich:</strong></p><ul>{% for p in resolved.problems %}<li>{{ p }}</li>{% endfor %}</ul>{% endif %}
+  {% if resolved.warnings %}<details><summary>{{ resolved.warnings | length }} Hinweise</summary><ul>{% for w in resolved.warnings %}<li>{{ w }}</li>{% endfor %}</ul></details>{% endif %}
+  {% if not resolved.problems %}
+  <p class="lead">{{ resolved.config.cases | length }} Fälle; Prüflinge: {{ resolved.config.models.tested.keys() | join(", ") }};
+    Prompts: {% for k, v in resolved.config.prompts.items() %}<span class="mono">{{ k }} v{{ v.version }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+  <form method="post" action="/study/freeze" style="margin: 0">
+    {% if frozen %}<p><label>Begründung (erscheint in AMENDMENTS.md)<br><textarea name="reason" rows="3" style="width: 100%" required></textarea></label></p>{% endif %}
+    <p style="margin: 0"><button type="submit">{% if frozen %}Protokoll v{{ versions | length + 1 }} einfrieren{% else %}Protokoll einfrieren{% endif %}</button>
+      <span class="lead">nicht rückgängig zu machen</span></p>
+  </form>
+  {% endif %}
+</section>
+
+{% if frozen %}
+<h3>Protokollversionen</h3>
+<table>
+  <thead><tr><th>Tag</th><th>Eingefroren</th><th>sha256</th><th>Begründung</th><th>Repository</th><th></th></tr></thead>
+  <tbody>{% for v in versions %}{% set p = pushes.get(v.tag) %}<tr>
+    <td class="mono">{{ v.tag }}</td><td>{{ v.created_at.strftime("%d.%m.%Y %H:%M") }}</td><td class="mono">{{ v.sha256[:12] }}</td>
+    <td>{{ v.reason or "Erste Fassung" }}</td>
+    <td>{% if p and p.ok %}<span class="status ok">übertragen</span> <span class="mono">{{ p.commit[:10] }}</span>{% elif p %}<span class="status bad">Fehler</span> {{ p.message }}
+      {% if repo %}<form method="post" action="/study/protocol/{{ v.version }}/push" style="display: inline"><button class="secondary" type="submit">erneut</button></form>{% endif %}
+      {% elif repo %}<form method="post" action="/study/protocol/{{ v.version }}/push" style="display: inline"><button class="secondary" type="submit">übertragen</button></form>{% else %}–{% endif %}</td>
+    <td><a href="/study/protocol/{{ v.version }}.zip">ZIP</a></td></tr>{% endfor %}</tbody>
+</table>
+
+<h3>Aufträge</h3>
+<p>{{ conformance.orders | length }} Aufträge passen zum Protokoll {{ conformance.protocol.tag }}{% if conformance.deviations %}, {{ conformance.deviations | length }} weichen ab{% endif %}.</p>
+{% if conformance.deviations %}
+<details><summary>Abweichungen</summary><ul>
+  {% for oid, reasons in conformance.deviations.items() %}<li><a href="/orders/{{ oid }}">Auftrag {{ oid }}</a> {{ orders[oid].name if oid in orders else "" }}: {{ reasons | join("; ") }}</li>{% endfor %}
+</ul></details>
+{% endif %}
+
+<section class="panel" style="margin-top: 1rem">
+  <h3 style="margin-top: 0">Ergebnisse veröffentlichen</h3>
+  <p class="lead">Exportiert Daten, Kennzahlen und Ergebnisseite der Aufträge, die zum Protokoll passen, nach
+    <code>studies/{{ study.slug }}/results/</code> und setzt den Tag <code>{{ study.slug }}-results-v{{ releases | length + 1 }}</code>.
+    Aus dem Tag wird auf GitHub eine Release erstellt; Zenodo vergibt die DOI.</p>
+  <form method="post" action="/study/publish" style="margin: 0">
+    <p><label class="choice"><input type="checkbox" name="raw" value="true"> mit Roh-Antworten (HTTP-Austausch); vorher die Bedingungen der Anbieter prüfen</label></p>
+    <p style="margin: 0"><button type="submit">Ergebnisse veröffentlichen</button></p>
+  </form>
+  {% if releases %}
+  <table style="margin-top: 1rem">
+    <thead><tr><th>Tag</th><th>Erstellt</th><th>Protokoll</th><th>Aufträge</th><th>Roh-Antworten</th><th>Repository</th><th></th></tr></thead>
+    <tbody>{% for r in releases %}{% set p = pushes.get(r.tag) %}<tr>
+      <td class="mono">{{ r.tag }}</td><td>{{ r.created_at.strftime("%d.%m.%Y %H:%M") }}</td>
+      <td class="mono">{% for v in versions %}{% if v.id == r.protocol_version_id %}{{ v.tag }}{% endif %}{% endfor %}</td>
+      <td>{{ r.orders | length }}</td><td>{{ "ja" if r.raw else "nein" }}</td>
+      <td>{% if p and p.ok %}<span class="status ok">übertragen</span> <span class="mono">{{ p.commit[:10] }}</span>{% elif p %}<span class="status bad">Fehler</span> {{ p.message }}{% else %}–{% endif %}</td>
+      <td><a href="/study/results/{{ r.version }}.zip">ZIP</a></td></tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

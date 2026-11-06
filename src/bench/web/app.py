@@ -30,6 +30,7 @@ from bench.web import (
     opposing,
     orders,
     pages,
+    study,
 )
 from bench.web import prompts as prompt_pages
 
@@ -130,4 +131,5 @@ def create_app(
     app.include_router(opposing.router)
     app.include_router(contamination.router)
     app.include_router(dashboard.router)
+    app.include_router(study.router)
     return app

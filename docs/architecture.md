@@ -236,7 +236,7 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Job status:** `done` (answer fits the schema), `not_evaluable` (answer arrived but does not fit; never re-asked), `failed` (no answer), `unknown` (worker stopped after sending), `cancelled`. Every call is stored as an immutable `Run` with the messages, raw HTTP exchanges (without keys), parsed output, outcome label, usage and cost (price list, and the provider's own figure where reported).
 - **Planning** (`bench/orders.py`): jobs are ordered repetition → phrasing → condition → case → model. A case is used for a model only if it was decided at least `cutoff_months` (default 3) after the model's training cutoff. The estimate uses 3.5 characters per input token and `expected_output_tokens`.
 - **Worker** (`bench/worker.py`): one process; jobs claimed by compare-and-set on the status in `seq` order; lease 2 min, heartbeat 30 s. Model settings come from the order's snapshot, checked against its hash; a mismatch pauses the order. An order pauses at its cost cap or the total cap (`BENCH_COST_CAP_TOTAL_USD`), and after 5 failures in a row at one provider. `BENCH_WORKER_CONCURRENCY` (default 8) limits calls in flight over all providers.
-- **Not yet:** the in-app notification banner; freezing the protocol.
+- **Not yet:** the in-app notification banner. (Freezing the protocol came in stage 6d.)
 
 ### As built in stage 4a (condition C)
 
@@ -321,6 +321,16 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Raw HTTP exchanges** are left out by default (publishing them is an open point, §13); admins can add them (`data/raw_exchanges.jsonl.gz`).
 - **Where:** button on the dashboard (`/export.zip`, viewer and up; `?raw=1` admin only; each download is in the audit log) and `bench export <file> [--raw]`. Publish results (6d) will commit the same files under `results/`.
 
+### As built in stage 6d (freeze protocol and publish results)
+
+- **Study page** (`/study`, `bench/web/study.py`, admin): create the study (slug, name), then edit the draft setup: cases, models per role (tested, judge, writer, extractor), conditions with repetitions and phrasings, the cutoff rule. The page lists what blocks freezing (e.g. no cases) and hints (cases without confirmed checklist, Stichtag or norms).
+- **Freeze** (`bench/protocol.py`): resolves the draft into a `ProtocolVersion` (immutable): cases with released parse and input hash, models with config hash, the latest version of every prompt with sha256, the analysis plan's sha256, and the sha256 of all of it. It writes the protocol files of publication.md §4 (`protocol.yaml`, `cases.csv`, `models.yaml` with secret names only, `prompts/*.md`, `analysis-plan.md`, `environment.yaml`, `AMENDMENTS.md`). Version 1 needs no reason; every later version is an **amendment** with a reason and a change.
+- **Conformance** is computed from each order's snapshot against the latest protocol version: created after the first freeze; cases and parses, models of the right role with the same config hash, prompt versions, conditions with at most the frozen repetitions and phrasings, the cutoff rule, Stichtage, norm sets and checklists. Orders that do not match may run but are **deviations**: the order page says why, and they are left out of the dashboard, the export and published results (the dashboard can show all orders on request). Judge, assessment and probe runs count only if their own order conforms.
+- **Analysis plan** now lives in the package (`src/bench/analysis/analysis-plan.md`, so the container can freeze it); `docs/analysis-plan.md` is a symlink.
+- **Publish results:** the export over the conforming orders, with the protocol tag and hash in the manifest; raw exchanges per publish by checkbox (default off). Each release is a `ResultsRelease` (immutable); its ZIP is kept in `<data_dir>/releases/`.
+- **Study repository** (`bench/studyrepo.py`): `BENCH_STUDY_REPO_URL`, branch `BENCH_STUDY_REPO_BRANCH`, SSH deploy key from the secret `STUDY_REPO_DEPLOY_KEY`. Each push works in a fresh clone in a temporary directory, writes below `studies/<slug>/` (`results/` replaced as a whole), commits, sets an annotated tag (`<slug>-protocol-vN`, `<slug>-results-vN`) and pushes; an existing tag is never moved. Each attempt is recorded (`RepoPush`); a failed push can be repeated. Without a repository, protocol and results are offered as ZIP files to commit by hand. The GitHub release (and with it the Zenodo DOI) is still created by hand from the tag.
+- `environment.yaml` records `BENCH_GIT_COMMIT` and `BENCH_IMAGE_DIGEST` if set at image build.
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -384,7 +394,7 @@ Each stage runs and is tested on its own.
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
 | 5 Evaluation ✓ | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe ✓ |
-| 6 Analysis | 6a analysis plan and metrics ✓; 6b dashboard ✓; 6c export ✓; 6d freeze protocol and publish results. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
+| 6 Analysis ✓ | 6a analysis plan and metrics ✓; 6b dashboard ✓; 6c export ✓; 6d freeze protocol and publish results ✓. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points
 

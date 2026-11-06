@@ -419,13 +419,19 @@ class Row:
         return bool(self.probe.outcome_match) and (self.reasons_found or 0) >= 1
 
 
-def rows(db: Session) -> list[Row]:
-    probes = db.exec(select(ContaminationProbe).order_by(col(ContaminationProbe.id))).all()
+def rows(db: Session, allowed: set[int] | None = None) -> list[Row]:
+    """Probes with their judge scores; ``allowed``: only these runs (study protocol)."""
+    probes = [
+        p
+        for p in db.exec(select(ContaminationProbe).order_by(col(ContaminationProbe.id))).all()
+        if allowed is None or p.run_id in allowed
+    ]
     scores: defaultdict[int, list[JudgeScore]] = defaultdict(list)
     for s in db.exec(
         select(JudgeScore).where(col(JudgeScore.target_run_id).in_([p.run_id for p in probes]))
     ).all():
-        scores[s.target_run_id].append(s)
+        if allowed is None or s.run_id in allowed:
+            scores[s.target_run_id].append(s)
     return [Row(p, scores[p.run_id]) for p in probes]
 
 

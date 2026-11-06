@@ -80,18 +80,19 @@ PARSE_FIELDS = (
     "input_sha256",
     "reference_text",
 )
-TABLES: list[tuple[str, type[SQLModel]]] = [
-    ("orders", Order),
-    ("prompts", PromptVersion),
-    ("reference_checklists", ReferenceChecklist),
-    ("citation_checks", CitationCheck),
-    ("judge_scores", JudgeScore),
-    ("calibration_items", CalibrationItem),
-    ("calibration_ratings", CalibrationRating),
-    ("opposing_reasonings", OpposingReasoning),
-    ("assessments", Assessment),
-    ("contamination_probes", ContaminationProbe),
-    ("norm_sets", NormSet),
+# table, and the column that ties a row to a run (None: reference data, always exported)
+TABLES: list[tuple[str, type[SQLModel], str | None]] = [
+    ("orders", Order, None),
+    ("prompts", PromptVersion, None),
+    ("reference_checklists", ReferenceChecklist, None),
+    ("citation_checks", CitationCheck, "run_id"),
+    ("judge_scores", JudgeScore, "run_id"),
+    ("calibration_items", CalibrationItem, "target_run_id"),
+    ("calibration_ratings", CalibrationRating, None),
+    ("opposing_reasonings", OpposingReasoning, "run_id"),
+    ("assessments", Assessment, "run_id"),
+    ("contamination_probes", ContaminationProbe, "run_id"),
+    ("norm_sets", NormSet, None),
 ]
 README = """# VfGH-LLM-Studie: Daten und Kennzahlen
 
@@ -173,8 +174,13 @@ def csv_bytes(items: Iterable[Any], skip: Iterable[str] = ()) -> tuple[bytes, in
     return buf.getvalue().encode(), len(rows)
 
 
-def data_files(db: Session, raw: bool = False) -> Iterator[tuple[str, bytes, int]]:
+def data_files(
+    db: Session, raw: bool = False, order_ids: list[int] | None = None
+) -> Iterator[tuple[str, bytes, int]]:
+    """With ``order_ids`` only these orders, their runs and the rows built on them."""
     people = Pseudonyms()
+    allowed = metrics.allowed_runs(db, order_ids)
+    items: set[int] = set()
     cases = db.exec(select(Case).order_by(col(Case.id))).all()
     yield (
         "data/cases.jsonl.gz",
@@ -189,15 +195,28 @@ def data_files(db: Session, raw: bool = False) -> Iterator[tuple[str, bytes, int
             for p in parses
         ),
     )
-    runs = db.exec(select(Run).order_by(col(Run.id))).all()
+    runs = [
+        r
+        for r in db.exec(select(Run).order_by(col(Run.id))).all()
+        if allowed is None or r.id in allowed
+    ]
     yield "data/runs.jsonl.gz", *jsonl_gz(_row(r, people, drop=["exchanges"]) for r in runs)
     if raw:
         yield (
             "data/raw_exchanges.jsonl.gz",
             *jsonl_gz({"run_id": r.id, "exchanges": r.exchanges} for r in runs),
         )
-    for name, table in TABLES:
-        rows = db.exec(select(table).order_by(table.id)).all()  # type: ignore[attr-defined]
+    for name, table, run_column in TABLES:
+        rows: list[Any] = list(db.exec(select(table).order_by(table.id)).all())  # type: ignore[attr-defined]
+        if allowed is not None:
+            if table is Order:
+                rows = [r for r in rows if r.id in set(order_ids or [])]
+            elif run_column:
+                rows = [r for r in rows if getattr(r, run_column) in allowed]
+            elif table is CalibrationRating:
+                rows = [r for r in rows if r.item_id in items]
+        if table is CalibrationItem:
+            items = {r.id for r in rows}
         yield f"data/{name}.jsonl.gz", *jsonl_gz(_row(r, people) for r in rows)
 
 
@@ -249,7 +268,12 @@ def metric_files(report: metrics.Report) -> Iterator[tuple[str, bytes, int]]:
 
 
 def dashboard_files(
-    db: Session, config: dict[str, ResolvedModel], report: metrics.Report, generated_at: str
+    db: Session,
+    config: dict[str, ResolvedModel],
+    report: metrics.Report,
+    generated_at: str,
+    order_ids: list[int] | None = None,
+    protocol: str = "",
 ) -> Iterator[tuple[str, bytes, int]]:
     from bench.web import dashboard
     from bench.web.app import ROLE_LABELS
@@ -261,8 +285,10 @@ def dashboard_files(
     env.globals["role_labels"] = ROLE_LABELS
     template = env.get_template("dashboard.html")
     for condition in sorted({o.condition for o in report.outcome}) or ["A"]:
-        context = dashboard.context(db, config, condition, report=report)
+        context = dashboard.context(db, config, condition, report=report, order_ids=order_ids)
         context.update(static_export=True, generated_at=generated_at, user=None)
+        if protocol:
+            context["protocol_label"] = protocol
         yield f"dashboard/{condition}.html", template.render(**context).encode(), 1
     for name in ("app.css",):
         yield f"dashboard/static/{name}", (WEB / "static" / name).read_bytes(), 1
@@ -274,15 +300,17 @@ def build(
     raw: bool = False,
     protocol: str = "noch nicht eingefroren",
     now: datetime | None = None,
+    order_ids: list[int] | None = None,
 ) -> bytes:
-    """The ZIP as bytes; deterministic for the same data and time."""
+    """The ZIP as bytes; deterministic for the same data and time. With ``order_ids``
+    only these orders count (the study protocol)."""
     now = now or datetime.now(UTC)
     generated_at = now.strftime("%Y-%m-%d %H:%M UTC")
-    report = metrics.analyse(db)
+    report = metrics.analyse(db, order_ids)
     files = [
-        *data_files(db, raw),
+        *data_files(db, raw, order_ids),
         *metric_files(report),
-        *dashboard_files(db, config, report, generated_at),
+        *dashboard_files(db, config, report, generated_at, order_ids, protocol),
     ]
     raw_note = (
         "Die Roh-Antworten (HTTP-Austausch) sind in `data/raw_exchanges.jsonl.gz`."
@@ -296,6 +324,7 @@ def build(
         "generated_at": now.isoformat(),
         "bench_version": __version__,
         "protocol": protocol,
+        "orders": order_ids,
         "raw_exchanges": raw,
         "files": {
             name: {"rows": n, "sha256": hashlib.sha256(content).hexdigest()}

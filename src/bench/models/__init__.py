@@ -122,6 +122,12 @@ from bench.models.runs import (  # noqa: E402
     PromptVersion,
     Run,
 )
+from bench.models.study import (  # noqa: E402
+    ProtocolVersion,
+    RepoPush,
+    ResultsRelease,
+    Study,
+)
 
 __all__ = [
     "OPEN_JOB_STATES",
@@ -147,10 +153,14 @@ __all__ = [
     "Order",
     "OrderStatus",
     "PromptVersion",
+    "ProtocolVersion",
     "ProviderCheck",
     "ReferenceChecklist",
+    "RepoPush",
+    "ResultsRelease",
     "Run",
     "SourceDocument",
+    "Study",
     "User",
     "UserRole",
     "UserSession",

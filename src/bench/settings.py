@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     dev_login: bool = False
     ris_mcp_url: str = "http://ris-mcp:8000/mcp"  # condition C
     ris_mcp_allowed_hosts: Annotated[list[str], NoDecode] = Field(default_factory=list)
+    # study repository for Freeze protocol / Publish results (stage 6d); empty = ZIP only.
+    # The SSH deploy key is the secret STUDY_REPO_DEPLOY_KEY.
+    study_repo_url: str = ""
+    study_repo_branch: str = "main"
+    git_commit: str = ""  # of this app, set at image build; recorded in environment.yaml
+    image_digest: str = ""
 
     oidc_issuer: str = ""
     oidc_client_id: str = ""

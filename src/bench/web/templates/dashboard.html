@@ -6,17 +6,20 @@
 {% block content %}
 <div class="viz-root">
 <h1>Ergebnisse</h1>
-<p class="lead">Protokoll: noch nicht eingefroren. Alle Zahlen beruhen auf den bisher gespeicherten
-Läufen und Bewertungen und ändern sich mit jedem neuen Auftrag. Berechnung nach dem
-Auswertungsplan (<code>docs/analysis-plan.md</code>).{% if static_export %} Stand: {{ generated_at }}.{% endif %}</p>
+<p class="lead">Protokoll: <strong>{{ protocol_label }}</strong>.
+{% if not frozen %}Alle Zahlen beruhen auf den bisher gespeicherten Läufen und Bewertungen und ändern sich mit jedem neuen Auftrag.
+{% elif alle %}Angezeigt werden <strong>alle Aufträge</strong>, auch Abweichungen vom Protokoll.
+{% else %}Es zählen nur Aufträge, die zum Protokoll passen{% if deviating %}; {{ deviating }} weitere weichen ab und bleiben außen vor{% endif %}.{% endif %}
+Berechnung nach dem Auswertungsplan (<code>docs/analysis-plan.md</code>).{% if static_export %} Stand: {{ generated_at }}.{% endif %}</p>
+{% if frozen and not static_export %}<p class="no-print">{% if alle %}<a href="?bedingung={{ condition }}">nur das Protokoll zeigen</a>{% else %}<a href="?bedingung={{ condition }}&amp;alle=1">alle Aufträge zeigen</a>{% endif %}</p>{% endif %}
 {% if not static_export %}
-<p class="no-print"><a class="button secondary" href="/export.zip">Daten und Kennzahlen herunterladen (ZIP)</a>
-  {% if user and user.role.value == "admin" %}<a href="/export.zip?raw=1">mit Roh-Antworten</a>{% endif %}</p>
+<p class="no-print"><a class="button secondary" href="/export.zip{{ '?alle=1' if alle else '' }}">Daten und Kennzahlen herunterladen (ZIP)</a>
+  {% if user and user.role.value == "admin" %}<a href="/export.zip?raw=1{{ '&amp;alle=1' if alle else '' }}">mit Roh-Antworten</a>{% endif %}</p>
 {% endif %}
 
 <nav class="tabs no-print" aria-label="Bedingung">
   {% for c, label in conditions.items() %}
-  {% if c in run_conditions %}<a href="{{ (c ~ '.html') if static_export else ('?bedingung=' ~ c) }}"{% if c == condition %} aria-current="page"{% endif %}>{{ c }}: {{ label }}</a>
+  {% if c in run_conditions %}<a href="{{ (c ~ '.html') if static_export else ('?bedingung=' ~ c ~ ('&alle=1' if alle else '')) }}"{% if c == condition %} aria-current="page"{% endif %}>{{ c }}: {{ label }}</a>
   {% else %}<span class="lead">{{ c }}: nicht gelaufen</span>{% endif %}
   {% endfor %}
 </nav>
@@ -204,7 +207,7 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
   {% if confusion %}
   <p class="lead">Kreuztabelle VfGH (Zeilen) gegen {{ confusion.model }} (Spalten), Bedingung {{ condition }}, n = {{ confusion.n }}.
     Die Diagonale (umrandet) ist richtig.</p>
-  {% if not static_export %}<form method="get" class="no-print" style="margin: 0 0 0.5rem"><input type="hidden" name="bedingung" value="{{ condition }}">
+  {% if not static_export %}<form method="get" class="no-print" style="margin: 0 0 0.5rem"><input type="hidden" name="bedingung" value="{{ condition }}">{% if alle %}<input type="hidden" name="alle" value="1">{% endif %}
     <label>Modell <select name="modell" onchange="this.form.submit()">{% for m in models %}<option{% if m == chosen %} selected{% endif %}>{{ m }}</option>{% endfor %}</select></label>
     <noscript><button type="submit">zeigen</button></noscript></form>{% endif %}
   <table class="heat confusion">

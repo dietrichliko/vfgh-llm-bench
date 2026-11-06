@@ -77,6 +77,9 @@ studies/<slug>/                 e.g. studies/conference-2026/
 
 ### What the app does
 
+As built in stage 6d, see architecture.md §7. Differences from the plan below: the protocol is defined on a study page, not per order; whether an order belongs to the study is computed from its snapshot rather than stored on each run; the GitHub release is still created by hand.
+
+
 1. **Freeze protocol** (admin button):
    - The app writes the files above, stores the snapshot and its sha256 in the database, and locks the order's configuration.
    - It commits to the study repository, sets an annotated tag `<slug>-protocol-v1` and pushes.
