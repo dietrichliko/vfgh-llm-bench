@@ -24,6 +24,18 @@
     <dt>Prompts</dt><dd>{% for p in prompt_versions %}<a href="/prompts/{{ p.key }}?version={{ p.version }}" class="mono">{{ p.key }} v{{ p.version }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd>
   </dl>
 </div>
+{% if order.task == "probe" %}
+<details open><summary>Kontaminationsprobe</summary>
+  <p>Nur Datum und Geschäftszahl; Ergebnisse auf der Seite <a href="/contamination">Kontamination</a>.</p>
+  {% if order.snapshot.get("before_cutoff") %}<p>Vor dem Wissensstand (Positivkontrolle): {% for k, ids in order.snapshot.before_cutoff.items() %}<span class="mono">{{ k }}</span> {{ ids | length }} Fälle{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+</details>
+{% endif %}
+{% if order.task == "probe_judge" %}
+<details open><summary>Bewertete Proben</summary>
+  <p>Erinnerte Gründe gegen die Referenzgründe; Ergebnisse auf der Seite <a href="/contamination">Kontamination</a>.</p>
+  {% if order.snapshot.get("skipped") %}<p>Ausgelassen: {% for k, n in order.snapshot.skipped.items() %}{{ n }} × {{ skipped_labels.get(k, k) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+</details>
+{% endif %}
 {% if order.task == "judge" %}
 <details open><summary>Bewertete Antworten</summary>
   <p>Aus Auftrag {% for i in order.snapshot.get("source_orders", []) %}<a href="/orders/{{ i }}">{{ i }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.

@@ -24,13 +24,22 @@ TASKS = {
     "judge": "Bewertung von Gründen und Zitaten (Richtermodell)",
     "write_opposing": "Zwei Begründungen mit entgegengesetztem Ergebnis (Hilfsaufgabe)",
     "assess": "Einschätzung einer Begründung (Prüfling, Ebene 5)",
+    "probe": "Kontaminationsprobe: Entscheidung nur aus Datum und Geschäftszahl (Prüfling)",
+    "probe_judge": "Bewertung der erinnerten Gründe (Richtermodell)",
 }
 PLACEHOLDERS = {
     "decide_b": ("input", "normen"),
     "judge": ("input", "checkliste", "antwort", "zitate"),
     "assess": ("input", "begruendung"),
+    "probe": ("datum", "geschaeftszahl"),  # never the case input
+    "probe_judge": ("checkliste", "antwort"),
 }
-WHERE = {"normen": "in Bedingung B", "begruendung": "bei der Einschätzung einer Begründung"}
+WHERE = {
+    "normen": "in Bedingung B",
+    "begruendung": "bei der Einschätzung einer Begründung",
+    "datum": "bei der Kontaminationsprobe",
+    "geschaeftszahl": "bei der Kontaminationsprobe",
+}
 ALL_PLACEHOLDERS = frozenset({"input"} | {p for ps in PLACEHOLDERS.values() for p in ps})
 PHRASINGS = 3
 
@@ -85,6 +94,9 @@ def validate(text: str, k: str = "") -> list[str]:
             problems.append(f"Platzhalter {{{name}}} fehlt")
     for name in sorted(ALL_PLACEHOLDERS - set(needed)):
         if f"{{{name}}}" in text:
+            if name == "input":
+                problems.append("Platzhalter {input} gibt es hier nicht")
+                continue
             where = WHERE.get(name, "bei der Bewertung")
             problems.append(f"Platzhalter {{{name}}} gibt es nur {where}")
     return problems

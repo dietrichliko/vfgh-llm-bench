@@ -188,3 +188,28 @@ class Assessment(SQLModel, table=True):
     side: str = Field(max_length=16)
     value: str = Field(max_length=32)
     created_at: datetime = Field(default_factory=utcnow)
+
+
+class ContaminationProbe(SQLModel, table=True):
+    """What a tested model recalls of a decision from its date and case number alone;
+    immutable (trigger).
+
+    ``before_cutoff``: the case fails the model's cutoff rule (positive control, never
+    scored in the study). ``outcome_match`` is None when the model gives no outcome.
+    The recalled reasons are scored by the judges (``JudgeScore`` with the probe run as
+    ``target_run_id`` and no citations).
+    """
+
+    __tablename__ = "contamination_probes"
+    __table_args__ = (UniqueConstraint("run_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    run_id: int = Field(foreign_key="runs.id")  # the probe run
+    case_id: int = Field(foreign_key="cases.id", index=True)
+    model_key: str = Field(max_length=128, index=True)
+    before_cutoff: bool
+    claim: str = Field(max_length=16)  # ja | unsicher | nein
+    outcome: str = Field(max_length=32)  # CaseOutcome value or "unknown"
+    outcome_match: bool | None = None
+    reasons: list[str] = Field(default_factory=list, sa_column=Column(JSON, nullable=False))
+    created_at: datetime = Field(default_factory=utcnow)

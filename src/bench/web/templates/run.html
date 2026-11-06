@@ -55,6 +55,17 @@
 <p>Einschätzung einer <a href="/opposing/{{ run.case_id }}">Gegenbegründung</a>{% if reasoning %} ({{ side_labels[reasoning.side] }}){% endif %}:
   <strong>{{ assess_labels[run.output.urteil] }}</strong></p>
 <pre class="doc">{{ run.output.begruendung }}</pre>
+{% elif run.output and run.task == "probe" %}
+<p>Kontaminationsprobe (<a href="/contamination">Übersicht</a>): kennt die Entscheidung: <strong>{{ run.output.bekannt }}</strong>;
+  Ergebnis: <strong>{{ run.output.ergebnis | replace("_", " ") }}</strong>
+  {% if case and case.outcome %} · Entscheidung des VfGH: <strong>{{ outcome_labels[case.outcome.case_outcome] }}</strong>{% endif %}</p>
+{% if run.output.gruende %}<ol>{% for g in run.output.gruende %}<li>{{ g }}</li>{% endfor %}</ol>{% endif %}
+{% elif run.output and run.task == "probe_judge" %}
+<p>Bewertung der erinnerten Gründe von <a href="/runs/{{ run.target_run_id }}">Lauf {{ run.target_run_id }}</a>{% if run.status != "done" %} (nicht übernommen){% endif %}.</p>
+<table>
+  <thead><tr><th>Nr.</th><th>Enthalten</th><th>Beleg</th></tr></thead>
+  <tbody>{% for g in run.output.gruende %}<tr><td>{{ g.nr }}</td><td>{{ value_labels[g.enthalten] }}</td><td>{{ g.beleg }}</td></tr>{% endfor %}</tbody>
+</table>
 {% elif run.output and run.task == "extract_reasons" %}
 <p>Vorgeschlagene tragende Gründe (<a href="/checklists/{{ run.case_id }}">zur Bewertung</a>):</p>
 <ol>{% for g in run.output.gruende %}<li>{{ g.text }}{% if g.randzahlen %} <span class="lead">(Rz {{ g.randzahlen | join(", ") }})</span>{% endif %}</li>{% endfor %}</ol>

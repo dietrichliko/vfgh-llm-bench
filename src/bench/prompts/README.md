@@ -22,3 +22,7 @@ DRAFT: to be read and approved by the legal expert before the study (see docs/pa
   equal length) and `assess` (a tested model rates one reasoning in a fresh context;
   placeholder `{begruendung}`, only there). Neither prompt may say which side the VfGH
   took, and the assess prompt never asks for an outcome.
+- Contamination probe: `probe` (a tested model gets only `{datum}` and
+  `{geschaeftszahl}`, never the case input, and says what it recalls) and `probe_judge`
+  (a judge scores the recalled reasons against the confirmed reference reasons;
+  `{checkliste}` and `{antwort}`, no case input).

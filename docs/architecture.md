@@ -291,6 +291,13 @@ A study order can run for hours or days. The browser is only used to configure, 
 - Pages: the overview lists per case the word counts and the number of assessments per side; the case page shows both texts and every assessment (admin only, not blind). Migration 0009 adds the tables and `reasoning_id` on jobs and runs.
 - Not built: the optional expert rating of ~10 pairs (open point in §13).
 
+### As built in stage 5e (contamination probe)
+
+- **Probe** (`bench/contamination.py`, task `probe`, prompt `probe.p1` with `{datum}` and `{geschaeftszahl}`; `{input}` is refused there; page "Kontamination", admin): each tested model gets, in a fresh call, only "VfGH <date>, <case number>" and says whether it knows the decision (*ja / unsicher / nein*), its outcome and the reasons it recalls. **Every released case** is probed, including cases that fail the model's cutoff rule: those are the **positive control** (`before_cutoff`) and never scored in the study. A pair of case and model is probed once.
+- **Outcome** is compared with the VfGH automatically (`outcome_match`; none if the model gives no outcome). A valid answer becomes a `ContaminationProbe` (immutable, migration 0010).
+- **Reasons** (task `probe_judge`, prompt `probe_judge.p1` with `{checkliste}` and `{antwort}`, no case input): for each probe that claims knowledge (ja or unsicher), names reasons, and whose case has a confirmed checklist, each chosen judge scores the recalled reasons against the reference reasons (*ja / teilweise / nein*, every reason exactly once, otherwise not evaluable). Family rule as for judging; the judge never sees the tested model. The result is a `JudgeScore` with the probe run as target and no citations; calibration only draws decide runs.
+- **Recalled:** the outcome matches and at least one judge finds at least one reference reason ("ja"). The page shows per model, after the cutoff (study) and before it (control): probed, knowledge claimed, outcome right, recalled; and the list per case and model. How recalled cases enter the results is decided in stage 6.
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -353,7 +360,7 @@ Each stage runs and is tested on its own.
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
-| 5 Evaluation | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe |
+| 5 Evaluation ✓ | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe ✓ |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points

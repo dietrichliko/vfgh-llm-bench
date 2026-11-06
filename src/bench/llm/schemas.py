@@ -111,3 +111,22 @@ class Einschaetzung(BaseModel):
     urteil: Literal[
         "tragfaehig", "eher_tragfaehig", "eher_nicht_tragfaehig", "nicht_tragfaehig"
     ] = Field(description="Ob die Begründung rechtlich tragfähig ist")
+
+
+class Erinnerung(BaseModel):
+    """Was das Modell über eine Entscheidung weiß, nur aus Datum und Geschäftszahl."""
+
+    bekannt: Literal["ja", "unsicher", "nein"] = Field(description="Ob du die Entscheidung kennst")
+    ergebnis: Literal[
+        "gesetzwidrig", "teilweise_gesetzwidrig", "abgewiesen", "zurueckgewiesen", "unbekannt"
+    ] = Field(description="Das Ergebnis der Entscheidung; „unbekannt“, wenn du es nicht weißt")
+    gruende: list[str] = Field(
+        default_factory=list,
+        description="Die tragenden Gründe, an die du dich erinnerst, je ein Satz; leer, wenn keine",
+    )
+
+
+class Wiedererkennung(BaseModel):
+    """Welche Referenzgründe die erinnerten Gründe enthalten."""
+
+    gruende: list[GrundBewertung] = Field(description="Ein Eintrag je Referenzgrund")

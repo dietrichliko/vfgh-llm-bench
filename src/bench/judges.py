@@ -249,7 +249,7 @@ def create(
 # ── worker hooks ────────────────────────────────────────────────────────────────
 
 
-def _checklist(db: Session, order: Order, case_id: int) -> ReferenceChecklist:
+def checklist_for(db: Session, order: Order, case_id: int) -> ReferenceChecklist:
     checklist_id = order.snapshot.get("checklists", {}).get(str(case_id))
     checklist = db.get(ReferenceChecklist, checklist_id) if checklist_id else None
     if checklist is None:
@@ -273,7 +273,7 @@ def messages(
         prompt_text,
         {
             "input": parse.input_text,
-            "checkliste": checklist_text(_checklist(db, order, job.case_id)),
+            "checkliste": checklist_text(checklist_for(db, order, job.case_id)),
             "antwort": answer_text(target.output),
             "zitate": citations.render(db, target),
         },
@@ -283,7 +283,7 @@ def messages(
 def validate(db: Session, order: Order, job: Job, output: BaseModel) -> str | None:
     """Every reference reason and every citation scored exactly once."""
     assert isinstance(output, Bewertung)
-    n = len(_checklist(db, order, job.case_id).items)
+    n = len(checklist_for(db, order, job.case_id).items)
     m = len(citations.citations_of(_target(db, job)))
     reasons = sorted(g.nr for g in output.gruende)
     cited = sorted(z.nr for z in output.zitate)
@@ -303,7 +303,7 @@ def from_run(db: Session, run: Run) -> JudgeScore:
         run_id=run.id or 0,
         target_run_id=run.target_run_id,
         case_id=run.case_id,
-        checklist_id=_checklist(db, order, run.case_id).id or 0,
+        checklist_id=checklist_for(db, order, run.case_id).id or 0,
         judge_model_key=run.model_key,
         reasons=[
             {"nr": g.nr, "value": g.enthalten, "evidence": g.beleg}

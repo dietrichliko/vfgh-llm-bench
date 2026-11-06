@@ -12,7 +12,14 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from bench.llm.schemas import Bewertung, Einschaetzung, Gegenbegruendungen, Referenzgruende
+from bench.llm.schemas import (
+    Bewertung,
+    Einschaetzung,
+    Erinnerung,
+    Gegenbegruendungen,
+    Referenzgruende,
+    Wiedererkennung,
+)
 from bench.models import CaseParse, Job, Order, Run
 from bench.providers import Role
 
@@ -81,6 +88,40 @@ def _assessment_from_run(db: Session, run: Run) -> None:
     opposing.from_assess_run(db, run)
 
 
+def _probe_messages(
+    db: Session, order: Order, job: Job, prompt: str, parse: CaseParse
+) -> list[dict[str, str]]:
+    from bench import contamination
+
+    return contamination.probe_messages(db, order, job, prompt, parse)
+
+
+def _probe_from_run(db: Session, run: Run) -> None:
+    from bench import contamination
+
+    contamination.from_probe_run(db, run)
+
+
+def _probe_judge_messages(
+    db: Session, order: Order, job: Job, prompt: str, parse: CaseParse
+) -> list[dict[str, str]]:
+    from bench import contamination
+
+    return contamination.judge_messages(db, order, job, prompt, parse)
+
+
+def _probe_judge_validate(db: Session, order: Order, job: Job, output: BaseModel) -> str | None:
+    from bench import contamination
+
+    return contamination.judge_validate(db, order, job, output)
+
+
+def _probe_score_from_run(db: Session, run: Run) -> None:
+    from bench import contamination
+
+    contamination.from_judge_run(db, run)
+
+
 HELPERS: dict[str, HelperTask] = {
     "extract_reasons": HelperTask(
         key="extract_reasons",
@@ -118,6 +159,25 @@ HELPERS: dict[str, HelperTask] = {
         input_text=lambda parse: parse.input_text,  # plus one reasoning
         on_done=_assessment_from_run,
         messages=_assess_messages,
+    ),
+    "probe": HelperTask(
+        key="probe",
+        label="Kontaminationsprobe",
+        role=Role.TESTED,
+        output_type=Erinnerung,
+        input_text=lambda parse: "",  # date and case number only, never the case input
+        on_done=_probe_from_run,
+        messages=_probe_messages,
+    ),
+    "probe_judge": HelperTask(
+        key="probe_judge",
+        label="Bewertung der Kontaminationsprobe",
+        role=Role.JUDGE,
+        output_type=Wiedererkennung,
+        input_text=lambda parse: "",  # reference reasons and recalled reasons only
+        on_done=_probe_score_from_run,
+        messages=_probe_judge_messages,
+        validate=_probe_judge_validate,
     ),
 }
 TASK_LABELS = {"decide": "Entscheidung", **{k: t.label for k, t in HELPERS.items()}}

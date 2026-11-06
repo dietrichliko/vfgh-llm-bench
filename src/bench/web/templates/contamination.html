@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Kontamination · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Kontaminationsprobe</h1>
+<p class="lead">Jedes getestete Modell erhält zu jedem freigegebenen Fall nur Datum und Geschäftszahl
+und gibt an, ob es die Entscheidung kennt, mit Ergebnis und erinnerten Gründen. Das Ergebnis wird
+automatisch verglichen, die Gründe bewerten die Richtermodelle gegen die Referenzgründe. Als
+<strong>erinnert</strong> gilt ein Fall, wenn das Ergebnis stimmt und ein Richter mindestens einen
+Referenzgrund findet. Fälle vor dem Wissensstand des Modells sind die Positivkontrolle; sie werden in
+der Studie nie gewertet.</p>
+
+{% if problem %}<div class="error"><p style="margin: 0">{{ problem }}</p></div>{% endif %}
+
+<div class="split no-print">
+  <section class="panel">
+    <h2 style="margin-top: 0">Probe</h2>
+    <form method="post" action="/contamination/probe" style="margin: 0">
+      <fieldset><legend>Modelle</legend>
+        {% for m in tested %}<label class="choice"><input type="checkbox" name="model_keys" value="{{ m.key }}"{% if not m.available %} disabled{% endif %}>
+          <span class="mono">{{ m.key }}</span>{% if not m.available %} – Schlüssel fehlt{% endif %}</label>{% endfor %}
+      </fieldset>
+      <p><label>Abstand zum Wissensstand (Monate), für die Einteilung vor/nach<br>
+        <input type="number" name="cutoff_months" min="0" value="3"></label></p>
+      <p style="margin: 0"><button type="submit">{{ released }} Fälle prüfen</button>
+        <span class="lead">schon geprüfte Paare aus Fall und Modell werden ausgelassen</span></p>
+    </form>
+  </section>
+  <section class="panel">
+    <h2 style="margin-top: 0">Gründe bewerten</h2>
+    {% if to_judge %}
+    <form method="post" action="/contamination/judge" style="margin: 0">
+      <fieldset><legend>Richtermodelle</legend>
+        {% for m in judge_models %}<label class="choice"><input type="checkbox" name="model_keys" value="{{ m.key }}"{% if not m.available %} disabled{% endif %}>
+          <span class="mono">{{ m.key }}</span>{% if not m.available %} – Schlüssel fehlt{% endif %}</label>{% endfor %}
+      </fieldset>
+      <p style="margin: 0"><button type="submit">{{ to_judge }} Antworten mit erinnerten Gründen bewerten</button></p>
+    </form>
+    {% else %}
+    <p class="lead" style="margin: 0">Keine Antwort, die eine Kenntnis behauptet und Gründe nennt.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if summary %}
+<h2>Je Modell</h2>
+<table>
+  <thead>
+    <tr><th rowspan="2">Modell</th><th colspan="4">nach dem Wissensstand (Studie)</th><th colspan="4">davor (Positivkontrolle)</th></tr>
+    <tr><th>geprüft</th><th>behauptet</th><th>Ergebnis richtig</th><th>erinnert</th><th>geprüft</th><th>behauptet</th><th>Ergebnis richtig</th><th>erinnert</th></tr>
+  </thead>
+  <tbody>{% for s in summary %}<tr><td class="mono">{{ s.model_key }}</td>
+    {% for b in (false, true) %}<td>{{ s.probed[b] }}</td><td>{{ s.claimed[b] }}</td><td>{{ s.outcome_right[b] }}</td><td>{% if s.recalled[b] %}<strong>{{ s.recalled[b] }}</strong>{% else %}0{% endif %}</td>{% endfor %}
+  </tr>{% endfor %}</tbody>
+</table>
+
+<h2>Je Fall und Modell</h2>
+<table>
+  <thead><tr><th>Fall</th><th>Modell</th><th>Zeitraum</th><th>kennt</th><th>Ergebnis</th><th>Gründe</th><th>Referenzgründe gefunden</th><th></th></tr></thead>
+  <tbody>
+  {% for r in rows %}{% set p = r.probe %}{% set c = cases.get(p.case_id) %}
+    <tr>
+      <td>{{ c.case_number if c else p.case_id }}</td>
+      <td class="mono">{{ p.model_key }}</td>
+      <td>{{ "davor" if p.before_cutoff else "nach" }}</td>
+      <td>{{ p.claim }}</td>
+      <td>{{ outcome_labels.get(p.outcome, p.outcome) }}{% if p.outcome_match is true %} <span class="status ok">richtig</span>{% elif p.outcome_match is false %} <span class="status bad">falsch</span>{% endif %}</td>
+      <td>{% if p.reasons %}<details><summary>{{ p.reasons | length }}</summary><ol>{% for g in p.reasons %}<li>{{ g }}</li>{% endfor %}</ol></details>{% else %}–{% endif %}</td>
+      <td>{% if r.reasons_found is none %}–{% else %}{{ r.reasons_found }} ({{ r.scores | length }} Richter){% endif %}</td>
+      <td>{% if r.recalled %}<span class="status warn">erinnert</span>{% endif %} <a href="/runs/{{ p.run_id }}">Lauf</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Noch keine Proben.</p>
+{% endif %}
+{% endblock %}
