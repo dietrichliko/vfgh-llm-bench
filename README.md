@@ -7,6 +7,7 @@ answers are compared with the actual decisions.
 | Document | Content |
 | --- | --- |
 | [docs/paper.md](docs/paper.md) | Study design (snapshot of the Claude Doc) |
+| [docs/plain-language.md](docs/plain-language.md) | The study in plain terms, for readers without a technical background |
 | [docs/architecture.md](docs/architecture.md) | How the application is built |
 | [docs/publication.md](docs/publication.md) | Study protocol in git, Zenodo, OSF |
 | [docs/analysis-plan.md](docs/analysis-plan.md) | How every metric is computed (frozen with the protocol) |
