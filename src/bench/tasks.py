@@ -2,6 +2,8 @@
 
 A helper task has one prompt (``<task>.p1``), an output schema, the model role it needs,
 the text it reads from the case, and what happens with a result that fits the schema.
+A task that reads more than the case (the judge reads a run) builds its own messages and
+may reject an answer that fits the schema but not the job.
 """
 
 from collections.abc import Callable
@@ -10,8 +12,8 @@ from dataclasses import dataclass
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from bench.llm.schemas import Referenzgruende
-from bench.models import CaseParse, Run
+from bench.llm.schemas import Bewertung, Referenzgruende
+from bench.models import CaseParse, Job, Order, Run
 from bench.providers import Role
 
 
@@ -21,14 +23,36 @@ class HelperTask:
     label: str
     role: Role
     output_type: type[BaseModel]
-    input_text: Callable[[CaseParse], str]
+    input_text: Callable[[CaseParse], str]  # also the basis of the cost check
     on_done: Callable[[Session, Run], None]
+    messages: Callable[[Session, Order, Job, str, CaseParse], list[dict[str, str]]] | None = None
+    validate: Callable[[Session, Order, Job, BaseModel], str | None] | None = None
 
 
 def _checklist_from_run(db: Session, run: Run) -> None:
     from bench import checklists  # avoid an import cycle
 
     checklists.from_run(db, run)
+
+
+def _judge_messages(
+    db: Session, order: Order, job: Job, prompt: str, parse: CaseParse
+) -> list[dict[str, str]]:
+    from bench import judges
+
+    return judges.messages(db, order, job, prompt, parse)
+
+
+def _judge_validate(db: Session, order: Order, job: Job, output: BaseModel) -> str | None:
+    from bench import judges
+
+    return judges.validate(db, order, job, output)
+
+
+def _score_from_run(db: Session, run: Run) -> None:
+    from bench import judges
+
+    judges.from_run(db, run)
 
 
 HELPERS: dict[str, HelperTask] = {
@@ -40,6 +64,16 @@ HELPERS: dict[str, HelperTask] = {
         # headnote, operative part and considerations: the reference part, never a model input
         input_text=lambda parse: parse.reference_text,
         on_done=_checklist_from_run,
+    ),
+    "judge": HelperTask(
+        key="judge",
+        label="Bewertung durch Richtermodelle",
+        role=Role.JUDGE,
+        output_type=Bewertung,
+        input_text=lambda parse: parse.input_text,  # plus checklist, answer and citations
+        on_done=_score_from_run,
+        messages=_judge_messages,
+        validate=_judge_validate,
     ),
 }
 TASK_LABELS = {"decide": "Entscheidung", **{k: t.label for k, t in HELPERS.items()}}

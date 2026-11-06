@@ -7,7 +7,8 @@
 - With an API key set, every request needs ``Authorization: Bearer <key>``.
 
 Ported from ``vfgh-llm-begruendung/ris-mcp`` (``ris_mcp/server.py``), without the
-resources (they bypassed the Stichtag) and, for now, without the judge endpoint.
+resources (they bypassed the Stichtag) and without the judge endpoint: the citation check
+looks decisions up from the worker (``bench.citations``), so this server never serves case law.
 """
 
 import logging

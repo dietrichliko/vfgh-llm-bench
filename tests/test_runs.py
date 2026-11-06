@@ -229,6 +229,7 @@ def test_seed_is_idempotent_and_the_database_wins(engine: sa.Engine) -> None:
             "decide_c.p2",
             "decide_c.p3",
             "extract_reasons.p1",
+            "judge.p1",
         ]
         assert prompts.seed(db) == []
         v2 = prompts.save(db, "decide.p1", "System\n---user---\nFall: {input}", None, " neu ")

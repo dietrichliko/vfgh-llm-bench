@@ -68,3 +68,26 @@ class Referenzgruende(BaseModel):
     """Die tragenden Gründe einer Entscheidung des Verfassungsgerichtshofes."""
 
     gruende: list[TragenderGrund] = Field(min_length=1, max_length=8)
+
+
+class GrundBewertung(BaseModel):
+    nr: int = Field(description="Nummer des Referenzgrundes")
+    enthalten: Literal["ja", "teilweise", "nein"] = Field(
+        description="Ob die Antwort den Referenzgrund enthält"
+    )
+    beleg: str = Field(description="Die Stelle der Antwort, kurz wiedergegeben; leer bei „nein“")
+
+
+class ZitatBewertung(BaseModel):
+    nr: int = Field(description="Nummer des Zitats")
+    traegt: Literal["ja", "teilweise", "nein", "nicht_beurteilbar"] = Field(
+        description="Ob die Quelle die Aussage trägt, für die sie zitiert wird"
+    )
+    begruendung: str = Field(description="Kurz, worauf sich die Bewertung stützt")
+
+
+class Bewertung(BaseModel):
+    """Die Bewertung einer Antwort: Referenzgründe und Zitate, je mit ihrer Nummer."""
+
+    gruende: list[GrundBewertung] = Field(description="Ein Eintrag je Referenzgrund")
+    zitate: list[ZitatBewertung] = Field(description="Ein Eintrag je Zitat; leer ohne Zitate")

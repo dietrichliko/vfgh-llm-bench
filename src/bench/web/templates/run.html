@@ -31,7 +31,21 @@
 </div>
 
 <h2>Ergebnis</h2>
-{% if run.output and run.task == "extract_reasons" %}
+{% if run.output and run.task == "judge" %}
+<p>Bewertung von <a href="/runs/{{ run.target_run_id }}">Lauf {{ run.target_run_id }}</a>{% if run.status != "done" %} (nicht übernommen){% endif %}.</p>
+<h3>Referenzgründe</h3>
+<table>
+  <thead><tr><th>Nr.</th><th>Enthalten</th><th>Beleg</th></tr></thead>
+  <tbody>{% for g in run.output.gruende %}<tr><td>{{ g.nr }}</td><td>{{ value_labels[g.enthalten] }}</td><td>{{ g.beleg }}</td></tr>{% endfor %}</tbody>
+</table>
+<h3>Zitate</h3>
+{% if run.output.zitate %}
+<table>
+  <thead><tr><th>Nr.</th><th>Trägt die Aussage</th><th>Begründung</th></tr></thead>
+  <tbody>{% for z in run.output.zitate %}<tr><td>{{ z.nr }}</td><td>{{ value_labels[z.traegt] }}</td><td>{{ z.begruendung }}</td></tr>{% endfor %}</tbody>
+</table>
+{% else %}<p>keine</p>{% endif %}
+{% elif run.output and run.task == "extract_reasons" %}
 <p>Vorgeschlagene tragende Gründe (<a href="/checklists/{{ run.case_id }}">zur Bewertung</a>):</p>
 <ol>{% for g in run.output.gruende %}<li>{{ g.text }}{% if g.randzahlen %} <span class="lead">(Rz {{ g.randzahlen | join(", ") }})</span>{% endif %}</li>{% endfor %}</ol>
 {% elif run.output %}
@@ -57,6 +71,46 @@
 <p>Die Antwort passt nicht zum verlangten Format.</p>
 {% else %}
 <p>Keine Antwort erhalten.</p>
+{% endif %}
+
+{% if run.task == "decide" and (checks or scores) %}
+<h2>Bewertung</h2>
+{% if checks %}
+<h3>Zitatprüfung im RIS</h3>
+<p class="lead">Von der Anwendung geprüft, ohne Modell; Stichtag {{ checks[0].stichtag.strftime("%d.%m.%Y") }}.</p>
+<table>
+  <thead><tr><th>Nr.</th><th>Zitat</th><th>Art</th><th>Ergebnis</th><th>Gefunden</th></tr></thead>
+  <tbody>
+  {% for c in checks %}
+    <tr>
+      <td>{{ c.nr }}</td><td>{{ c.text }}</td><td>{{ kind_labels[c.kind] }}</td>
+      <td><span class="status {{ 'ok' if c.result == 'found' else ('bad' if c.result == 'not_found' else 'warn') }}">{{ result_labels[c.result] }}</span>{% if c.note %}<br><span class="lead">{{ c.note }}</span>{% endif %}</td>
+      <td>{% if c.url %}<a href="{{ c.url }}">{{ c.source }}</a>{% elif c.source %}{{ c.source }}{% endif %}
+        {% if c.excerpt %}<details><summary>Auszug</summary><pre>{{ c.excerpt }}</pre></details>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% for s in scores %}
+{% set cl = checklists.get(s.checklist_id) %}
+{% set share = reasons_share(s) %}
+<h3>Richter <span class="mono">{{ s.judge_model_key }}</span> (<a href="/runs/{{ s.run_id }}">Lauf {{ s.run_id }}</a>){% if share is not none %} · Referenzgründe {{ (share * 100) | round | int }} %{% endif %}</h3>
+<table>
+  <thead><tr><th>Referenzgrund</th><th>Enthalten</th><th>Beleg</th></tr></thead>
+  <tbody>
+  {% for r in s.reasons %}
+    <tr><td>{{ r.nr }}. {{ cl.items[r.nr - 1].text if cl and r.nr <= cl.items | length else "" }}</td><td>{{ value_labels[r.value] }}</td><td>{{ r.evidence }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% if s.citations %}
+<table>
+  <thead><tr><th>Zitat</th><th>Trägt die Aussage</th><th>Begründung</th></tr></thead>
+  <tbody>{% for z in s.citations %}<tr><td>{{ z.nr }}</td><td>{{ value_labels[z.value] }}</td><td>{{ z.note }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+{% endfor %}
 {% endif %}
 
 {% if run.response_text %}

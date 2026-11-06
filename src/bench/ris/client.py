@@ -169,6 +169,15 @@ class RisClient:
             by_area=dict(Counter(a for h in hits for a in (h.areas or ["–"])).most_common()),
         )
 
+    async def search_page(self, params: dict[str, str]) -> dict[str, Any]:
+        """One page of a case-law search (``OgdDocumentResults``), for the citation check."""
+        resp = await self._get(API, params)
+        result = resp.json().get("OgdSearchResult", {})
+        if "OgdDocumentResults" not in result:
+            raise RuntimeError(f"RIS error: {str(result)[:300]}")
+        docs: dict[str, Any] = result["OgdDocumentResults"]
+        return docs
+
     async def fetch(self, url: str) -> bytes:
         if not url.startswith(("https://ogd.ris.bka.gv.at/", "https://ris.bka.gv.at/")):
             raise ValueError(f"not an RIS document URL: {url}")

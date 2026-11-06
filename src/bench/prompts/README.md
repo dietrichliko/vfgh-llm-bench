@@ -9,7 +9,11 @@ DRAFT: to be read and approved by the legal expert before the study (see docs/pa
   is the system message, the part after it the user message.
 - Tasks: `decide` (condition A), `decide_b` (condition B: plus the approved norm texts
   in `{normen}`), `decide_c` (condition C: the same task with the RIS
-  tools; the Stichtag is set by the app and never named in the prompt).
-- Placeholders: `{input}` (sections I–III of the decision, redacted); `{normen}` only in
-  `decide_b` (the norm texts approved for the case).
+  tools; the Stichtag is set by the app and never named in the prompt). Helper tasks
+  have one phrasing: `extract_reasons` (reference reasons from the considerations) and
+  `judge` (scores a decide run).
+- Placeholders: `{input}` (sections I–III of the decision, redacted; for
+  `extract_reasons` the reference part); `{normen}` only in `decide_b` (the norm texts
+  approved for the case); `{checkliste}`, `{antwort}` and `{zitate}` only in `judge` (the
+  confirmed reference reasons, the answer judged, its citations with the RIS check).
 - No prompt may hint at the actual outcome.

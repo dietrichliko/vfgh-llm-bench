@@ -1,6 +1,7 @@
 """Order pages (admin only): new order with preview, list, progress and control, run detail."""
 
 from typing import Annotated, Any
+from urllib.parse import quote
 
 from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -8,16 +9,18 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import orders, prompts
+from bench import citations, judges, orders, prompts
 from bench.auth import AdminDep, DbDep
 from bench.models import (
     Case,
     CaseStatus,
+    CitationCheck,
     Job,
     JobStatus,
     Order,
     OrderStatus,
     PromptVersion,
+    ReferenceChecklist,
     Run,
 )
 from bench.providers import ResolvedModel, Role
@@ -49,6 +52,14 @@ LABELS = {
     "conditions": orders.CONDITIONS,
     "available_conditions": orders.AVAILABLE_CONDITIONS,
     "task_labels": TASK_LABELS,
+    "kind_labels": citations.KIND_LABELS,
+    "result_labels": citations.RESULT_LABELS,
+    "value_labels": judges.VALUE_LABELS,
+}
+SKIPPED_LABELS = {
+    "no_checklist": "Fall ohne bestätigte Referenzgründe",
+    "same_family": "Richter aus derselben Modellfamilie",
+    "already": "schon bewertet oder beauftragt",
 }
 RECENT_RUNS = 50
 
@@ -62,6 +73,22 @@ def _order(db: Session, order_id: int) -> Order:
 
 def _tested(request: Request) -> list[ResolvedModel]:
     return [rm for rm in resolved_models(request).values() if Role.TESTED in rm.config.roles]
+
+
+def _judges(request: Request) -> list[ResolvedModel]:
+    return [rm for rm in resolved_models(request).values() if Role.JUDGE in rm.config.roles]
+
+
+def _judge_plans(request: Request, db: Session, order: Order) -> list[dict[str, Any]]:
+    """Per judge model: what judging this decide order's answers would mean."""
+    if order.task != "decide":
+        return []
+    runs = judges.targets(db, [order.id or 0])
+    out = []
+    for rm in _judges(request):
+        p, skipped = judges.plan(db, runs, [rm])
+        out.append({"model": rm, "plan": p, "skipped": skipped})
+    return out
 
 
 def _released(db: Session) -> list[Case]:
@@ -256,6 +283,9 @@ def order_detail(request: Request, order_id: int, user: AdminDep, db: DbDep) -> 
         cases=cases,
         prompt_versions=prompt_versions,
         recent_runs=RECENT_RUNS,
+        judge_plans=_judge_plans(request, db, order),
+        skipped_labels=SKIPPED_LABELS,
+        problem=request.query_params.get("problem"),
         **_progress_context(db, order),
     )
 
@@ -263,6 +293,34 @@ def order_detail(request: Request, order_id: int, user: AdminDep, db: DbDep) -> 
 @router.get("/orders/{order_id}/progress", response_class=HTMLResponse)
 def order_progress(request: Request, order_id: int, user: AdminDep, db: DbDep) -> HTMLResponse:
     return render(request, "_order_progress.html", **_progress_context(db, _order(db, order_id)))
+
+
+@router.post("/orders/{order_id}/judge")
+def order_judge(
+    request: Request,
+    order_id: int,
+    user: AdminDep,
+    db: DbDep,
+    model_keys: Annotated[list[str], Form()] = [],  # noqa: B006
+    cost_cap_usd: Annotated[str, Form()] = "",
+) -> Response:
+    """A judge order for the evaluable answers of this decide order."""
+    order = _order(db, order_id)
+    available = {rm.key: rm for rm in _judges(request)}
+    try:
+        if order.task != "decide":
+            raise ValueError("Nur Entscheidungen werden bewertet")
+        if any(k not in available for k in model_keys):
+            raise ValueError("Unbekanntes Richtermodell")
+        cap = OrderForm(cost_cap_usd=cost_cap_usd).cost_cap()
+        judge_order = judges.create(
+            db, [order_id], [available[k] for k in model_keys], user.id, cap
+        )
+    except ValueError as exc:
+        url = f"/orders/{order_id}?problem={quote(str(exc))}#judges"
+        return RedirectResponse(url, status.HTTP_303_SEE_OTHER)
+    db.commit()
+    return RedirectResponse(f"/orders/{judge_order.id}", status.HTTP_303_SEE_OTHER)
 
 
 ACTIONS = {
@@ -302,6 +360,24 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         if order is not None and run.condition in orders.NEEDS_REFERENCE_DATE
         else None
     )
+    checks = (
+        db.exec(
+            select(CitationCheck)
+            .where(CitationCheck.run_id == run.id)
+            .order_by(col(CitationCheck.nr))
+        ).all()
+        if run.task == "decide"
+        else []
+    )
+    scores = judges.scores_for(db, run.id or 0) if run.task == "decide" else []
+    checklist_ids = {s.checklist_id for s in scores}
+    checklists = {
+        c.id: c
+        for c in db.exec(
+            select(ReferenceChecklist).where(col(ReferenceChecklist.id).in_(checklist_ids))
+        ).all()
+    }
+    target = db.get(Run, run.target_run_id) if run.target_run_id else None
     others = db.exec(
         select(Run.id, Run.status, Run.started_at)
         .where(Run.job_id == run.job_id)
@@ -316,5 +392,10 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         prompt=prompt,
         attempts=others,
         stichtag=stichtag,
+        checks=checks,
+        scores=scores,
+        checklists=checklists,
+        reasons_share=judges.reasons_share,
+        target=target,
         **LABELS,
     )

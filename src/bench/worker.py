@@ -10,6 +10,9 @@
 - After ``MAX_CONSECUTIVE_FAILURES`` failures in a row for one provider, its orders pause.
 - Condition C: the model gets the ris-mcp tools over a connection fixed to the case's
   Stichtag (from the order snapshot); only providers with native tool calling run it.
+- Judge jobs: the citations of the run judged are checked in the RIS first (once per run,
+  shared by all judges). If the RIS cannot be reached, the job goes back to the queue and
+  its order pauses; nothing has been sent to the model yet.
 
 Designed for one worker process (the in-memory limits are per process).
 """
@@ -30,7 +33,7 @@ from pydantic_ai.mcp import MCPToolset
 from sqlalchemy import Engine, update
 from sqlmodel import Session, col, select
 
-from bench import orders, prompts
+from bench import citations, orders, prompts
 from bench.llm.schemas import Entscheidung
 from bench.llm.task import TaskResult, run_task
 from bench.models import (
@@ -46,6 +49,8 @@ from bench.models import (
     utcnow,
 )
 from bench.providers import ModelConfig, ProviderConfig, ResolvedModel, ToolMode, config_hash
+from bench.ris.client import RisClient as CaseLawClient
+from bench.rismcp.norms import RisClient as NormsClient
 from bench.rismcp.server import STICHTAG_HEADER, TOOL_NAMES
 from bench.settings import RIS_MCP_API_KEY, Settings
 from bench.tasks import HELPERS
@@ -90,6 +95,8 @@ class Worker:
         poll_seconds: float = 2.0,
         heartbeat_seconds: float = HEARTBEAT_SECONDS,
         mcp_transport: httpx.AsyncBaseTransport | None = None,  # tests: in-process ris-mcp
+        norms_ris: NormsClient | None = None,  # citation check: legislation
+        case_law_ris: CaseLawClient | None = None,  # citation check: decisions
     ) -> None:
         self.engine = engine
         self.settings = settings
@@ -98,10 +105,25 @@ class Worker:
         self.poll_seconds = poll_seconds
         self.heartbeat_seconds = heartbeat_seconds
         self.mcp_transport = mcp_transport
+        self._norms_ris = norms_ris
+        self._case_law_ris = case_law_ris
+        self._citation_locks: dict[int, asyncio.Lock] = defaultdict(asyncio.Lock)  # per run
         self.running: dict[str, int] = defaultdict(int)  # provider → jobs in flight
         self.last_start: dict[str, float] = {}
         self.failures: dict[str, int] = defaultdict(int)  # provider → consecutive failures
         self.tasks: set[asyncio.Task[None]] = set()
+
+    async def aclose(self) -> None:
+        for client in (self._norms_ris, self._case_law_ris):
+            if client is not None:
+                await client.aclose()
+
+    def _ris_clients(self) -> tuple[NormsClient, CaseLawClient]:
+        if self._norms_ris is None:
+            self._norms_ris = NormsClient()
+        if self._case_law_ris is None:
+            self._case_law_ris = CaseLawClient()
+        return self._norms_ris, self._case_law_ris
 
     # ── recovery ──────────────────────────────────────────────────────────────
 
@@ -245,7 +267,27 @@ class Worker:
             headers["Authorization"] = f"Bearer {key}"
         return httpx.AsyncClient(headers=headers, timeout=120.0, transport=self.mcp_transport)
 
+    def _requeue_and_pause(self, job: Job, reason: str) -> None:
+        """Put a job back unsent and pause its order (e.g. the RIS is down)."""
+        with Session(self.engine) as db:
+            stored = db.get(Job, job.id)
+            order = db.get(Order, job.order_id)
+            assert stored is not None and order is not None
+            stored.status, stored.worker, stored.lease_until = JobStatus.QUEUED, None, None
+            stored.error = reason
+            if order.status is OrderStatus.RUNNING:
+                order.status, order.status_reason = OrderStatus.PAUSED, reason
+            db.commit()
+        log.warning("order %s paused: %s", job.order_id, reason)
+
     async def _execute(self, job: Job) -> None:
+        if job.task == "judge" and job.target_run_id is not None:
+            try:
+                async with self._citation_locks[job.target_run_id]:  # judges of one run
+                    await citations.check_run(self.engine, *self._ris_clients(), job.target_run_id)
+            except citations.RisUnavailable as exc:
+                self._requeue_and_pause(job, str(exc))
+                return
         with Session(self.engine) as db:
             order = db.get(Order, job.order_id)
             parse = db.get(CaseParse, job.parse_id)
@@ -267,7 +309,9 @@ class Worker:
                 stichtag = order.snapshot.get("reference_dates", {}).get(str(job.case_id))
                 if stichtag is None:
                     raise RuntimeError(f"Fall {job.case_id} ohne Stichtag")
-            if helper is not None:
+            if helper is not None and helper.messages is not None:
+                messages = helper.messages(db, order, job, prompt.text, parse)
+            elif helper is not None:
                 messages = prompts.render(prompt.text, helper.input_text(parse))
             else:
                 messages = prompts.render(
@@ -309,7 +353,18 @@ class Worker:
     ) -> None:
         output = result.output
         outcome = output.outcome() if isinstance(output, Entscheidung) else None
+        helper = HELPERS.get(job.task)
         with Session(self.engine) as db:
+            order = db.get(Order, job.order_id)
+            assert order is not None
+            status, error = result.status, result.error
+            problem = (
+                helper.validate(db, order, job, output)
+                if status is JobStatus.DONE and helper and helper.validate and output is not None
+                else None
+            )
+            if problem:
+                status, error = JobStatus.NOT_EVALUABLE, problem
             run = Run(
                 job_id=job.id or 0,
                 order_id=job.order_id,
@@ -324,8 +379,9 @@ class Worker:
                 phrasing=job.phrasing,
                 repetition=job.repetition,
                 prompt_version_id=job.prompt_version_id,
-                status=result.status,
-                error=result.error,
+                target_run_id=job.target_run_id,
+                status=status,
+                error=error,
                 messages=messages,
                 exchanges=[ex.as_dict() for ex in result.exchanges],
                 response_text=result.response_text,
@@ -346,19 +402,17 @@ class Worker:
             )
             db.add(run)
             db.flush()
-            helper = HELPERS.get(job.task)
-            if helper is not None and result.status is JobStatus.DONE:
+            if helper is not None and status is JobStatus.DONE:
                 helper.on_done(db, run)
             stored = db.get(Job, job.id)
-            order = db.get(Order, job.order_id)
-            assert stored is not None and order is not None
-            stored.status = result.status
-            stored.error = result.error
+            assert stored is not None
+            stored.status = status
+            stored.error = error
             stored.last_run_id = run.id
             stored.finished_at = utcnow()
             stored.lease_until = None
 
-            if result.status is JobStatus.FAILED:
+            if status is JobStatus.FAILED:
                 self.failures[job.provider_key] += 1
                 if (
                     self.failures[job.provider_key] >= MAX_CONSECUTIVE_FAILURES

@@ -24,6 +24,13 @@
     <dt>Prompts</dt><dd>{% for p in prompt_versions %}<a href="/prompts/{{ p.key }}?version={{ p.version }}" class="mono">{{ p.key }} v{{ p.version }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd>
   </dl>
 </div>
+{% if order.task == "judge" %}
+<details open><summary>Bewertete Antworten</summary>
+  <p>Aus Auftrag {% for i in order.snapshot.get("source_orders", []) %}<a href="/orders/{{ i }}">{{ i }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.
+  Richter: {% for k in order.model_keys %}<span class="mono">{{ k }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+  {% if order.snapshot.get("skipped") %}<p>Ausgelassen: {% for k, n in order.snapshot.skipped.items() %}{{ n }} × {{ skipped_labels.get(k, k) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+</details>
+{% endif %}
 {% if order.snapshot.get("no_reference_date") %}
 <details><summary>Fälle ohne Stichtag (nicht in B und C)</summary>
   <p>{% for i in order.snapshot.no_reference_date %}{{ cases[i].case_number if i in cases else i }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
@@ -42,6 +49,30 @@
   {% endfor %}
   </ul>
 </details>
+{% endif %}
+
+{% if judge_plans %}
+<h2 id="judges">Bewertung durch Richtermodelle</h2>
+<p class="lead">Die auswertbaren Antworten dieses Auftrags, gemessen an den bestätigten Referenzgründen; vorher prüft die Anwendung die Zitate im RIS. Ein Richter bewertet keine Modelle seiner eigenen Familie.</p>
+{% if problem %}<p class="status bad">{{ problem }}</p>{% endif %}
+<form method="post" action="/orders/{{ order.id }}/judge">
+  <table>
+    <thead><tr><th></th><th>Richtermodell</th><th>Bewertungen</th><th>Geschätzt</th><th>Ausgelassen</th></tr></thead>
+    <tbody>
+    {% for jp in judge_plans %}
+      <tr>
+        <td><input type="checkbox" name="model_keys" value="{{ jp.model.key }}" id="judge-{{ jp.model.key }}"{% if not jp.plan.jobs or not jp.model.available %} disabled{% endif %}></td>
+        <td><label for="judge-{{ jp.model.key }}"><span class="mono">{{ jp.model.key }}</span> ({{ jp.model.config.model }}){% if not jp.model.available %} – Schlüssel fehlt{% endif %}</label></td>
+        <td>{{ jp.plan.jobs | length }}</td>
+        <td>{{ "%.2f" | format(jp.plan.estimated_cost_usd) }} USD</td>
+        <td>{% for k, n in jp.skipped.items() %}{{ n }} × {{ skipped_labels[k] }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p><label>Kostengrenze (USD, optional) <input name="cost_cap_usd" size="8" inputmode="decimal"></label>
+  <button type="submit">Bewertung beauftragen</button></p>
+</form>
 {% endif %}
 
 <h2>Letzte Aufrufe</h2>

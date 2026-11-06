@@ -1,7 +1,9 @@
 """Prompt texts: seeded from ``bench/prompts/*.md``, versioned in the database.
 
 A prompt is ``<task>.p<N>`` (N = phrasing). Every edit creates a new version; orders
-snapshot the version ids they use, and runs store the full text sent.
+snapshot the version ids they use, and runs store the full text sent. The user part holds
+the task's placeholders (``{input}``, and e.g. ``{normen}`` in condition B); each must
+appear, and no other task's placeholder may.
 """
 
 import re
@@ -19,8 +21,13 @@ TASKS = {
     "decide_b": "Entscheidung mit vorgegebenen Normen (Bedingung B)",
     "decide_c": "Entscheidung mit RIS-Recherche (Bedingung C)",
     "extract_reasons": "Referenzgründe aus den Erwägungen (Hilfsaufgabe)",
+    "judge": "Bewertung von Gründen und Zitaten (Richtermodell)",
 }
-NORMS_TASKS = frozenset({"decide_b"})  # prompts that must contain {normen}
+PLACEHOLDERS = {
+    "decide_b": ("input", "normen"),
+    "judge": ("input", "checkliste", "antwort", "zitate"),
+}
+ALL_PLACEHOLDERS = frozenset({"input"} | {p for ps in PLACEHOLDERS.values() for p in ps})
 PHRASINGS = 3
 
 
@@ -67,13 +74,15 @@ def validate(text: str, k: str = "") -> list[str]:
     problems = []
     if USER_MARKER not in text:
         problems.append(f"Trennzeile „{USER_MARKER}“ fehlt")
-    if "{input}" not in text:
-        problems.append("Platzhalter {input} fehlt")
-    needs_norms = k.partition(".")[0] in NORMS_TASKS
-    if needs_norms and "{normen}" not in text:
-        problems.append("Platzhalter {normen} fehlt")
-    if not needs_norms and "{normen}" in text:
-        problems.append("Platzhalter {normen} gibt es nur in Bedingung B")
+    task = k.partition(".")[0]
+    needed = PLACEHOLDERS.get(task, ("input",))
+    for name in needed:
+        if f"{{{name}}}" not in text:
+            problems.append(f"Platzhalter {{{name}}} fehlt")
+    for name in sorted(ALL_PLACEHOLDERS - set(needed)):
+        if f"{{{name}}}" in text:
+            where = "in Bedingung B" if name == "normen" else "bei der Bewertung"
+            problems.append(f"Platzhalter {{{name}}} gibt es nur {where}")
     return problems
 
 
@@ -102,11 +111,20 @@ def save(db: Session, k: str, text: str, user_id: int | None, note: str | None) 
 
 
 def render(text: str, input_text: str, norms: str | None = None) -> list[dict[str, str]]:
-    """System and user message; only ``{input}`` and ``{normen}`` are replaced (in one pass,
-    so text inside the case or the norms is never treated as a placeholder)."""
-    values = {"{input}": input_text.strip(), "{normen}": (norms or "").strip()}
+    """System and user message for a decision (``{input}``, in B also ``{normen}``)."""
+    return render_values(text, {"input": input_text, "normen": norms or ""})
+
+
+def render_values(text: str, values: dict[str, str]) -> list[dict[str, str]]:
+    """System and user message; only the known placeholders are replaced, in one pass, so
+    text inside the case, the norms or an answer is never treated as a placeholder."""
     system, _, user = text.partition(USER_MARKER)
-    filled = re.sub(r"\{input\}|\{normen\}", lambda m: values[m.group(0)], user.strip())
+    names = "|".join(sorted(ALL_PLACEHOLDERS))
+    filled = re.sub(
+        rf"\{{({names})\}}",
+        lambda m: values[m.group(1)].strip() if m.group(1) in values else m.group(0),
+        user.strip(),
+    )
     return [
         {"role": "system", "content": system.strip()},
         {"role": "user", "content": filled},

@@ -35,7 +35,11 @@ def _worker(args: argparse.Namespace) -> int:
 
     async def go() -> None:
         async with make_http_client() as client:
-            await Worker(engine, settings, client, poll_seconds=args.interval).run_forever()
+            worker = Worker(engine, settings, client, poll_seconds=args.interval)
+            try:
+                await worker.run_forever()
+            finally:
+                await worker.aclose()
 
     from sqlmodel import Session
 

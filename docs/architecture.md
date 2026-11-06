@@ -46,7 +46,7 @@ As of 2026-10-29. This describes how the study in [paper.md](paper.md) is implem
 | `web` | `bench` | UI, API, writes jobs, reads results |
 | `worker` | `bench` (`bench worker`) | Runs LLM jobs; can be restarted independently |
 | `bridge-univie` | `registry.cern.ch/mbi-vienna/aai-bridge:0.4.0` | OpenAI-compatible access to u:ai, provenance headers |
-| `ris-mcp` | `bench` (`bench ris-mcp`) | Legislation only, with a reference-date filter; separate judge endpoint for case-law lookup (stage 5) |
+| `ris-mcp` | `bench` (`bench ris-mcp`) | Legislation only, with a reference-date filter. Case law is never served; the citation check looks decisions up from the worker |
 
 ### Code layout
 
@@ -166,7 +166,7 @@ Kept from the old project:
   - `UsageLimits(tool_calls_limit=15)`; exceeding it makes the run *not evaluable*. Tool errors (e.g. a citation not found) go back to the model as failed results.
   - Every tool call is stored with its arguments and result (`Run.tool_calls`), as is the usage of every round.
   - **Only providers with `tool_mode: native` are offered for condition C.** u:ai models (emulated tools) can be tested in conditions A and B, which use no tools; the dashboard shows their C cell as "not run: no native tool calling".
-- **Judges need no tools.** Citation existence is checked by the app beforehand (`citations.py` + ris-mcp judge endpoint), and the judges receive the results.
+- **Judges need no tools.** Citation existence is checked by the app beforehand (`citations.py`, from the worker straight to the RIS), and the judges receive the results with the text found.
 
 ## 6 Data
 
@@ -262,6 +262,19 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **`extract_reasons`:** the extractor model (role `extractor`) reads the reference part (headnote, operative part, considerations) and returns at most eight decisive reasons with margin numbers (`Referenzgruende`). A valid answer becomes version 1 of the case's `ReferenceChecklist`.
 - **Review** (`bench/checklists.py`, page "Referenzgründe", legal expert and admin): the expert rates version 1 correct, incomplete or wrong. Correct confirms it; otherwise the expert's corrected list (one reason per line) becomes a new confirmed version. The rating of the model's list is kept for the paper. `Case.checklist_id` points at the confirmed version, which the judges use. Rated and confirmed versions are immutable (SQLite trigger); a later revision is a new version.
 
+### As built in stage 5b (judges and citation check)
+
+- **Judge orders** (`bench/judges.py`): on the page of a decide order, the admin picks judge models (role `judge`) and sees per judge the number of judgments, the estimate and what is left out. One job per evaluable decide run and judge. Left out: runs whose case has no confirmed checklist; judges of the tested model's family (**family rule**); pairs already judged or planned (a failed judgment is repeated with "retry failed" on the judge order). The snapshot fixes the checklist version per case.
+- **Citation check** (`bench/citations.py`): before the first judge call on a run, the worker checks each of its citations in the RIS, without a model, and stores one `CitationCheck` per citation (immutable): `found`, `not_found`, `unresolvable`, `not_checkable` (literature) or `error`.
+  - Norms: the version in force on the case's Stichtag (decision date if the case has none), resolved with the condition B title rules (state prefixes, VfGH short forms); the excerpt is the start of the norm text.
+  - Decisions: VfSlg number or case number (VfGH, VwGH, OGH) via the case-law client (`bench/ris/judikatur.py`, ported from the old ris-mcp judge endpoint). There is no judge endpoint on ris-mcp: judges have no tools, and ris-mcp stays legislation only.
+  - A citation already checked for another run (same text, kind and Stichtag) is reused, not asked again. Two judges of one run wait for one check.
+  - If the RIS is unreachable (network, 429, 5xx), the job goes back to the queue unsent and the order pauses; resuming continues the check where it stopped.
+- **Judge prompt** `judge.p1` with the placeholders `{input}` (the case as the model saw it), `{checkliste}`, `{antwort}` (operative part, decisive reasons, reasoning) and `{zitate}` (citations with check result and RIS excerpt). The judge never sees the tested model's name, provider or condition; a test asserts this on the request body.
+- **Criteria** (schema `Bewertung`): per reference reason *ja / teilweise / nein* with evidence from the answer (level 2); per citation whether the source carries the statement, *ja / teilweise / nein / nicht_beurteilbar*, judged only on the RIS excerpt (level 3, accuracy; existence comes from the check). An answer that does not score every reason and every citation exactly once is *not evaluable*. A valid one becomes a `JudgeScore` (immutable).
+- **Run page:** the decide run shows the citation check and each judge's scores, with the share of reference reasons given (ja = 1, teilweise = ½) for orientation; metrics follow in stage 6.
+- Left out on purpose: an overall grade and additional reasons beyond the checklist (not among the paper's metrics; each extra criterion would need its own calibration).
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -324,7 +337,7 @@ Each stage runs and is tested on its own.
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
-| 5 Evaluation | Reference checklists, opposing reasonings and assessment, judges, citation check, calibration queue, contamination probe |
+| 5 Evaluation | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue, 5d opposing reasonings and assessment, 5e contamination probe |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points
