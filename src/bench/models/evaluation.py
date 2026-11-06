@@ -1,4 +1,5 @@
-"""Evaluation: reference checklists (level 2), citation checks and judge scores (levels 2, 3)."""
+"""Evaluation: reference checklists (level 2), citation checks and judge scores (levels 2, 3),
+and the expert calibration of the judges."""
 
 from datetime import date, datetime
 from enum import StrEnum
@@ -98,4 +99,49 @@ class JudgeScore(SQLModel, table=True):
     citations: list[dict[str, Any]] = Field(
         default_factory=list, sa_column=Column(JSON, nullable=False)
     )
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class CalibrationItem(SQLModel, table=True):
+    """A decide run drawn for the expert's calibration ratings; immutable (trigger).
+
+    Items are inserted in random order, so the id says nothing about model or condition.
+    ``stratum`` (condition and model) is for the admin only. ``double``: a second person
+    rates it too (upper bound of agreement).
+    """
+
+    __tablename__ = "calibration_items"
+
+    id: int | None = Field(default=None, primary_key=True)
+    target_run_id: int = Field(foreign_key="runs.id", unique=True)
+    case_id: int = Field(foreign_key="cases.id", index=True)
+    checklist_id: int = Field(foreign_key="reference_checklists.id")
+    stratum: str = Field(max_length=160)
+    double: bool = False
+    draw: int  # number of the draw that added it
+    seed: int
+    created_at: datetime = Field(default_factory=utcnow)
+    created_by: int | None = Field(default=None, foreign_key="users.id")
+
+
+class CalibrationRating(SQLModel, table=True):
+    """One person's rating of a calibration item, on the judges' criteria; immutable (trigger).
+
+    ``reasons``: ``{"nr", "value": ja|teilweise|nein, "evidence"}``; ``citations``:
+    ``{"nr", "value": ja|teilweise|nein|nicht_beurteilbar, "note"}``, as in ``JudgeScore``.
+    """
+
+    __tablename__ = "calibration_ratings"
+    __table_args__ = (UniqueConstraint("item_id", "rater_id"),)
+
+    id: int | None = Field(default=None, primary_key=True)
+    item_id: int = Field(foreign_key="calibration_items.id", index=True)
+    rater_id: int = Field(foreign_key="users.id")
+    reasons: list[dict[str, Any]] = Field(
+        default_factory=list, sa_column=Column(JSON, nullable=False)
+    )
+    citations: list[dict[str, Any]] = Field(
+        default_factory=list, sa_column=Column(JSON, nullable=False)
+    )
+    note: str | None = None
     created_at: datetime = Field(default_factory=utcnow)

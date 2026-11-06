@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Kalibrierung · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<h1>Kalibrierung der Richtermodelle</h1>
+<p class="lead">Sie bewerten Antworten der getesteten Modelle nach denselben Kriterien wie die
+Richtermodelle: ob die Antwort jeden Referenzgrund enthält, und ob jede zitierte Quelle die Aussage
+trägt. Modell, Bedingung und die Bewertungen der Richtermodelle bleiben verborgen. Aus dem Vergleich
+ergibt sich, welchen Kriterien der Richtermodelle die Studie vertrauen kann.</p>
+
+{% if problem %}<div class="error"><p style="margin: 0">{{ problem }}</p></div>{% endif %}
+
+<section class="panel" style="margin-bottom: 1rem">
+  {% if open_items %}
+  <p style="margin: 0"><strong>{{ open_items | length }}</strong> Antworten warten auf Ihre Bewertung.
+    <a class="button" href="/calibration/next">Nächste Antwort bewerten</a></p>
+  {% else %}
+  <p style="margin: 0">Keine Antworten offen.</p>
+  {% endif %}
+</section>
+
+{% if mine %}
+<h2>Von Ihnen bewertet</h2>
+<ul>{% for r in mine %}<li><a href="/calibration/{{ r.item_id }}">Antwort Nr. {{ r.item_id }}</a>,
+  {{ r.created_at.strftime("%d.%m.%Y %H:%M") }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if progress %}
+<h2>Stichprobe (Administration)</h2>
+<p>{{ progress.items }} Antworten gezogen, davon {{ progress.double }} für eine Zweitbewertung;
+  {{ progress.ratings_done }} von {{ progress.ratings_needed }} Bewertungen abgegeben,
+  {{ progress.open_items }} Antworten offen.</p>
+{% if progress.by_stratum %}
+<table>
+  <thead><tr><th>Bedingung · Modell</th><th>gezogen</th><th>fertig bewertet</th></tr></thead>
+  <tbody>{% for k, v in progress.by_stratum.items() %}<tr><td class="mono">{{ k }}</td><td>{{ v[0] }}</td><td>{{ v[1] }}</td></tr>{% endfor %}</tbody>
+</table>
+<p class="lead">Ziehungen: {% for d in progress.draws %}Nr. {{ d[0] }} ({{ d[1] }} Antworten, Seed {{ d[2] }}){% if not loop.last %}; {% endif %}{% endfor %}</p>
+{% endif %}
+
+<section class="panel no-print">
+  <h3 style="margin-top: 0">Antworten ziehen</h3>
+  {% if available %}
+  <p class="lead">Bewertete Antworten, die noch nicht gezogen sind:
+    {% for k, n in available.items() %}<span class="mono">{{ k }}</span>: {{ n }}{% if not loop.last %}; {% endif %}{% endfor %}.
+    Gezogen wird reihum je Bedingung und Modell, je Schicht zuerst Fälle, die noch wenig vorkommen.
+    Die ersten Antworten jeder Ziehung, über die Schichten verteilt, bewertet eine zweite Person.</p>
+  <form method="post" action="/calibration/draw" style="margin: 0">
+    <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin: 0">
+      <label>Antworten<br><input type="number" name="size" min="1" value="{{ [default_size, available.values() | sum] | min }}" required></label>
+      <label>davon zweimal bewertet<br><input type="number" name="double" min="0" value="{{ [default_double, available.values() | sum] | min }}"></label>
+      <label>Seed (optional)<br><input type="number" name="seed" min="0"></label>
+      <button type="submit">ziehen</button>
+    </p>
+  </form>
+  {% else %}
+  <p class="lead" style="margin: 0">Keine bewerteten Antworten verfügbar. Zuerst einen Auftrag von
+    Richtermodellen bewerten lassen.</p>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

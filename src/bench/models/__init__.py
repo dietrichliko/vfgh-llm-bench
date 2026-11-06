@@ -102,6 +102,8 @@ from bench.models.cases import (  # noqa: E402
     SourceDocument,
 )
 from bench.models.evaluation import (  # noqa: E402
+    CalibrationItem,
+    CalibrationRating,
     ChecklistRating,
     CitationCheck,
     CitationResult,
@@ -121,6 +123,8 @@ from bench.models.runs import (  # noqa: E402
 __all__ = [
     "OPEN_JOB_STATES",
     "AuditLog",
+    "CalibrationItem",
+    "CalibrationRating",
     "Case",
     "CaseParse",
     "CaseStatus",

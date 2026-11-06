@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Kalibrierung Nr. {{ item.id }} · VfGH-LLM-Studie{% endblock %}
+{% block content %}
+<p class="no-print"><a href="/calibration">← Kalibrierung</a></p>
+<h1>Antwort Nr. {{ item.id }}: VfGH {{ case.decision_date.strftime("%d.%m.%Y") }}, {{ case.case_number }}</h1>
+<p class="lead">{{ case.areas | join(", ") }}{% if not mine %} · noch {{ open_count }} weitere offen{% endif %}</p>
+
+{% if problem %}<div class="error"><p style="margin: 0">{{ problem }}</p></div>{% endif %}
+
+<details>
+  <summary>Sachverhalt und Antrag, wie das Modell sie erhielt</summary>
+  <pre class="doc">{{ input_text }}</pre>
+</details>
+
+<div class="split">
+  <div>
+    <h2>Antwort</h2>
+    <h3>Spruch</h3>
+    <ul>{% for p in answer.spruch %}<li>{{ p.bestimmung }}: {{ ergebnis[p.ergebnis] }} ({{ antrag[p.antrag] }})</li>{% endfor %}</ul>
+    <h3>Tragende Gründe</h3>
+    <ol>{% for g in answer.tragende_gruende %}<li>{{ g }}</li>{% endfor %}</ol>
+    <h3>Begründung</h3>
+    <pre class="doc">{{ answer.begruendung }}</pre>
+  </div>
+
+  <div>
+  {% if mine %}
+    <h2>Ihre Bewertung</h2>
+    <p class="lead">Abgegeben am {{ mine.created_at.strftime("%d.%m.%Y %H:%M") }}; nicht mehr änderbar.</p>
+    <h3>Referenzgründe</h3>
+    <ol>{% for it in checklist.items %}{% set r = mine.reasons[loop.index0] %}
+      <li>{{ it.text }}<br><strong>{{ value_labels[r.value] }}</strong>{% if r.evidence %}: {{ r.evidence }}{% endif %}</li>{% endfor %}</ol>
+    {% if mine.citations %}
+    <h3>Zitate</h3>
+    <ol>{% for z in cited %}{% set r = mine.citations[loop.index0] %}
+      <li>{{ z.text }}<br><strong>{{ value_labels[r.value] }}</strong>{% if r.note %}: {{ r.note }}{% endif %}</li>{% endfor %}</ol>
+    {% endif %}
+    {% if mine.note %}<p>Notiz: {{ mine.note }}</p>{% endif %}
+    {% if next_id %}<p><a class="button" href="/calibration/{{ next_id }}">Nächste Antwort</a></p>{% endif %}
+  {% else %}
+    <form method="post" action="/calibration/{{ item.id }}">
+      <h2>Referenzgründe</h2>
+      <p class="lead">Enthält die Antwort den Grund? Die Formulierung muss nicht übereinstimmen.</p>
+      {% for it in checklist.items %}{% set n = loop.index %}
+      <fieldset class="panel" style="margin-bottom: 0.75rem">
+        <legend>{{ n }}. {{ it.text }}</legend>
+        {% for v in reason_values %}<label class="choice"><input type="radio" name="g{{ n }}" value="{{ v }}" required> {{ value_labels[v] }}</label> {% endfor %}
+        <p style="margin-bottom: 0"><label>Stelle in der Antwort (optional)<br><input type="text" name="g{{ n }}_beleg" style="width: 100%"></label></p>
+      </fieldset>
+      {% endfor %}
+
+      <h2>Zitate</h2>
+      {% if cited %}
+      <p class="lead">Trägt die Quelle die Aussage, für die sie zitiert wird? Die Existenz hat die
+        Anwendung im RIS geprüft; beurteilt wird nur auf Grund des Auszugs.</p>
+      {% for z in cited %}
+      <fieldset class="panel" style="margin-bottom: 0.75rem">
+        <legend>[{{ z.nr }}] {{ z.text }}</legend>
+        {% if z.check %}
+        <p class="lead">{{ kind_labels[z.check.kind] }} · Prüfung: {{ result_labels[z.check.result.value] }}{% if z.check.source %} ({{ z.check.source }}){% endif %}</p>
+        {% if z.check.result.value == "found" and z.check.excerpt %}
+        <details><summary>Auszug aus dem RIS</summary><pre class="doc">{{ z.check.excerpt }}</pre></details>
+        {% endif %}
+        {% else %}<p class="lead">nicht geprüft</p>{% endif %}
+        {% for v in citation_values %}<label class="choice"><input type="radio" name="z{{ z.nr }}" value="{{ v }}" required> {{ value_labels[v] }}</label> {% endfor %}
+        <p style="margin-bottom: 0"><label>Begründung (optional)<br><input type="text" name="z{{ z.nr }}_notiz" style="width: 100%"></label></p>
+      </fieldset>
+      {% endfor %}
+      {% else %}
+      <p>Die Antwort zitiert nichts.</p>
+      {% endif %}
+
+      <p><label>Notiz (optional)<br><input type="text" name="note" style="width: 100%"></label></p>
+      <p><button type="submit">Bewertung speichern und weiter</button></p>
+    </form>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

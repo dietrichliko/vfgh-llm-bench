@@ -1,6 +1,6 @@
 # Architecture
 
-As of 2026-10-29. This describes how the study in [paper.md](paper.md) is implemented. The predecessor project is summarised in [prior-work.md](prior-work.md), and publication in [publication.md](publication.md).
+As of 2026-11-06. This describes how the study in [paper.md](paper.md) is implemented. The predecessor project is summarised in [prior-work.md](prior-work.md), and publication in [publication.md](publication.md).
 
 ## 1 Decisions
 
@@ -275,12 +275,20 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Run page:** the decide run shows the citation check and each judge's scores, with the share of reference reasons given (ja = 1, teilweise = ½) for orientation; metrics follow in stage 6.
 - Left out on purpose: an overall grade and additional reasons beyond the checklist (not among the paper's metrics; each extra criterion would need its own calibration).
 
+### As built in stage 5c (calibration queue)
+
+- **Draw** (`bench/calibration.py`, page "Kalibrierung", admin): the admin draws *n* answers (default 40) from the decide runs that at least one judge has scored and that are not drawn yet. Sampling goes round robin over the strata condition × model, and within a stratum takes the least used case first, so every condition gets its share (the paper's threshold must hold in every condition). The seed is stored per draw; further draws add to the sample, never the same run twice. A run whose judges used different checklist versions is left out; the item keeps the version the judges used.
+- **Second rating:** the first *k* picks of a draw (default 10), spread over the strata, are also rated by a second person, as the upper bound of agreement. Which person rates first does not matter: an item needs one rating, a double item two from different people.
+- **Queue and rating page** (legal expert and admin): each person sees the items they can still rate, in item order. The page shows the case input as the models saw it, the reference reasons, the answer (operative part, decisive reasons, reasoning) and each citation with the RIS check and excerpt, and asks the judges' criteria: per reference reason *ja / teilweise / nein* with an optional passage, per citation *ja / teilweise / nein / nicht beurteilbar* with an optional note. Items are stored in random order, so the item id says nothing about the stratum.
+- **Blind:** the rating page shows no model, provider, condition, run id or judge score (a test checks the HTML). The stratum is shown to the admin only, on the overview.
+- `CalibrationItem` and `CalibrationRating` are immutable (SQLite trigger, migration 0008). Judge–human and human–human agreement (κ per criterion and condition) and the PPI correction follow in stage 6.
+
 ## 8 Users and screens
 
 | Role | Screens |
 | --- | --- |
 | Admin | Cases (RIS search, batch import, split/leak view, flags, release); providers and models (status, test, cutoff coverage); prompts (versions, freeze); orders (setup, cost estimate, progress, controls); protocol (freeze, amendments, publish); costs; users |
-| Legal expert | Reference checklists (rate correct / incomplete / wrong); calibration queue (~40 outputs, blind, same criteria as the judges); optionally ~10 opposing-reasoning pairs, blind |
+| Legal expert | Reference checklists (rate correct / incomplete / wrong); calibration queue (~40 outputs, ~10 of them also rated by a second person; blind, same criteria as the judges); optionally ~10 opposing-reasoning pairs, blind |
 | Viewer | Dashboard (leaderboard, model profiles, case × model grid, the four analyses from `paper.md` §6), case pages, exports |
 
 - **Login:** generic OIDC (issuer, client id and secret via config/secrets; CERN SSO works) plus a dev login for local use. Admins are listed in the settings.
@@ -337,7 +345,7 @@ Each stage runs and is tested on its own.
 | 2 Cases ✓ | Port `ris/` with tests; `SourceDocument`, `CaseParse`; batch import with XML, PDF and attachments (web page and `bench import-cases`); outcome per provision; flags and automatic exclusions; review page; release with confirmed outcome; condition B norm proposals from RIS metadata |
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
-| 5 Evaluation | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue, 5d opposing reasonings and assessment, 5e contamination probe |
+| 5 Evaluation | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment, 5e contamination probe |
 | 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points
