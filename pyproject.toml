@@ -2,7 +2,8 @@
 name = "bench"
 version = "0.0.0"
 description = "Web application for the study whether LLMs reason like the Austrian Constitutional Court"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115",
