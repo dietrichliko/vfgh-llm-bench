@@ -49,8 +49,9 @@ repository is set up (see *Study repository* below and `docs/publication.md`).
   (LLM calls in flight, default 8), `BENCH_RIS_MCP_URL` (default `http://ris-mcp:8000/mcp`),
   `BENCH_RIS_MCP_ALLOWED_HOSTS` (host check of the MCP server, comma-separated),
   `BENCH_STUDY_REPO_URL` and `BENCH_STUDY_REPO_BRANCH` (default `main`) for the study
-  repository, `BENCH_GIT_COMMIT` and `BENCH_IMAGE_DIGEST` (set at image build; recorded in
-  the frozen protocol).
+  repository, `BENCH_GIT_COMMIT` (set at image build) and `BENCH_IMAGE_DIGEST` (set when
+  running a released image, see *Commits and releases*); both are recorded in the frozen
+  protocol.
 
 ## Study repository
 
@@ -77,6 +78,10 @@ done
 GIT_COMMIT=$(git rev-parse HEAD) BENCH_DEV_LOGIN=1 BENCH_ADMIN_EMAILS=you@example.org \
   podman compose -f deploy/compose.yaml up --build           # http://localhost:8000
 ```
+
+**Upgrading** an existing installation: new secrets in `compose.yaml` must exist as files,
+even if empty (compose refuses to start otherwise). Since the study repository was added:
+`touch deploy/secrets/STUDY_REPO_DEPLOY_KEY`.
 
 fly.io (temporary): see `deploy/fly/web.toml`.
 
@@ -113,11 +118,18 @@ uv run cz bump          # next version from the commits, updates pyproject.toml,
 git push --follow-tags
 ```
 
-The tag runs `.github/workflows/release.yml`: the CI checks, then the image is pushed to
-`ghcr.io/dietrichliko/vfgh-llm-bench` (tags `X.Y.Z`, `X.Y` and the commit sha) and a GitHub
-release is created with the changelog section and the image digest. Deploy with that image
-and set `BENCH_IMAGE_DIGEST` to the digest, so frozen protocols record it. The package is
-private like the repository: `podman login ghcr.io` with a token that can read packages.
+The tag runs `.github/workflows/release.yml`. It first checks that the tag matches
+`pyproject.toml` and that `CHANGELOG.md` has its section, then runs the CI checks, pushes
+the image to `ghcr.io/dietrichliko/vfgh-llm-bench`, smoke-tests exactly that image and
+creates a GitHub release with the changelog section and the image digest. Image tags:
+`X.Y.Z`, `X.Y` (for a pre-release such as `0.2.0rc1` only the full version) and
+`sha-<full commit sha>`; there is no `latest`.
+
+Deploy the released image by version or digest and set `BENCH_IMAGE_DIGEST` to the digest
+from the release, so frozen protocols record which image produced them. Do not set it for
+an image built locally (`compose.yaml` builds its own, fly.io too): the digest would not
+describe it. After the first release, check the package's visibility on GitHub; while it
+is private, servers need `podman login ghcr.io` with a token that can read packages.
 Freeze the study protocol only from a released version.
 
 `uv run cz changelog --dry-run` shows the changelog for unreleased commits.
