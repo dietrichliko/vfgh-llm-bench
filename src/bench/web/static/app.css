@@ -132,3 +132,33 @@ legend { font-family: var(--sans); font-weight: 600; font-size: 0.9rem; padding:
 label.choice { display: block; font-size: 0.92rem; }
 .case-choices { max-height: 24rem; overflow: auto; }
 a.button { display: inline-block; text-decoration: none; font-family: var(--sans); }
+
+/* Dashboard (stage 6b): reference palette of the dataviz method, light surface. */
+.viz-root { --surface: #fcfcfb; --ink2: #52514e; --grid: #e1e0d9; }
+.viz-root .figure { margin-bottom: 2.5rem; }
+.viz-root .scroll { overflow-x: auto; }
+.viz-root table { font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.viz-root .r { text-align: right; }
+.viz-root .c { text-align: center; }
+.viz-root .nowrap { white-space: nowrap; }
+.viz-root .ci { color: var(--ink2); font-family: var(--mono); font-size: 0.85em; }
+.viz-root .flag { font-size: 0.7rem; font-weight: 600; color: var(--warn); border: 1px solid var(--warn); border-radius: 3px; padding: 0 0.2rem; }
+.viz-root .leader svg { vertical-align: middle; margin-right: 0.4rem; }
+.viz-root .tabs { display: flex; gap: 1rem; flex-wrap: wrap; font-family: var(--sans); margin-bottom: 1.5rem; }
+.viz-root .tabs a[aria-current] { font-weight: 700; text-decoration: none; border-bottom: 2px solid var(--accent); }
+.viz-root table.heat { border-collapse: separate; border-spacing: 2px; background: transparent; }
+.viz-root table.heat td { border: 0; border-radius: 4px; padding: 0.6rem 0.4rem; min-width: 4rem; }
+.viz-root table.heat td.diag { outline: 2px solid var(--fg); outline-offset: -2px; }
+.viz-root table.grid { border-collapse: separate; border-spacing: 2px; background: transparent; width: auto; }
+.viz-root table.grid th, .viz-root table.grid td { border: 0; padding: 0.2rem; }
+.viz-root td.cell { width: 1.8rem; height: 1.8rem; text-align: center; border-radius: 4px; font-weight: 700; }
+.viz-root .legend { font-family: var(--sans); font-size: 0.85rem; display: flex; gap: 0.4rem 1rem; flex-wrap: wrap; align-items: center; }
+.viz-root .swatch { display: inline-block; width: 0.9rem; height: 0.9rem; border-radius: 3px; vertical-align: middle; margin-right: 0.25rem; }
+.viz-root .swatch.line { height: 0.2rem; width: 1.2rem; }
+.viz-root .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(26rem, 1fr)); gap: 1rem; }
+.viz-root .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1rem 1.25rem; }
+.viz-root .card h3 { margin-top: 0; }
+.viz-root .card svg { width: 100%; height: auto; }
+.viz-root svg .tick { font: 11px var(--mono); fill: #898781; }
+.viz-root svg .label { font: 12px var(--sans); fill: var(--fg); }
+.viz-root table.bars td, .viz-root table.bars th { padding: 0.2rem 0.4rem; border-bottom: 0; }

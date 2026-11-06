@@ -304,6 +304,16 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Code** (`bench/analysis/`): `stats.py` holds the statistics in plain Python, without numpy: Wilson interval, exact McNemar, Cohen's κ, linearly weighted κ, Fleiss' κ, AUC (Mann–Whitney), case-cluster bootstrap with a fixed seed, and the PPI mean. `metrics.py` computes the five levels, calibration agreement and the threshold, PPI per condition, and the contamination sensitivity tables from the stored runs; `analyse(db)` returns all of it as one report for the dashboard and the export.
 - **Decisions** (user, 2026-11-06): majority label per case for level 1 (a tie is wrong); the judges' mean, with criteria below κ 0.7 in any condition shown but marked *not calibrated*; recalled cases only in a sensitivity table; partly unlawful cases reported separately in level 5.
 
+### As built in stage 6b (dashboard)
+
+- **Page "Ergebnisse"** (`/dashboard`, `bench/web/dashboard.py`, viewer, expert and admin): computed live from `analyse(db)` over all stored decide runs; a condition switch (A/B/C) above the figures. Until the protocol is frozen (6d), the page says that the numbers are provisional.
+- **Figure 1, leaderboard:** per model the cases, accuracy with its interval as a bar and the "always unlawful" baseline as a tick, share of correct runs, κ, reasons, fabricated and inaccurate citations; in A also unstable, both sound and AUC. Judge-based columns carry "vorl." while the criterion is not calibrated.
+- **Figure 2, profiles:** all metrics on 0–100 (higher is better) in a blue heatmap with the values in the cells.
+- **Figure 3, case × model:** majority label right / wrong per cell with a glyph (✓ ✗ ·, ~ for disagreeing runs), hits per model and models right per case; admins can open the case.
+- **Figure 4:** source access (accuracy per condition, one line per model, with the McNemar results in the table); prior knowledge (share recalled before vs after the cutoff, from the contamination probe, instead of accuracy by distance to the cutoff, because pre-cutoff cases are never run); sham reasoning (accuracy against both judged sound, with AUC and the partly unlawful row in the table); error direction (confusion matrix for a chosen model, diagonal outlined).
+- **Details:** calibration κ per criterion, condition and rater with the threshold; PPI; the sensitivity table without recalled cases; stability with κ per phrasing; citation counts.
+- **Charts:** inline SVG and HTML tables, no JavaScript library; the reference palette of the dataviz method (categorical slots in fixed order, one blue ramp); colour is never alone (glyphs, values, labels, legends); every chart has its numbers in a table; hover tooltips via SVG titles. Light mode only, like the rest of the app.
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -367,7 +377,7 @@ Each stage runs and is tested on its own.
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
 | 5 Evaluation ✓ | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe ✓ |
-| 6 Analysis | 6a analysis plan and metrics ✓; 6b dashboard; 6c export; 6d freeze protocol and publish results. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
+| 6 Analysis | 6a analysis plan and metrics ✓; 6b dashboard ✓; 6c export; 6d freeze protocol and publish results. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points
 

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block title %}Ergebnisse · VfGH-LLM-Studie{% endblock %}
+{% macro iv(i, digits=0) %}{% if i is none %}–{% else %}{{ (i.estimate * 100) | round(digits) | int }} %{% endif %}{% endmacro %}
+{% macro ivr(i) %}{% if i is not none %} <span class="ci">[{{ (i.low * 100) | round | int }}–{{ (i.high * 100) | round | int }}]</span>{% endif %}{% endmacro %}
+{% macro num(x, digits=2) %}{% if x is none %}–{% else %}{{ ("%." ~ digits ~ "f") | format(x) | replace(".", ",") }}{% endif %}{% endmacro %}
+{% block content %}
+<div class="viz-root">
+<h1>Ergebnisse</h1>
+<p class="lead">Protokoll: noch nicht eingefroren. Alle Zahlen beruhen auf den bisher gespeicherten
+Läufen und Bewertungen und ändern sich mit jedem neuen Auftrag. Berechnung nach dem
+Auswertungsplan (<code>docs/analysis-plan.md</code>).</p>
+
+<nav class="tabs no-print" aria-label="Bedingung">
+  {% for c, label in conditions.items() %}
+  {% if c in run_conditions %}<a href="?bedingung={{ c }}"{% if c == condition %} aria-current="page"{% endif %}>{{ c }}: {{ label }}</a>
+  {% else %}<span class="lead">{{ c }}: nicht gelaufen</span>{% endif %}
+  {% endfor %}
+</nav>
+
+{% if not rows %}
+<p>Noch keine ausgewerteten Läufe in Bedingung {{ condition }}.</p>
+{% else %}
+
+{# ── Figure 1 ─────────────────────────────────────────────────────────── #}
+<section class="figure">
+<h2>Leaderboard – {{ conditions[condition] }}</h2>
+<p class="lead">Sortiert nach Tenor-Treffern (Mehrheit der Läufe je Fall). Punkt: Treffer, Band: 95-%-Intervall,
+orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Intervalle in Klammern.
+{% if not report.calibration.calibrated.reasons %}<br><strong>Gründe</strong> und {% endif %}{% if not report.calibration.calibrated.citations %}<strong>Zitate ungenau</strong>{% endif %}
+{% if not report.calibration.calibrated.reasons or not report.calibration.calibrated.citations %} beruhen auf Richtermodellen, die noch nicht kalibriert sind (κ &lt; 0,7 oder zu wenige Expertenbewertungen): vorläufig.{% endif %}</p>
+<div class="scroll">
+<table class="leader">
+  <thead><tr><th>#</th><th>Modell</th><th>Stichtag</th><th class="r">Fälle</th><th>Tenor-Treffer</th><th class="r">Läufe richtig</th><th class="r">κ</th>
+    <th class="r">Gründe{% if not report.calibration.calibrated.reasons %} <span class="flag" title="nicht kalibriert">vorl.</span>{% endif %}</th>
+    <th class="r">Zitate erfunden</th>
+    <th class="r">Zitate ungenau{% if not report.calibration.calibrated.citations %} <span class="flag" title="nicht kalibriert">vorl.</span>{% endif %}</th>
+    {% if condition == "A" %}<th class="r">Instabil</th><th class="r">Beide tragfähig</th><th class="r">AUC</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td><strong>{{ r.model_key }}</strong><br><span class="lead">{{ r.model_name }}</span></td>
+      <td class="mono">{{ r.cutoff.strftime("%m/%Y") if r.cutoff else "–" }}</td>
+      <td class="r mono">{{ r.cases }}</td>
+      <td class="nowrap">
+        {% if r.accuracy %}
+        <svg width="160" height="16" role="img" aria-label="{{ iv(r.accuracy) }} Treffer, Intervall {{ (r.accuracy.low*100)|round|int }} bis {{ (r.accuracy.high*100)|round|int }} %">
+          <title>{{ r.model_key }}: {{ iv(r.accuracy) }} [{{ (r.accuracy.low*100)|round|int }}–{{ (r.accuracy.high*100)|round|int }}]{% if r.baseline is not none %} · immer gesetzwidrig {{ (r.baseline*100)|round|int }} %{% endif %}</title>
+          <rect x="0" y="5" width="160" height="6" rx="3" fill="{{ empty }}"/>
+          <rect x="{{ 160 * r.accuracy.low }}" y="5" width="{{ 160 * (r.accuracy.high - r.accuracy.low) }}" height="6" rx="3" fill="#b7d3f6"/>
+          {% if r.baseline is not none %}<rect x="{{ 160 * r.baseline - 1 }}" y="1" width="2" height="14" fill="{{ wrong }}"/>{% endif %}
+          <circle cx="{{ 160 * r.accuracy.estimate }}" cy="8" r="5" fill="#256abf" stroke="#fcfcfb" stroke-width="2"/>
+        </svg>
+        <strong class="mono">{{ iv(r.accuracy) }}</strong>{{ ivr(r.accuracy) }}
+        {% else %}–{% endif %}
+      </td>
+      <td class="r mono">{{ "–" if r.run_share is none else ((r.run_share*100)|round|int ~ " %") }}</td>
+      <td class="r mono">{{ num(r.kappa) }}</td>
+      <td class="r mono">{{ iv(r.reasons) }}</td>
+      <td class="r mono">{{ iv(r.fabricated) }}</td>
+      <td class="r mono">{{ iv(r.inaccurate) }}</td>
+      {% if condition == "A" %}
+      <td class="r mono">{{ iv(r.unstable) }}</td>
+      <td class="r mono">{{ iv(r.both_sound) }}</td>
+      <td class="r mono">{{ "–" if r.auc is none else num(r.auc.estimate) }}</td>
+      {% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+</section>
+
+{# ── Figure 2 ─────────────────────────────────────────────────────────── #}
+<section class="figure">
+<h2>Stärken und Schwächen je Modell</h2>
+<p class="lead">Alle Kennzahlen auf 0–100, höher ist besser; Zitatfehler, Instabilität und „beide tragfähig“
+sind umgedreht. Dunkles Feld: Stärke, helles: Schwäche; „–“: nicht gemessen.</p>
+<div class="scroll">
+<table class="heat">
+  <thead><tr><th>Modell</th>{% for t, sub in profile_columns %}<th class="c">{{ t }}<br><span class="lead">{{ sub }}</span></th>{% endfor %}</tr></thead>
+  <tbody>{% for model, values in profiles %}<tr><th scope="row">{{ model }}</th>
+    {% for v in values %}{% set fill, ink = ramp(v) %}<td class="c mono" style="background: {{ fill }}; color: {{ ink }}" title="{{ model }} · {{ profile_columns[loop.index0][0] }} {{ profile_columns[loop.index0][1] }}: {{ '–' if v is none else v }}">{{ "–" if v is none else v }}</td>{% endfor %}
+  </tr>{% endfor %}</tbody>
+</table>
+</div>
+<p class="lead legend"><span class="swatch" style="background: {{ ramp(40)[0] }}"></span> 40 oder weniger
+  <span class="swatch" style="background: {{ ramp(70)[0] }}"></span> 70 <span class="swatch" style="background: {{ ramp(100)[0] }}"></span> 100</p>
+</section>
+
+{# ── Figure 3 ─────────────────────────────────────────────────────────── #}
+<section class="figure">
+<h2>Jeder Fall, jedes Modell – Bedingung {{ condition }}</h2>
+<p class="lead">Spalten: Fälle nach Entscheidungsdatum; Zeilen: Modelle. Leere Felder liegen vor dem Stichtag
+des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über alle Modelle falsch sind, markieren schwierige Fälle.</p>
+<p class="legend">
+  <span class="swatch" style="background: {{ right }}"></span> ✓ richtig
+  <span class="swatch" style="background: {{ wrong }}"></span> ✗ falsch
+  <span class="swatch" style="background: {{ empty }}"></span> · nicht gewertet
+  <span class="lead">~ Läufe uneinig (instabil)</span></p>
+<div class="scroll">
+<table class="grid">
+  <thead><tr><th>Modell</th>
+    {% for c in grid.cases %}<th class="c mono" title="VfGH {{ c.decision_date.strftime('%d.%m.%Y') }}, {{ c.case_number }}">{% if user.role.value == "admin" %}<a href="/cases/{{ c.id }}">{{ "%02d" | format(loop.index) }}</a>{% else %}{{ "%02d" | format(loop.index) }}{% endif %}</th>{% endfor %}
+    <th class="r">Treffer</th></tr></thead>
+  <tbody>
+  {% for model, cells, right_n, run_n in grid.rows %}
+    <tr><th scope="row">{{ model }}</th>
+    {% for cell in cells %}{% set c = grid.cases[loop.index0] %}
+      {% if cell.state == "right" %}<td class="cell" style="background: {{ right }}; color: #fff" title="{{ c.case_number }} · {{ model }}: richtig ({{ outcome_labels[cell.label] }}){% if cell.unstable %}, Läufe uneinig{% endif %}">✓{% if cell.unstable %}~{% endif %}</td>
+      {% elif cell.state == "wrong" %}<td class="cell" style="background: {{ wrong }}; color: #fff" title="{{ c.case_number }} · {{ model }}: falsch ({{ outcome_labels[cell.label or 'none'] }}){% if cell.unstable %}, Läufe uneinig{% endif %}">✗{% if cell.unstable %}~{% endif %}</td>
+      {% else %}<td class="cell" style="background: {{ empty }}" title="{{ c.case_number }} · {{ model }}: nicht gewertet">·</td>{% endif %}
+    {% endfor %}
+      <td class="r mono">{{ right_n }}/{{ run_n }}</td></tr>
+  {% endfor %}
+    <tr><th scope="row">Modelle richtig</th>{% for n in grid.right_per_case %}<td class="c mono">{{ n }}</td>{% endfor %}<td></td></tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+{# ── Figure 4 ─────────────────────────────────────────────────────────── #}
+<h2>Vier Auswertungen</h2>
+<div class="cards">
+
+<section class="card">
+  <h3>Quellenzugang</h3>
+  <p class="lead">Tenor-Treffer je Modell in den gelaufenen Bedingungen.</p>
+  {% set s = slopes %}
+  {% if s.conditions | length > 1 %}
+  {% set g = s.geo %}
+  <svg viewBox="0 0 440 230" role="img" aria-label="Tenor-Treffer je Bedingung und Modell">
+    {% for t, y in s.ticks %}
+    <line x1="{{ g.left }}" x2="{{ g.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#e1e0d9"/>
+    <text x="{{ g.left - 8 }}" y="{{ y + 4 }}" text-anchor="end" class="tick">{{ t | int }}</text>{% endfor %}
+    {% for c, x in s.xs.items() %}<text x="{{ x }}" y="{{ g.bottom + 22 }}" text-anchor="middle" class="tick">{{ c }}</text>{% endfor %}
+    {% for ser in s.series %}
+      <polyline fill="none" stroke="{{ ser.color }}" stroke-width="2" points="{% for x, y, c, v in ser.xy %}{{ x }},{{ y }} {% endfor %}"/>
+      {% for x, y, c, v in ser.xy %}<circle cx="{{ x }}" cy="{{ y }}" r="4" fill="{{ ser.color }}" stroke="#fcfcfb" stroke-width="2"><title>{{ ser.model }}, Bedingung {{ c }}: {{ v }} %</title></circle>{% endfor %}
+      <text x="{{ ser.label[0] }}" y="{{ ser.label[1] }}" class="label">{{ ser.label[2] }}</text>
+    {% endfor %}
+  </svg>
+  <p class="legend">{% for ser in s.series %}<span class="swatch line" style="background: {{ ser.color }}"></span> {{ ser.model }} {% endfor %}</p>
+  {% else %}<p>Erst mit einer zweiten Bedingung.</p>{% endif %}
+  <details><summary>Tabelle</summary><table><thead><tr><th>Modell</th>{% for c in s.conditions %}<th class="r">{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for ser in s.series %}<tr><td>{{ ser.model }}</td>{% for c in s.conditions %}<td class="r mono">{% for cc, v in ser.points %}{% if cc == c %}{{ v }} %{% endif %}{% endfor %}</td>{% endfor %}</tr>{% endfor %}</tbody></table>
+    {% if report.comparisons %}<p>McNemar (exakt): {% for m in report.comparisons %}{{ m.model_key }} A/{{ m.second }}: n = {{ m.cases }}, nur A richtig {{ m.only_first }}, nur {{ m.second }} richtig {{ m.only_second }}, p = {{ num(m.p_value, 3) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+  </details>
+</section>
+
+<section class="card">
+  <h3>Vorwissen</h3>
+  <p class="lead">Anteil der Fälle, die ein Modell nur aus Datum und Geschäftszahl erinnert (Ergebnis richtig und
+    mindestens ein Referenzgrund). Vor dem Stichtag: Positivkontrolle; nach dem Stichtag: Studienfälle.</p>
+  {% if recall %}
+  <p class="legend"><span class="swatch" style="background: {{ series[1] }}"></span> vor dem Stichtag
+    <span class="swatch" style="background: {{ series[0] }}"></span> nach dem Stichtag</p>
+  <table class="bars">
+    <tbody>{% for r in recall %}
+      {% for key, color, label in (("before", series[1], "vor"), ("after", series[0], "nach")) %}{% set n, m = r[key] %}
+      <tr>{% if loop.first %}<th scope="row" rowspan="2">{{ r.model }}</th>{% endif %}
+        <td class="lead">{{ label }}</td>
+        <td><svg width="200" height="14" role="img" aria-label="{{ r.model }} {{ label }}: {{ n }} von {{ m }}"><title>{{ r.model }}, {{ label }} dem Stichtag: {{ n }} von {{ m }} erinnert</title>
+          <rect x="0" y="2" width="200" height="10" rx="2" fill="{{ empty }}"/>
+          {% if m and n %}<rect x="0" y="2" width="{{ 200 * n / m }}" height="10" rx="2" fill="{{ color }}"/>{% endif %}</svg></td>
+        <td class="r mono">{% if m %}{{ (100 * n / m) | round | int }} % ({{ n }}/{{ m }}){% else %}–{% endif %}</td></tr>
+      {% endfor %}
+    {% endfor %}</tbody>
+  </table>
+  <p class="lead">Erinnert ein Modell vor dem Stichtag viel, nach dem Stichtag aber nichts, wirkt die Stichtagsregel.</p>
+  {% else %}<p>Noch keine Kontaminationsprobe.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h3>Scheinbegründungen</h3>
+  <p class="lead">Tenor-Treffer (A) gegen den Anteil der Fälle, in denen beide gegensätzlichen Begründungen als
+    tragfähig gelten. Oben links: überzeugt sich von allem; unten rechts: trifft und unterscheidet.</p>
+  {% set sc = scatter %}
+  {% if sc.points %}
+  {% set g = sc.geo %}
+  <svg viewBox="0 0 440 240" role="img" aria-label="Treffer gegen beide tragfähig">
+    {% for t, y in sc.yticks %}<line x1="{{ g.left }}" x2="{{ g.right }}" y1="{{ y }}" y2="{{ y }}" stroke="#e1e0d9"/><text x="{{ g.left - 8 }}" y="{{ y + 4 }}" text-anchor="end" class="tick">{{ t | int }} %</text>{% endfor %}
+    {% for t, x in sc.xticks %}<text x="{{ x }}" y="{{ g.bottom + 18 }}" text-anchor="middle" class="tick">{{ t | int }}</text>{% endfor %}
+    <text x="{{ (g.left + g.right) / 2 }}" y="{{ g.bottom + 36 }}" text-anchor="middle" class="tick">Tenor-Treffer (%)</text>
+    {% for p in sc.points %}
+    <circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="6" fill="{{ series[0] }}" stroke="#fcfcfb" stroke-width="2"><title>{{ p.model }}: Treffer {{ p.x }} %, beide tragfähig {{ p.y }} %</title></circle>
+    <text x="{{ p.cx + 10 }}" y="{{ p.ly }}" class="label">{{ p.model }}</text>{% endfor %}
+  </svg>
+  <details><summary>Tabelle</summary><table><thead><tr><th>Modell</th><th class="r">Treffer A</th><th class="r">beide tragfähig</th><th class="r">AUC</th><th class="r">Fälle</th><th>teilweise gesetzwidrig: tragfähig</th></tr></thead>
+    <tbody>{% for o in report.opposing %}<tr><td>{{ o.model_key }}</td>
+      <td class="r mono">{% for p in sc.points %}{% if p.model == o.model_key %}{{ p.x }} %{% endif %}{% endfor %}</td>
+      <td class="r mono">{{ iv(o.both_sound) }}{{ ivr(o.both_sound) }}</td><td class="r mono">{{ "–" if o.auc is none else num(o.auc.estimate) }}{% if o.auc %} [{{ num(o.auc.low) }}–{{ num(o.auc.high) }}]{% endif %}</td>
+      <td class="r mono">{{ o.cases }}</td>
+      <td>{% if o.partly_cases %}{{ o.partly_cases }} Fälle: {% for side, v in o.partly_sound.items() %}{{ "gesetzwidrig" if side == "unlawful" else "nicht gesetzwidrig" }} {{ "–" if v is none else ((v*100)|round|int ~ " %") }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}–{% endif %}</td></tr>{% endfor %}</tbody></table></details>
+  {% else %}<p>Noch keine Einschätzungen von Gegenbegründungen.</p>{% endif %}
+</section>
+
+<section class="card">
+  <h3>Fehlerrichtung</h3>
+  {% if confusion %}
+  <p class="lead">Kreuztabelle VfGH (Zeilen) gegen {{ confusion.model }} (Spalten), Bedingung {{ condition }}, n = {{ confusion.n }}.
+    Die Diagonale (umrandet) ist richtig.</p>
+  <form method="get" class="no-print" style="margin: 0 0 0.5rem"><input type="hidden" name="bedingung" value="{{ condition }}">
+    <label>Modell <select name="modell" onchange="this.form.submit()">{% for m in models %}<option{% if m == chosen %} selected{% endif %}>{{ m }}</option>{% endfor %}</select></label>
+    <noscript><button type="submit">zeigen</button></noscript></form>
+  <table class="heat confusion">
+    <thead><tr><th>VfGH ↓ / Modell →</th>{% for p in confusion.preds %}<th class="c">{{ outcome_labels[p] }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for t in confusion.truths %}{% set ti = loop.index0 %}<tr><th scope="row">{{ outcome_labels[t] }}</th>
+      {% for p in confusion.preds %}{% set n, fill, ink = confusion.cells[ti][loop.index0] %}
+      <td class="c mono{% if p == t %} diag{% endif %}" style="background: {{ fill }}; color: {{ ink }}" title="VfGH {{ outcome_labels[t] }}, Modell {{ outcome_labels[p] }}: {{ n }}">{{ n }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+  {% endif %}
+</section>
+</div>
+
+{# ── Details ──────────────────────────────────────────────────────────── #}
+<h2>Kalibrierung der Richtermodelle</h2>
+<p class="lead">Linear gewichtetes κ zwischen der Expertenbewertung und dem Mittel der Richter (bzw. einem Richter;
+„zweite Person“: Obergrenze). Schwelle κ ≥ 0,7 in jeder gelaufenen Bedingung.</p>
+<p>Referenzgründe: <strong>{{ "kalibriert" if report.calibration.calibrated.reasons else "nicht kalibriert" }}</strong> ·
+  Zitate „trägt“: <strong>{{ "kalibriert" if report.calibration.calibrated.citations else "nicht kalibriert" }}</strong></p>
+{% if report.calibration.agreements %}
+<table>
+  <thead><tr><th>Kriterium</th><th>Bedingung</th><th>verglichen mit</th><th class="r">Urteile</th><th class="r">κ</th></tr></thead>
+  <tbody>{% for a in report.calibration.agreements %}<tr><td>{{ "Referenzgründe" if a.criterion == "reasons" else "Zitate" }}</td><td>{{ a.condition }}</td>
+    <td>{% if a.rater == "mean" %}<strong>Mittel der Richter</strong>{% elif a.rater == "human" %}zweite Person{% else %}<span class="mono">{{ a.rater }}</span>{% endif %}</td>
+    <td class="r mono">{{ a.items }}</td><td class="r mono">{{ num(a.kappa) }}{% if a.rater == "mean" and a.kappa is not none %} {% if a.kappa >= 0.7 %}<span class="status ok">≥ 0,7</span>{% else %}<span class="status bad">&lt; 0,7</span>{% endif %}{% endif %}</td></tr>{% endfor %}</tbody>
+</table>
+{% else %}<p>Noch keine Expertenbewertungen.</p>{% endif %}
+
+{% if report.ppi %}
+<h3>Korrektur mit der Expertenstichprobe (PPI)</h3>
+<table>
+  <thead><tr><th>Kennzahl</th><th>Bedingung</th><th class="r">Läufe / Zitate</th><th class="r">Expertenurteile</th><th class="r">nur Richter</th><th class="r">korrigiert</th></tr></thead>
+  <tbody>{% for p in report.ppi %}<tr><td>{{ "Anteil Referenzgründe" if p.criterion == "reasons" else "Zitate ungenau" }}</td><td>{{ p.condition }}</td>
+    <td class="r mono">{{ p.runs }}</td><td class="r mono">{{ p.items }}</td>
+    <td class="r mono">{{ "–" if p.judge_only is none else ((p.judge_only*100)|round|int ~ " %") }}</td>
+    <td class="r mono">{% if p.corrected %}{{ (p.corrected.estimate*100)|round|int }} % [{{ (p.corrected.low*100)|round|int }}–{{ (p.corrected.high*100)|round|int }}]{% else %}–{% endif %}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
+<h2>Sensitivität: ohne erinnerte Fälle</h2>
+{% if report.recalled %}
+<p class="lead">Fälle, die ein Modell nach seinem Stichtag aus Datum und Geschäftszahl erinnert, bleiben für dieses Modell weg:
+  {% for m, ids in report.recalled.items() %}{{ m }} {{ ids | length }}{% if not loop.last %}, {% endif %}{% endfor %}.</p>
+<table>
+  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">Fälle</th><th class="r">Treffer</th><th class="r">Gründe</th></tr></thead>
+  <tbody>{% for o in report.outcome_without_recalled %}{% set r = (report.reasons_without_recalled | selectattr("model_key", "equalto", o.model_key) | selectattr("condition", "equalto", o.condition) | first) %}
+    <tr><td>{{ o.model_key }}</td><td>{{ o.condition }}</td><td class="r mono">{{ o.cases }}</td><td class="r mono">{{ iv(o.accuracy) }}{{ ivr(o.accuracy) }}</td><td class="r mono">{{ iv(r.share) if r else "–" }}</td></tr>{% endfor %}</tbody>
+</table>
+{% else %}<p>Kein Modell erinnert einen Studienfall; die Hauptergebnisse gelten unverändert.</p>{% endif %}
+
+{% if report.stability %}
+<h2>Stabilität (Bedingung A)</h2>
+<table>
+  <thead><tr><th>Modell</th><th class="r">Fälle</th><th class="r">instabil</th><th class="r">Fleiss' κ</th><th>κ je Formulierung</th></tr></thead>
+  <tbody>{% for s in report.stability %}<tr><td>{{ s.model_key }}</td><td class="r mono">{{ s.cases }}</td><td class="r mono">{{ s.unstable }} ({{ iv(s.share) }})</td>
+    <td class="r mono">{{ num(s.fleiss) }} <span class="lead">(n = {{ s.fleiss_cases }})</span></td>
+    <td class="mono">{% for p, k in s.by_phrasing.items() %}p{{ p }}: {{ num(k) }}{% if not loop.last %}, {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
+<h2>Zitate</h2>
+<table>
+  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">prüfbar</th><th class="r">nicht gefunden</th><th class="r">nicht auflösbar</th><th class="r">bewertet</th><th class="r">erfunden</th><th class="r">ungenau</th></tr></thead>
+  <tbody>{% for c in report.citations %}<tr><td>{{ c.model_key }}</td><td>{{ c.condition }}</td><td class="r mono">{{ c.checkable }}</td><td class="r mono">{{ c.not_found }}</td>
+    <td class="r mono">{{ c.unresolvable }}</td><td class="r mono">{{ c.judged }}</td><td class="r mono">{{ iv(c.fabricated) }}{{ ivr(c.fabricated) }}</td><td class="r mono">{{ iv(c.inaccurate) }}{{ ivr(c.inaccurate) }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+</div>
+{% endblock %}

@@ -6,22 +6,28 @@
 <p class="notice">Ihr Konto ist angelegt, aber noch nicht freigeschaltet. Bitte wenden Sie sich an
 die Projektleitung.</p>
 {% elif user.role.value == "admin" %}
-<p class="lead">Bewertung und Auswertung folgen in den nächsten Stufen.</p>
 <ul>
+  <li><a href="/dashboard">Ergebnisse</a>: Leaderboard, Profile, alle Fälle und die vier Auswertungen</li>
   <li><a href="/cases">Fälle</a>: Entscheidungen aus dem RIS importieren, prüfen und freigeben</li>
   <li><a href="/prompts">Prompts</a>: Aufgabentexte für die Modelle ansehen und ändern</li>
   <li><a href="/orders">Aufträge</a>: Fälle an Modelle schicken, Fortschritt und Kosten verfolgen</li>
   <li><a href="/checklists">Referenzgründe</a>: tragende Gründe je Fall extrahieren lassen und prüfen</li>
+  <li><a href="/calibration">Kalibrierung</a>: Antworten für die Expertenbewertung ziehen</li>
+  <li><a href="/opposing">Gegenbegründungen</a>: schreiben lassen und von den Prüflingen einschätzen lassen</li>
+  <li><a href="/contamination">Kontamination</a>: prüfen, ob Modelle Entscheidungen schon kennen</li>
   <li><a href="/admin/providers">Anbieter &amp; Modelle</a>: Konfiguration prüfen und Modelle testen</li>
   <li><a href="/admin/users">Benutzer</a>: Konten freischalten und Rollen vergeben</li>
 </ul>
 {% elif user.role.value == "expert" %}
-<p class="lead">Bewertungen und Auswertung folgen in den nächsten Stufen.</p>
 <ul>
   <li><a href="/checklists">Referenzgründe</a>: die tragenden Gründe je Fall bewerten und korrigieren</li>
+  <li><a href="/calibration">Kalibrierung</a>: Antworten der Modelle blind bewerten</li>
+  <li><a href="/dashboard">Ergebnisse</a>: die Auswertung</li>
   <li><a href="/prompts">Prompts</a>: die Aufgabentexte für die Modelle lesen</li>
 </ul>
 {% else %}
-<p class="lead">Fälle, Bewertungen und Auswertung folgen in den nächsten Stufen.</p>
+<ul>
+  <li><a href="/dashboard">Ergebnisse</a>: Leaderboard, Profile, alle Fälle und die vier Auswertungen</li>
+</ul>
 {% endif %}
 {% endblock %}
