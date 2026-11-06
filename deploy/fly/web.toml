@@ -14,6 +14,9 @@ primary_region = "fra"
 BENCH_PUBLIC_URL = "https://vfgh-bench.fly.dev"
 BENCH_OIDC_ISSUER = "https://auth.cern.ch/auth/realms/cern"
 BENCH_SECRETS_DIR = "/nonexistent"
+# BENCH_STUDY_REPO_URL = "git@github.com:<owner>/vfgh-llm-bench-study.git"
+# fly builds its own image, so there is no release digest: environment.yaml records the
+# commit (GIT_COMMIT build arg) and image_digest stays empty.
 
 [[files]]
 guest_path = "/config/providers.yaml"

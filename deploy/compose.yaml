@@ -26,7 +26,8 @@ services:
       BENCH_OIDC_CLIENT_ID: ${BENCH_OIDC_CLIENT_ID:-}
       BENCH_STUDY_REPO_URL: ${BENCH_STUDY_REPO_URL:-}      # empty: protocol and results as ZIP
       BENCH_STUDY_REPO_BRANCH: ${BENCH_STUDY_REPO_BRANCH:-main}
-      BENCH_IMAGE_DIGEST: ${BENCH_IMAGE_DIGEST:-}           # from the GitHub release
+      # No BENCH_IMAGE_DIGEST here: this file builds its own image, so a release digest
+      # would not describe it. Set it only where the released ghcr.io image is pulled.
     volumes:
       - bench-data:/data
       - ../config/providers.yaml:/config/providers.yaml:ro,z
@@ -48,6 +49,8 @@ services:
       - bench-data:/data
       - ../config/providers.yaml:/config/providers.yaml:ro,z
     secrets: [UAI_API_KEY, OPENROUTER_API_KEY, RIS_MCP_API_KEY]
+    healthcheck:
+      disable: true               # no HTTP server; the image's check is for `bench serve`
     depends_on: [web, ris-mcp]
     restart: unless-stopped
 
@@ -84,5 +87,5 @@ secrets:
     file: secrets/OPENROUTER_API_KEY
   RIS_MCP_API_KEY:
     file: secrets/RIS_MCP_API_KEY
-  STUDY_REPO_DEPLOY_KEY:          # SSH key with write access to the study repository only
-    file: secrets/STUDY_REPO_DEPLOY_KEY
+  STUDY_REPO_DEPLOY_KEY:          # SSH key with write access to the study repository only;
+    file: secrets/STUDY_REPO_DEPLOY_KEY  # must exist (may be empty): touch it when upgrading

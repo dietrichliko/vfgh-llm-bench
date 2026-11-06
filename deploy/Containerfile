@@ -14,10 +14,7 @@ COPY src/ ./src/
 RUN uv sync --frozen --no-dev --no-editable
 
 FROM docker.io/library/python:3.13-slim
-# commit of the code in the image; recorded in the frozen protocol (environment.yaml)
-ARG GIT_COMMIT=""
-LABEL org.opencontainers.image.source="https://github.com/dietrichliko/vfgh-llm-bench" \
-      org.opencontainers.image.revision="${GIT_COMMIT}"
+LABEL org.opencontainers.image.source="https://github.com/dietrichliko/vfgh-llm-bench"
 # git, ssh: the app pushes frozen protocols and results to the study repository (stage 6d)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git openssh-client \
@@ -31,10 +28,18 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYDANTIC_AI_NO_BANNER=1 \
     BENCH_DATA_DIR=/data \
     BENCH_CONFIG=/config/providers.yaml \
-    BENCH_SECRETS_DIR=/run/secrets \
-    BENCH_GIT_COMMIT=${GIT_COMMIT}
+    BENCH_SECRETS_DIR=/run/secrets
+# commit of the code in the image; recorded in the frozen protocol (environment.yaml).
+# Declared this late so that a new commit does not invalidate the layers above.
+ARG GIT_COMMIT=""
+# podman/buildah keys cached LABEL and ENV steps without build args; this RUN step uses the
+# argument, so a new commit invalidates the cache here and the steps below are rebuilt
+RUN echo "commit: ${GIT_COMMIT:-unknown}"
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
+ENV BENCH_GIT_COMMIT=${GIT_COMMIT}
 USER bench
 VOLUME /data
 EXPOSE 8000
+# for `bench serve` (the default command); compose.yaml switches it off for the worker
 HEALTHCHECK --interval=60s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
 CMD ["bench", "serve", "--port", "8000"]
