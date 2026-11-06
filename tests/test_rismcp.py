@@ -297,7 +297,7 @@ def test_parse_citation(citation: str, expected: tuple[str, str, str]) -> None:
 
 
 def test_key_required() -> None:
-    with TestClient(srv.create_app("geheim")) as c:  # type: ignore[arg-type]
+    with TestClient(srv.create_app("geheim")) as c:
         assert c.get("/health").status_code == 200
         assert c.post("/mcp", json={}).status_code == 401
         assert (

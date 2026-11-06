@@ -150,7 +150,8 @@ async def test_exclude_and_reopen(engine: sa.Engine) -> None:
         cases.exclude(db, case, None, "nur teilweise relevant")
         assert case.status == CaseStatus.EXCLUDED
         cases.reopen(db, case, None)
-        assert case.status == CaseStatus.IMPORTED and case.exclusion_reason is None
+        status: CaseStatus = case.status  # reopen changed it; mypy keeps the narrowed type
+        assert status == CaseStatus.IMPORTED and case.exclusion_reason is None
 
 
 async def test_reparse_adds_a_new_parse(engine: sa.Engine) -> None:

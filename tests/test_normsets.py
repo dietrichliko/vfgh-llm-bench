@@ -219,10 +219,10 @@ def released_case(db: Session, norms: list[str], reference: date | None = STICHT
 
 async def test_propose_review_approve(engine: sa.Engine, ris: RisClient) -> None:
     with Session(engine) as db:
-        case = released_case(db, ["StVO 1960 §24", "VfGG §7", "Richtlinie 92/43/EWG Art1"])
-        norm_set = normsets.start(db, case, None)
+        new_case = released_case(db, ["StVO 1960 §24", "VfGG §7", "Richtlinie 92/43/EWG Art1"])
+        new_set = normsets.start(db, new_case, None)
         db.commit()
-        set_id, case_id = norm_set.id or 0, case.id
+        set_id, case_id = new_set.id or 0, new_case.id
     await normsets.fetch_proposals(engine, ris, set_id)
 
     with Session(engine) as db:
