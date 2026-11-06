@@ -314,6 +314,13 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Details:** calibration κ per criterion, condition and rater with the threshold; PPI; the sensitivity table without recalled cases; stability with κ per phrasing; citation counts.
 - **Charts:** inline SVG and HTML tables, no JavaScript library; the reference palette of the dataviz method (categorical slots in fixed order, one blue ramp); colour is never alone (glyphs, values, labels, legends); every chart has its numbers in a table; hover tooltips via SVG titles. Light mode only, like the rest of the app.
 
+### As built in stage 6c (export)
+
+- **One ZIP** (`bench/export.py`): `README.md`, `manifest.json` (time, app version, protocol, rows and sha256 per file), `data/*.jsonl.gz` (cases with their released parse, orders with snapshots, prompt versions, runs, checklists, citation checks, judge scores, calibration items and ratings, opposing reasonings, assessments, contamination probes, norm sets), `metrics/*.csv` (every table of the analysis report; intervals as `_low` / `_high`) and `dashboard/<condition>.html` with its stylesheet, readable offline. Same data and time give the same bytes.
+- **Privacy:** user ids become "Person n"; names, e-mail addresses, users, sessions, the audit log and provider checks are never exported. Keys were never stored.
+- **Raw HTTP exchanges** are left out by default (publishing them is an open point, §13); admins can add them (`data/raw_exchanges.jsonl.gz`).
+- **Where:** button on the dashboard (`/export.zip`, viewer and up; `?raw=1` admin only; each download is in the audit log) and `bench export <file> [--raw]`. Publish results (6d) will commit the same files under `results/`.
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -377,7 +384,7 @@ Each stage runs and is tested on its own.
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
 | 5 Evaluation ✓ | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe ✓ |
-| 6 Analysis | 6a analysis plan and metrics ✓; 6b dashboard ✓; 6c export; 6d freeze protocol and publish results. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
+| 6 Analysis | 6a analysis plan and metrics ✓; 6b dashboard ✓; 6c export ✓; 6d freeze protocol and publish results. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points
 

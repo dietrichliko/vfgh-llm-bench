@@ -9,18 +9,19 @@ fixed order; one blue ramp for magnitude).
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import UTC, date, datetime
 from itertools import pairwise
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, Response
 from sqlmodel import Session, col, select
 
 from bench.analysis import metrics
 from bench.analysis.stats import Interval
 from bench.auth import DbDep, require_roles
-from bench.models import Case, User, UserRole
+from bench.models import Case, User, UserRole, audit
+from bench.providers import ResolvedModel
 from bench.web.cases import OUTCOME_LABELS
 from bench.web.pages import render, resolved_models
 
@@ -354,6 +355,50 @@ def confusion(report: metrics.Report, model: str | None, condition: str) -> dict
 # ── page ────────────────────────────────────────────────────────────────────────
 
 
+def context(
+    db: Session,
+    config: dict[str, ResolvedModel],
+    condition: str = "A",
+    model: str = "",
+    report: metrics.Report | None = None,
+) -> dict[str, Any]:
+    """Everything the dashboard template needs (also used by the static export)."""
+    condition = condition if condition in CONDITIONS else "A"
+    report = report or metrics.analyse(db)
+    runs = metrics.decide_runs(db)
+    names = {k: rm.name for k, rm in config.items()}
+    cutoffs = {k: rm.config.cutoff for k, rm in config.items()}
+    models = sorted({o.model_key for o in report.outcome})
+    run_conditions = sorted({o.condition for o in report.outcome}, key=list(CONDITIONS).index)
+    rows = leaderboard(report, condition, names, cutoffs)
+    chosen = model if model in models else (rows[0].model_key if rows else None)
+    return {
+        "report": report,
+        "condition": condition,
+        "conditions": CONDITIONS,
+        "run_conditions": run_conditions,
+        "models": models,
+        "rows": rows,
+        "profile_columns": PROFILE_COLUMNS,
+        "profiles": profiles(report, models),
+        "grid": grid(db, runs, report, condition),
+        "slopes": slopes(report, models),
+        "recall": recall_bars(db),
+        "scatter": scatter(report),
+        "confusion": confusion(report, chosen, condition),
+        "chosen": chosen,
+        "ramp": ramp,
+        "pct": pct,
+        "est": est,
+        "right": RIGHT,
+        "wrong": WRONG,
+        "empty": EMPTY,
+        "series": SERIES,
+        "outcome_labels": {**OUTCOME_LABELS, "none": "keins / Gleichstand"},
+        "static_export": False,
+    }
+
+
 @router.get("/dashboard", response_class=HTMLResponse)
 def dashboard(
     request: Request,
@@ -362,40 +407,27 @@ def dashboard(
     bedingung: str = "A",
     modell: str = "",
 ) -> HTMLResponse:
-    condition = bedingung if bedingung in CONDITIONS else "A"
-    report = metrics.analyse(db)
-    runs = metrics.decide_runs(db)
-    config = resolved_models(request)
-    names = {k: rm.name for k, rm in config.items()}
-    cutoffs = {k: rm.config.cutoff for k, rm in config.items()}
-    models = sorted({o.model_key for o in report.outcome})
-    run_conditions = sorted({o.condition for o in report.outcome}, key=list(CONDITIONS).index)
-    rows = leaderboard(report, condition, names, cutoffs)
-    chosen = modell if modell in models else (rows[0].model_key if rows else None)
     return render(
         request,
         "dashboard.html",
         user=user,
-        report=report,
-        condition=condition,
-        conditions=CONDITIONS,
-        run_conditions=run_conditions,
-        models=models,
-        rows=rows,
-        profile_columns=PROFILE_COLUMNS,
-        profiles=profiles(report, models),
-        grid=grid(db, runs, report, condition),
-        slopes=slopes(report, models),
-        recall=recall_bars(db),
-        scatter=scatter(report),
-        confusion=confusion(report, chosen, condition),
-        chosen=chosen,
-        ramp=ramp,
-        pct=pct,
-        est=est,
-        right=RIGHT,
-        wrong=WRONG,
-        empty=EMPTY,
-        series=SERIES,
-        outcome_labels={**OUTCOME_LABELS, "none": "keins / Gleichstand"},
+        **context(db, resolved_models(request), bedingung, modell),
+    )
+
+
+@router.get("/export.zip")
+def export_zip(request: Request, user: ViewerDep, db: DbDep, raw: bool = False) -> Response:
+    """Data, metrics and the dashboard as one ZIP; raw exchanges for admins only."""
+    from bench import export
+
+    if raw and user.role is not UserRole.ADMIN:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Roh-Antworten nur für die Administration")
+    content = export.build(db, resolved_models(request), raw=raw)
+    name = f"vfgh-llm-studie-{datetime.now(UTC):%Y%m%d-%H%M}{'-roh' if raw else ''}.zip"
+    audit(db, "export", user_id=user.id, detail={"raw": raw, "bytes": len(content)})
+    db.commit()
+    return Response(
+        content,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
     )

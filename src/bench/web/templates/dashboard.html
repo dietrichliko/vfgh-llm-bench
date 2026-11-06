@@ -8,11 +8,15 @@
 <h1>Ergebnisse</h1>
 <p class="lead">Protokoll: noch nicht eingefroren. Alle Zahlen beruhen auf den bisher gespeicherten
 Läufen und Bewertungen und ändern sich mit jedem neuen Auftrag. Berechnung nach dem
-Auswertungsplan (<code>docs/analysis-plan.md</code>).</p>
+Auswertungsplan (<code>docs/analysis-plan.md</code>).{% if static_export %} Stand: {{ generated_at }}.{% endif %}</p>
+{% if not static_export %}
+<p class="no-print"><a class="button secondary" href="/export.zip">Daten und Kennzahlen herunterladen (ZIP)</a>
+  {% if user and user.role.value == "admin" %}<a href="/export.zip?raw=1">mit Roh-Antworten</a>{% endif %}</p>
+{% endif %}
 
 <nav class="tabs no-print" aria-label="Bedingung">
   {% for c, label in conditions.items() %}
-  {% if c in run_conditions %}<a href="?bedingung={{ c }}"{% if c == condition %} aria-current="page"{% endif %}>{{ c }}: {{ label }}</a>
+  {% if c in run_conditions %}<a href="{{ (c ~ '.html') if static_export else ('?bedingung=' ~ c) }}"{% if c == condition %} aria-current="page"{% endif %}>{{ c }}: {{ label }}</a>
   {% else %}<span class="lead">{{ c }}: nicht gelaufen</span>{% endif %}
   {% endfor %}
 </nav>
@@ -101,7 +105,7 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 <div class="scroll">
 <table class="grid">
   <thead><tr><th>Modell</th>
-    {% for c in grid.cases %}<th class="c mono" title="VfGH {{ c.decision_date.strftime('%d.%m.%Y') }}, {{ c.case_number }}">{% if user.role.value == "admin" %}<a href="/cases/{{ c.id }}">{{ "%02d" | format(loop.index) }}</a>{% else %}{{ "%02d" | format(loop.index) }}{% endif %}</th>{% endfor %}
+    {% for c in grid.cases %}<th class="c mono" title="VfGH {{ c.decision_date.strftime('%d.%m.%Y') }}, {{ c.case_number }}">{% if user and user.role.value == "admin" %}<a href="/cases/{{ c.id }}">{{ "%02d" | format(loop.index) }}</a>{% else %}{{ "%02d" | format(loop.index) }}{% endif %}</th>{% endfor %}
     <th class="r">Treffer</th></tr></thead>
   <tbody>
   {% for model, cells, right_n, run_n in grid.rows %}
@@ -200,9 +204,9 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
   {% if confusion %}
   <p class="lead">Kreuztabelle VfGH (Zeilen) gegen {{ confusion.model }} (Spalten), Bedingung {{ condition }}, n = {{ confusion.n }}.
     Die Diagonale (umrandet) ist richtig.</p>
-  <form method="get" class="no-print" style="margin: 0 0 0.5rem"><input type="hidden" name="bedingung" value="{{ condition }}">
+  {% if not static_export %}<form method="get" class="no-print" style="margin: 0 0 0.5rem"><input type="hidden" name="bedingung" value="{{ condition }}">
     <label>Modell <select name="modell" onchange="this.form.submit()">{% for m in models %}<option{% if m == chosen %} selected{% endif %}>{{ m }}</option>{% endfor %}</select></label>
-    <noscript><button type="submit">zeigen</button></noscript></form>
+    <noscript><button type="submit">zeigen</button></noscript></form>{% endif %}
   <table class="heat confusion">
     <thead><tr><th>VfGH ↓ / Modell →</th>{% for p in confusion.preds %}<th class="c">{{ outcome_labels[p] }}</th>{% endfor %}</tr></thead>
     <tbody>{% for t in confusion.truths %}{% set ti = loop.index0 %}<tr><th scope="row">{{ outcome_labels[t] }}</th>

@@ -117,6 +117,23 @@ def _import_cases(args: argparse.Namespace) -> int:
         return 0 if done.status == "done" and not done.failed else 1
 
 
+def _export(args: argparse.Namespace) -> int:
+    from sqlmodel import Session
+
+    from bench import export
+    from bench.db import make_engine
+    from bench.providers import load_config, resolve
+    from bench.settings import get_settings
+
+    settings = get_settings()
+    config = resolve(load_config(settings.config_path), settings)
+    with Session(make_engine(settings.db_url)) as db:
+        content = export.build(db, config, raw=args.raw)
+    args.out.write_bytes(content)
+    print(f"{args.out}: {len(content)} bytes")
+    return 0
+
+
 def _check_providers(args: argparse.Namespace) -> int:
     from bench.llm.http import make_http_client
     from bench.llm.ping import ping
@@ -182,6 +199,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--to", dest="date_to", type=date.fromisoformat)
     p.add_argument("--procedural", action="store_true", help="also procedural rulings")
     p.set_defaults(func=_import_cases)
+
+    p = sub.add_parser("export", help="data, metrics and dashboard as one ZIP")
+    p.add_argument("out", type=Path)
+    p.add_argument("--raw", action="store_true", help="include the raw HTTP exchanges")
+    p.set_defaults(func=_export)
 
     p = sub.add_parser("check-providers", help="send a short test prompt to each model")
     p.add_argument("model", nargs="*", help="model keys (default: all)")
