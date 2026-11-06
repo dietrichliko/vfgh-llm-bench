@@ -298,6 +298,12 @@ A study order can run for hours or days. The browser is only used to configure, 
 - **Reasons** (task `probe_judge`, prompt `probe_judge.p1` with `{checkliste}` and `{antwort}`, no case input): for each probe that claims knowledge (ja or unsicher), names reasons, and whose case has a confirmed checklist, each chosen judge scores the recalled reasons against the reference reasons (*ja / teilweise / nein*, every reason exactly once, otherwise not evaluable). Family rule as for judging; the judge never sees the tested model. The result is a `JudgeScore` with the probe run as target and no citations; calibration only draws decide runs.
 - **Recalled:** the outcome matches and at least one judge finds at least one reference reason ("ja"). The page shows per model, after the cutoff (study) and before it (control): probed, knowledge claimed, outcome right, recalled; and the list per case and model. How recalled cases enter the results is decided in stage 6.
 
+### As built in stage 6a (analysis plan and metrics)
+
+- **Analysis plan:** [analysis-plan.md](analysis-plan.md) fixes every computation (unit, interval, test, threshold, exclusions) and is frozen with the protocol.
+- **Code** (`bench/analysis/`): `stats.py` holds the statistics in plain Python, without numpy: Wilson interval, exact McNemar, Cohen's κ, linearly weighted κ, Fleiss' κ, AUC (Mann–Whitney), case-cluster bootstrap with a fixed seed, and the PPI mean. `metrics.py` computes the five levels, calibration agreement and the threshold, PPI per condition, and the contamination sensitivity tables from the stored runs; `analyse(db)` returns all of it as one report for the dashboard and the export.
+- **Decisions** (user, 2026-11-06): majority label per case for level 1 (a tie is wrong); the judges' mean, with criteria below κ 0.7 in any condition shown but marked *not calibrated*; recalled cases only in a sensitivity table; partly unlawful cases reported separately in level 5.
+
 ## 8 Users and screens
 
 | Role | Screens |
@@ -361,7 +367,7 @@ Each stage runs and is tested on its own.
 | 3 Runs A ✓ | Prompts in the DB, orders with snapshot and cost estimate, worker and job queue, progress page, cutoff filter, cost caps, Freeze protocol |
 | 4 Conditions C ✓ and B ✓ | 4a: port `ris-mcp`, MCP client via Pydantic AI, tool limit, tool log, native-only rule, Stichtag per case. 4b: condition B norm texts at the Stichtag, reviewed per case |
 | 5 Evaluation ✓ | 5a reference checklists ✓, 5b judges and citation check ✓, 5c calibration queue ✓, 5d opposing reasonings and assessment ✓, 5e contamination probe ✓ |
-| 6 Analysis | Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
+| 6 Analysis | 6a analysis plan and metrics ✓; 6b dashboard; 6c export; 6d freeze protocol and publish results. Metrics (κ, Fleiss' κ, Wilson, AUC, McNemar, PPI), dashboard with figures 1–4, export, Publish results |
 
 ## 13 Open points
 
