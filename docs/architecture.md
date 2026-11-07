@@ -11,7 +11,7 @@ As of 2026-11-06. This describes how the study in [paper.md](paper.md) is implem
 | LLM access | **Pydantic AI**, only its **OpenAI-compatible** model class. A provider is a base URL + key from a config file |
 | Database | **SQLModel** on SQLAlchemy, **SQLite** by default (`BENCH_DATABASE_URL` can point elsewhere), Alembic migrations |
 | UI | **Jinja + htmx + Alpine.js**, server-rendered, no JS build, all static files vendored |
-| Hosting | Any container host (laptop, institute server). fly.io only temporarily |
+| Hosting | Locally with compose (images built from the working tree), or fly.io with the released image |
 | Secrets | Passed into the container (secrets directory or env); never in config, logs or DB |
 | Code | A new app in this repository; proven parts are ported from `../vfgh-llm-begruendung` |
 | Conference scope | Test **open-weight models via OpenRouter**; u:ai frontier models as **judges and helpers** |
@@ -66,7 +66,7 @@ src/bench/
   auth.py          generic OIDC + dev login
   web/             routers, Jinja templates, htmx fragments
   static/          vendored htmx, Alpine.js, CSS
-  cli.py           bench serve | worker | migrate | backup | check-providers
+  cli.py           bench serve | worker | all | migrate | backup | restore | check-providers
 migrations/        Alembic
 config/providers.example.yaml
 deploy/            Containerfile, compose.yaml, fly/ (temporary)
@@ -376,8 +376,10 @@ The app freezes the study setup into files, commits them to a separate study rep
 
 - **`deploy/Containerfile`:** a uv build stage, then a slim runtime with a non-root user, the git CLI (for the protocol push), a `/data` volume and `/config` read-only.
 - **`deploy/compose.yaml`:** `web`, `worker`, `bridge-univie` and later `ris-mcp`, with secrets from files and the config bind mount. Runs with Podman or Docker on a laptop or a server.
-- **`deploy/fly/`:** temporary deployment. Secrets go in as env; the worker machine must not auto-stop while jobs are queued.
-- **Backup:** `bench backup` makes a gzipped SQLite online backup to a directory; scheduling is the host's job.
+- **`deploy/fly/`:** `web.toml` runs the released ghcr.io image (deployed by digest with `deploy.sh`, which sets `BENCH_IMAGE_DIGEST`) as one machine with the volume; `bridge.toml` the u:ai bridge, private only. Secrets go in as env.
+- **`bench all`** (`bench/supervisor.py`): web, worker and ris-mcp (on `localhost:8001`) as child processes of one machine, because a fly.io volume belongs to one machine. Exits 1 if a child dies (fly.io restarts the machine). Stops with exit 0 after `BENCH_IDLE_STOP_MINUTES` (15) without requests and without open jobs (a running job, or a queued one in a running order); the restart policy `on-failure` leaves it stopped and the proxy starts it at the next request. fly.io's auto-stop is off because it sees only requests, not the worker's LLM calls. Activity: the web process touches `BENCH_ACTIVITY_FILE` on every request except `/health` and while its background tasks run (`bench/activity.py`).
+- **u:ai bridge on fly.io** (`bench/flymachines.py`): reached at `vfgh-bench-bridge.internal:8000` over the private network, because fly.io's proxy closes connections silent for 60 s and u:ai calls are not streamed (streaming would change the raw exchanges the study records). `bench all` starts its machines via the Machines API (`FLY_API_TOKEN`, a deploy token of the bridge app only) before the worker and stops them after it; it waits for the bridge's `/health`. Failures are logged, not raised. The bridge runs with `uvicorn --host ::` because its own command listens on IPv4 only.
+- **Backup:** `bench backup` makes a gzipped SQLite online backup to a directory; locally, scheduling is the host's job. On fly.io, `bench all` uploads one to an S3 bucket (Tigris: `BUCKET_NAME`, `AWS_*`) before a pending migration, every `BENCH_BACKUP_INTERVAL_HOURS` (6) and when it stops, only if the sha256 of the uncompressed copy changed (an unchanged database gives a byte-identical copy). Pruning keeps all of the last `BENCH_BACKUP_KEEP_DAYS` (14) days, before that the newest of each ISO week. Volume snapshots are kept 30 days in addition. `bench restore KEY|FILE` checks the backup (integrity, `alembic_version`) and stages it; the next start of `bench all` swaps it in and keeps the old file beside it (`--now` swaps at once when nothing runs). Decisions (user, 2026-11-07): local runs build their own containers, fly.io the released image; the bridge is part of the fly.io deployment; machines stop when unused; backups to Tigris (EOS via a CERNBox upload-only link considered, postponed).
 - **Development:**
   - uv, Python 3.13, ruff (same rules as the old project), mypy in strict mode, pytest with `httpx2.MockTransport` (the openai SDK uses httpx2, which respx cannot mock);
   - pre-commit and Conventional Commits;

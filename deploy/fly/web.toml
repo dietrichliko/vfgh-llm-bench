@@ -1,49 +1,74 @@
-# Temporary deployment on fly.io. Secrets arrive as environment variables:
-#   fly secrets set --app vfgh-bench BENCH_SESSION_SECRET=… BENCH_OIDC_CLIENT_SECRET=… \
-#       UAI_API_KEY=… OPENROUTER_API_KEY=…
-#   fly deploy --config deploy/fly/web.toml --dockerfile deploy/Containerfile \
-#       --build-arg GIT_COMMIT=$(git rev-parse HEAD)
-# Study repository (Freeze protocol / Publish results): set BENCH_STUDY_REPO_URL below and
-#   fly secrets set --app vfgh-bench STUDY_REPO_DEPLOY_KEY="$(cat deploy-key)"
-# The provider config is baked in via [[files]] from config/providers.yaml.
+# fly.io: the released image, everything in one machine (`bench all`). Step by step in
+# README.md, "fly.io"; deploy a release with deploy/fly/deploy.sh <version>.
+#
+# One machine, because the SQLite volume belongs to exactly one machine: `bench all` runs
+# web, worker and ris-mcp, stops itself 15 minutes after the last request once no job is
+# open (exit 0: the machine stays stopped) and the next request starts it again. fly.io's
+# own auto-stop is off: it sees only requests, not the worker's LLM calls.
+#
+# Secrets (fly secrets set --app vfgh-bench NAME=…): BENCH_SESSION_SECRET,
+# BENCH_OIDC_CLIENT_SECRET, OPENROUTER_API_KEY, UAI_API_KEY (= AAI_BRIDGE_API_KEY of the
+# bridge app), FLY_API_TOKEN (deploy token of the bridge app only: `bench all` starts and
+# stops the bridge), RIS_MCP_API_KEY, optionally STUDY_REPO_DEPLOY_KEY;
+# `fly storage create` adds BUCKET_NAME and the AWS_* secrets of the backup bucket (Tigris).
 
 app = "vfgh-bench"
 primary_region = "fra"
+kill_signal = "SIGTERM"
+kill_timeout = 120  # children stop, then a last backup is uploaded
+
+[build]
+# deploy.sh passes the image by digest (--image); this tag is only the fallback
+image = "ghcr.io/dietrichliko/vfgh-llm-bench:0.2.0"
 
 [env]
 BENCH_PUBLIC_URL = "https://vfgh-bench.fly.dev"
 BENCH_OIDC_ISSUER = "https://auth.cern.ch/auth/realms/cern"
-BENCH_SECRETS_DIR = "/nonexistent"
+BENCH_SECRETS_DIR = "/nonexistent"  # secrets arrive as environment variables
+BENCH_IDLE_STOP_MINUTES = "15"
+BENCH_BACKUP_INTERVAL_HOURS = "6"
+BENCH_BACKUP_KEEP_DAYS = "14"
+BENCH_RIS_MCP_URL = "http://localhost:8001/mcp"
+BENCH_RIS_MCP_ALLOWED_HOSTS = "localhost:8001"
+BENCH_FLY_BRIDGE_APP = "vfgh-bench-bridge"  # deploy/fly/bridge.toml
+BENCH_FLY_BRIDGE_HEALTH_URL = "http://vfgh-bench-bridge.internal:8000/health"
+# BENCH_OIDC_CLIENT_ID = "…"
+# BENCH_ADMIN_EMAILS = "…"
 # BENCH_STUDY_REPO_URL = "git@github.com:<owner>/vfgh-llm-bench-study.git"
-# fly builds its own image, so there is no release digest: environment.yaml records the
-# commit (GIT_COMMIT build arg) and image_digest stays empty.
+# BENCH_IMAGE_DIGEST is set by deploy.sh
 
 [[files]]
 guest_path = "/config/providers.yaml"
-local_path = "config/providers.yaml"
+local_path = "config/providers.fly.yaml"  # u:ai base_url: http://vfgh-bench-bridge.internal:8000/v1
 
 [mounts]
 source = "bench_data"
 destination = "/data"
+snapshot_retention = 30  # days; daily snapshots in addition to the Tigris backups
 
 [processes]
-web = "bench serve --port 8000"
-# worker = "bench worker"   # stage 3; must not auto-stop while jobs are queued
+app = "bench all --port 8000 --mcp-port 8001"
+
+[[restart]]
+policy = "on-failure"  # a crash restarts; the idle stop (exit 0) does not
+retries = 10
+processes = ["app"]
 
 [http_service]
 internal_port = 8000
 force_https = true
-processes = ["web"]
-auto_stop_machines = "stop"
+processes = ["app"]
+auto_stop_machines = "off"  # `bench all` stops itself
 auto_start_machines = true
 min_machines_running = 0
 
 [[http_service.checks]]
 interval = "60s"
 method = "GET"
-path = "/health"
+path = "/health"  # not counted as activity
 timeout = "5s"
+grace_period = "30s"
 
 [[vm]]
 size = "shared-cpu-1x"
-memory = "512mb"
+memory = "1gb"  # three Python processes

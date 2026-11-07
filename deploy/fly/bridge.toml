@@ -1,0 +1,35 @@
+# fly.io: the u:ai bridge (AAI bridge, profile univie), reachable only over the private
+# network: http://vfgh-bench-bridge.internal:8000/v1
+#
+# Not through fly.io's proxy: it closes connections that carry no data for 60 s, and the
+# app's u:ai calls (not streamed) are silent until the answer is complete. Without the
+# proxy nothing starts the bridge on demand, so the web app's `bench all` starts it when
+# it starts and stops it when it stops (Machines API, secret FLY_API_TOKEN of the web
+# app = a deploy token of this app only). Step by step in README.md, "fly.io".
+#
+#   fly apps create vfgh-bench-bridge
+#   fly secrets set --app vfgh-bench-bridge --stage AAI_BRIDGE_CLIENT_ID=… \
+#       AAI_BRIDGE_CLIENT_SECRET=… AAI_BRIDGE_API_KEY=…
+#   fly deploy --config deploy/fly/bridge.toml --ha=false
+#
+# The web app's secret UAI_API_KEY has the same value as AAI_BRIDGE_API_KEY.
+
+app = "vfgh-bench-bridge"
+primary_region = "fra"  # same region as the web app
+
+[build]
+image = "registry.cern.ch/mbi-vienna/aai-bridge:0.4.0"
+
+[env]
+AAI_BRIDGE_PROFILE = "univie"
+AAI_BRIDGE_UPSTREAM_TIMEOUT = "600"
+
+[processes]
+# the image's `bridge` command listens on 0.0.0.0 (IPv4 only); the private network is IPv6
+app = "python -m uvicorn academic_ai_bridge.main:app --host :: --port 8000"
+
+# no [http_service]: no proxy, no public address, no auto-stop by fly.io
+
+[[vm]]
+size = "shared-cpu-1x"
+memory = "512mb"

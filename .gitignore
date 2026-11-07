@@ -21,6 +21,7 @@ dev-data/
 backups/
 deploy/secrets/
 config/providers.yaml
+config/providers.fly.yaml
 
 # Editor
 .idea/

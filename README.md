@@ -84,7 +84,68 @@ GIT_COMMIT=$(git rev-parse HEAD) BENCH_DEV_LOGIN=1 BENCH_ADMIN_EMAILS=you@exampl
 even if empty (compose refuses to start otherwise). Since the study repository was added:
 `touch deploy/secrets/STUDY_REPO_DEPLOY_KEY`.
 
-fly.io (temporary): see `deploy/fly/web.toml`.
+Locally, the containers are built from the working tree. fly.io runs the released image.
+
+## fly.io
+
+Two apps in the region `fra`:
+
+- **`vfgh-bench`** (`deploy/fly/web.toml`): the released image from ghcr.io, one machine
+  with a volume. `bench all` runs web, worker and ris-mcp together, because the SQLite
+  volume belongs to one machine. It stops itself 15 minutes after the last request once
+  no job is open; the next request starts it again (cold start a few seconds). fly.io's
+  own auto-stop is off: it sees only requests, so it would stop a running order.
+- **`vfgh-bench-bridge`** (`deploy/fly/bridge.toml`): the u:ai bridge, private only. The
+  worker calls it at `vfgh-bench-bridge.internal:8000`, not through fly.io's proxy,
+  which closes connections that are silent for 60 s (u:ai calls are not streamed).
+  `bench all` starts it when it starts and stops it when it stops.
+
+**Backups:** daily volume snapshots (kept 30 days) and off-site backups to a Tigris
+bucket, made by `bench all` before a migration, every 6 hours while it runs and when it
+stops, each only if the database changed. All backups of the last 14 days are kept,
+before that the newest of each week.
+
+**First setup** (needs [flyctl](https://fly.io/docs/flyctl/install/) and `fly auth login`):
+
+```bash
+# provider config for fly.io: as config/providers.yaml, but the u:ai base_url is
+#   http://vfgh-bench-bridge.internal:8000/v1
+cp config/providers.yaml config/providers.fly.yaml          # then edit
+
+# 1. bridge
+fly apps create vfgh-bench-bridge
+fly secrets set --app vfgh-bench-bridge --stage AAI_BRIDGE_CLIENT_ID=… \
+    AAI_BRIDGE_CLIENT_SECRET=… AAI_BRIDGE_API_KEY=…
+fly deploy --config deploy/fly/bridge.toml --ha=false
+
+# 2. web app, volume and backup bucket
+fly apps create vfgh-bench
+fly volumes create bench_data --app vfgh-bench --region fra --size 1
+fly storage create --app vfgh-bench --name vfgh-bench-backups   # sets BUCKET_NAME, AWS_*
+fly secrets set --app vfgh-bench --stage \
+    BENCH_SESSION_SECRET=$(openssl rand -hex 32) \
+    RIS_MCP_API_KEY=$(openssl rand -hex 32) \
+    BENCH_OIDC_CLIENT_SECRET=… OPENROUTER_API_KEY=… \
+    UAI_API_KEY=…                       # = AAI_BRIDGE_API_KEY of the bridge
+fly secrets set --app vfgh-bench --stage \
+    FLY_API_TOKEN="$(fly tokens create deploy --app vfgh-bench-bridge --expiry 8760h)"
+# set BENCH_OIDC_CLIENT_ID and BENCH_ADMIN_EMAILS in deploy/fly/web.toml, then:
+deploy/fly/deploy.sh 0.2.0
+```
+
+**Upgrade** to a new release: `deploy/fly/deploy.sh X.Y.Z`. It deploys the image by
+digest and sets `BENCH_IMAGE_DIGEST`. A pending migration is preceded by a backup.
+
+**Restore** a backup:
+
+```bash
+fly ssh console --app vfgh-bench -C "bench restore --list"
+fly ssh console --app vfgh-bench -C "bench restore backups/<stamp>-idle.sqlite.gz"
+fly machine restart --app vfgh-bench    # swaps it in; the old database stays beside it
+```
+
+`fly ssh console` needs the machine running: open the app in the browser first. The
+token for the bridge expires after a year (`--expiry`); renew it with the same command.
 
 ## Development
 
