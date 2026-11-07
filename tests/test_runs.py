@@ -875,3 +875,96 @@ def test_the_reference_date_can_be_cleared(client: TestClient) -> None:
     )
     with Session(_engine(client)) as db:
         assert db.get(Case, case_id).reference_date is None  # type: ignore[union-attr]
+
+
+# ── limits: answer length and run time ───────────────────────────────────────────
+
+
+def _limited(settings: Settings, tmp_path: Path, extra: str) -> Settings:
+    """The test config with limits added to the provider "or" (alpha's)."""
+    config = tmp_path / "limited.yaml"
+    config.write_text(
+        CONFIG.replace("    tool_mode: native\n", f"    tool_mode: native\n{extra}", 1)
+    )
+    return settings.model_copy(update={"config_path": config})
+
+
+async def test_max_output_tokens_is_sent_and_a_model_may_override_it(
+    engine: sa.Engine, settings: Settings, tmp_path: Path
+) -> None:
+    s = _limited(settings, tmp_path, "    max_output_tokens: 16000\n")
+    models = resolve(load_config(s.config_path), s)
+    from bench.providers import model_settings
+
+    assert model_settings(models["alpha"])["max_tokens"] == 16000
+    assert "max_tokens" not in model_settings(models["beta"])  # other provider: no cap
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+    requests: list[Any] = []
+    await work(engine, s, answer(), requests)
+    assert requests[0]["max_tokens"] == 16000
+    assert "max_completion_tokens" not in requests[0]
+    with Session(engine) as db:
+        assert jobs_of(db, order_id)[0].status is JobStatus.DONE
+
+    own = s.config_path.read_text().replace(
+        "    expected_output_tokens: 1000\n",
+        "    expected_output_tokens: 1000\n    max_output_tokens: 4000\n",
+    )
+    s.config_path.write_text(own)
+    assert model_settings(resolve(load_config(s.config_path), s)["alpha"])["max_tokens"] == 4000
+
+
+async def test_the_cap_field_follows_the_provider(
+    engine: sa.Engine, settings: Settings, tmp_path: Path
+) -> None:
+    """The u:ai bridge reads max_completion_tokens; sent as max_tokens it would be ignored."""
+    s = _limited(
+        settings,
+        tmp_path,
+        "    max_output_tokens: 8000\n    max_tokens_field: max_completion_tokens\n",
+    )
+    models = resolve(load_config(s.config_path), s)
+    make_order(engine, models, ["alpha"], n_cases=1)
+    requests: list[Any] = []
+    await work(engine, s, answer(), requests)
+    assert requests[0]["max_completion_tokens"] == 8000 and "max_tokens" not in requests[0]
+
+
+async def test_a_cut_off_answer_says_so(
+    engine: sa.Engine, settings: Settings, tmp_path: Path
+) -> None:
+    s = _limited(settings, tmp_path, "    max_output_tokens: 50\n")
+    models = resolve(load_config(s.config_path), s)
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+
+    def cut(_req: httpx2.Request) -> httpx2.Response:
+        body = chat_response('{"spruch": [{"bestimmung": "§ 1', model="x")
+        body["choices"][0]["finish_reason"] = "length"
+        return httpx2.Response(200, json=body)
+
+    await work(engine, s, cut)
+    with Session(engine) as db:
+        job = jobs_of(db, order_id)[0]
+    assert job.status is JobStatus.NOT_EVALUABLE
+    assert job.error and "bei max_tokens (50) abgeschnitten" in job.error
+
+
+async def test_the_run_time_limit_holds_without_an_answer(
+    engine: sa.Engine, settings: Settings, tmp_path: Path
+) -> None:
+    """OpenRouter keeps a connection alive while the model writes: only a wall clock helps."""
+    s = _limited(settings, tmp_path, "    max_run_seconds: 0.2\n")
+    models = resolve(load_config(s.config_path), s)
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+
+    async def endless(_req: httpx2.Request) -> httpx2.Response:
+        await asyncio.sleep(30)
+        return httpx2.Response(200, json=chat_response(json.dumps(ANSWER), model="x"))
+
+    async with make_http_client(httpx2.MockTransport(endless), backoff=0) as client:
+        worker = Worker(engine, s, client, name="test")
+        await asyncio.wait_for(worker.run_until_idle(), timeout=10)
+    with Session(engine) as db:
+        job = jobs_of(db, order_id)[0]
+    assert job.status is JobStatus.FAILED
+    assert job.error == "Zeitlimit von 0.2 s für den Lauf überschritten"

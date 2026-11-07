@@ -10,6 +10,7 @@ Tool errors go back to the model as failed results; exceeding the limit makes th
 ``not_evaluable``. Every call is logged with its arguments and result.
 """
 
+import asyncio
 import contextlib
 import hashlib
 import json
@@ -34,7 +35,7 @@ from pydantic_ai.messages import (
 from bench.llm.http import Exchange, capture
 from bench.llm.ping import reported_model_matches, usage_dict
 from bench.models import JobStatus
-from bench.providers import ResolvedModel, build_model, output_spec
+from bench.providers import ResolvedModel, build_model, max_output_tokens, output_spec
 from bench.settings import Settings
 
 TOOL_CALL_LIMIT = 15
@@ -109,6 +110,14 @@ def _last_success(exchanges: list[Exchange]) -> tuple[dict[str, Any], dict[str, 
                 return {}, ex.response_headers
             return (data if isinstance(data, dict) else {}), ex.response_headers
     return {}, {}
+
+
+def _finish_reason(raw: dict[str, Any]) -> str | None:
+    choices = raw.get("choices")
+    if isinstance(choices, list) and choices and isinstance(choices[0], dict):
+        reason = choices[0].get("finish_reason")
+        return reason if isinstance(reason, str) else None
+    return None
 
 
 def _raw_usage(exchanges: list[Exchange]) -> dict[str, Any]:
@@ -186,9 +195,16 @@ async def run_task[T: BaseModel](
                 toolsets=tools,
             )
             limits = UsageLimits(tool_calls_limit=TOOL_CALL_LIMIT) if tools else None
-            result = await agent.run(user, usage_limits=limits)
+            async with asyncio.timeout(rm.provider.max_run_seconds):
+                result = await agent.run(user, usage_limits=limits)
             output = result.output
             usage = usage_dict(result.usage)
+        except TimeoutError:
+            # also when the endpoint keeps the connection alive without an answer
+            status, error = (
+                JobStatus.FAILED,
+                f"Zeitlimit von {rm.provider.max_run_seconds:g} s für den Lauf überschritten",
+            )
         except UsageLimitExceeded as exc:
             status, error = JobStatus.NOT_EVALUABLE, f"Werkzeuglimit überschritten: {exc}"
         except UnexpectedModelBehavior as exc:
@@ -199,6 +215,11 @@ async def run_task[T: BaseModel](
     raw, headers = _last_success(cap.exchanges)
     if status is not JobStatus.FAILED and not raw:
         status = JobStatus.FAILED
+    if status is not JobStatus.DONE and _finish_reason(raw) == "length":
+        error = (
+            f"Antwort bei max_tokens ({max_output_tokens(rm)}) abgeschnitten"
+            f" ({error or 'nicht auswertbar'})"
+        )
     raw_usage = _raw_usage(cap.exchanges)
     if not usage and raw_usage:
         usage = {k: raw_usage[k] for k in ("input_tokens", "output_tokens")}

@@ -18,7 +18,9 @@ providers:
     tool_mode: native          # the only mode allowed in condition C
     max_concurrency: 8
     requests_per_minute: 60
-    timeout_seconds: 600
+    timeout_seconds: 600       # without any data; OpenRouter's keep-alive resets it
+    max_run_seconds: 900       # wall clock per run incl. tool rounds
+    max_output_tokens: 16000   # cap incl. thinking: a model caught in a loop ends here
     extra_body:
       provider:
         allow_fallbacks: false # no silent switch to another provider
@@ -33,6 +35,9 @@ providers:
     json_object: false         # true: also send response_format {"type": "json_object"}
     tool_mode: emulated        # never offered for condition C
     max_concurrency: 4
+    max_run_seconds: 900
+    max_tokens_field: max_completion_tokens  # the bridge reads this field, not max_tokens
+    # no max_output_tokens: the bridge refuses it for models whose upstream cannot cap
 
 models:
   # --- Tested: open-weight models on OpenRouter (conference scope) -------------------

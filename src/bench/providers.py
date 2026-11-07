@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import httpx2
 import yaml
@@ -18,7 +18,7 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic_ai import NativeOutput, PromptedOutput
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIChatModelSettings
-from pydantic_ai.profiles import ModelProfile
+from pydantic_ai.profiles.openai import OpenAIModelProfile
 from pydantic_ai.providers.openai import OpenAIProvider
 
 from bench.llm.schemas import PROMPTED_OUTPUT_TEMPLATE
@@ -65,7 +65,16 @@ class ProviderConfig(_Strict):
     tool_mode: ToolMode = ToolMode.NONE
     max_concurrency: int = Field(default=4, ge=1)
     requests_per_minute: int | None = Field(default=None, ge=1)
-    timeout_seconds: float = Field(default=600, gt=0)
+    timeout_seconds: float = Field(default=600, gt=0)  # without any data from the endpoint
+    # wall clock for a whole run incl. tool rounds; keep-alive data does not reset it
+    max_run_seconds: float = Field(default=900, gt=0)
+    # cap on the answer incl. thinking, sent as max_tokens; a model may override it.
+    # None: no cap (a model caught in a loop then runs until its own limit)
+    max_output_tokens: int | None = Field(default=None, ge=1)
+    # the request field for that cap: OpenRouter and most endpoints read max_tokens,
+    # OpenAI and the u:ai bridge max_completion_tokens; a field the endpoint ignores
+    # would leave the answer uncapped without any error
+    max_tokens_field: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
 
 
 class ModelConfig(_Strict):
@@ -77,6 +86,7 @@ class ModelConfig(_Strict):
     roles: list[Role] = Field(min_length=1)
     price: Price | None = None
     expected_output_tokens: int = Field(default=6000, ge=1)  # incl. thinking; for estimates
+    max_output_tokens: int | None = Field(default=None, ge=1)  # overrides the provider's
     parameters: dict[str, Any] = Field(default_factory=dict)
     extra_body: dict[str, Any] = Field(default_factory=dict)
 
@@ -168,9 +178,16 @@ def resolve(config: StudyConfig, settings: Settings) -> dict[str, ResolvedModel]
     return out
 
 
+def max_output_tokens(rm: ResolvedModel) -> int | None:
+    return rm.config.max_output_tokens or rm.provider.max_output_tokens
+
+
 def model_settings(rm: ResolvedModel) -> OpenAIChatModelSettings:
     """Settings sent with every request: only what the config states, nothing invented."""
-    settings: dict[str, Any] = dict(rm.config.parameters)
+    settings: dict[str, Any] = {}
+    if cap := max_output_tokens(rm):
+        settings["max_tokens"] = cap
+    settings.update(rm.config.parameters)  # an explicit parameter wins
     extra_body = {**rm.provider.extra_body, **rm.config.extra_body}
     if extra_body:
         settings["extra_body"] = extra_body
@@ -194,11 +211,18 @@ def build_model(
     )
     provider = OpenAIProvider(openai_client=client)
     # what the endpoint supports comes from our config, not from guesses by model name
-    profile: ModelProfile = {
-        **(provider.model_profile(rm.config.model) or {}),
-        "supports_json_schema_output": rm.provider.output_mode is OutputMode.NATIVE,
-        "supports_json_object_output": rm.provider.json_object,
-    }
+    base: dict[str, Any] = dict(provider.model_profile(rm.config.model) or {})
+    profile = cast(
+        OpenAIModelProfile,
+        {
+            **base,
+            "supports_json_schema_output": rm.provider.output_mode is OutputMode.NATIVE,
+            "supports_json_object_output": rm.provider.json_object,
+            "openai_chat_supports_max_completion_tokens": (
+                rm.provider.max_tokens_field == "max_completion_tokens"
+            ),
+        },
+    )
     return OpenAIChatModel(
         rm.config.model,
         provider=provider,
