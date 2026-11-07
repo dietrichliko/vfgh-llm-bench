@@ -238,10 +238,11 @@ def set_reference_date(
     user: AdminDep,
     db: DbDep,
     reference_date: Annotated[date | None, Form()] = None,
+    clear: Annotated[bool, Form()] = False,
 ) -> Response:
     case = _case(db, case_id)
     try:
-        cases.set_reference_date(db, case, user.id, reference_date)
+        cases.set_reference_date(db, case, user.id, None if clear else reference_date)
     except ValueError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
     db.commit()

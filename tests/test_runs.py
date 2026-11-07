@@ -851,3 +851,27 @@ def test_open_jobs_keep_the_machine_running(
         job.status = JobStatus.RUNNING
         db.commit()
     assert has_open_jobs(engine)  # a job in flight always counts
+
+
+def test_the_reference_date_can_be_cleared(client: TestClient) -> None:
+    """A case with several historical legal situations has no single Stichtag: A only."""
+    login(client, "admin@example.org")
+    with Session(_engine(client)) as db:
+        case = add_case(db, 1, date(2025, 12, 1), reference=date(2026, 9, 22))
+        db.commit()
+        case_id = case.id
+    r = client.post(
+        f"/cases/{case_id}/reference-date", data={"reference_date": ""}, follow_redirects=False
+    )
+    assert r.status_code == 303, r.text
+    with Session(_engine(client)) as db:
+        assert db.get(Case, case_id).reference_date is None  # type: ignore[union-attr]
+    assert "kein Stichtag: nicht in B und C" in client.get(f"/cases/{case_id}").text
+    # the button: browsers make emptying a date field awkward
+    client.post(f"/cases/{case_id}/reference-date", data={"reference_date": "2026-09-22"})
+    assert "Stichtag entfernen" in client.get(f"/cases/{case_id}").text
+    client.post(
+        f"/cases/{case_id}/reference-date", data={"reference_date": "2026-09-22", "clear": "1"}
+    )
+    with Session(_engine(client)) as db:
+        assert db.get(Case, case_id).reference_date is None  # type: ignore[union-attr]
