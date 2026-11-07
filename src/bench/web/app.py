@@ -1,7 +1,8 @@
 """FastAPI application: server-rendered pages (Jinja + htmx), login, admin pages."""
 
+import asyncio
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from sqlmodel import Session
 from starlette.middleware.sessions import SessionMiddleware
 
 from bench import __version__, auth, prompts
+from bench.activity import THROTTLE_SECONDS, ActivityMarker
 from bench.db import make_engine, migrate
 from bench.llm.http import make_http_client
 from bench.providers import StudyConfig, load_config
@@ -65,6 +67,15 @@ def create_app(
     settings = settings or get_settings()
     engine = make_engine(settings.db_url)
 
+    marker = ActivityMarker(settings.activity_file) if settings.activity_file else None
+
+    async def mark_busy(app: FastAPI, marker: ActivityMarker) -> None:
+        """Background tasks (e.g. a case import) count as activity while they run."""
+        while True:
+            if app.state.tasks:
+                marker.touch()
+            await asyncio.sleep(THROTTLE_SECONDS)
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         migrate(engine)
@@ -72,7 +83,10 @@ def create_app(
             if added := prompts.seed(db):
                 log.info("prompts seeded: %s", ", ".join(added))
             db.commit()
+        busy = asyncio.create_task(mark_busy(app, marker)) if marker else None
         yield
+        if busy:
+            busy.cancel()
         for task in list(app.state.tasks):
             task.cancel()
         await app.state.ris.aclose()
@@ -115,6 +129,16 @@ def create_app(
                 status_code=status.HTTP_401_UNAUTHORIZED, headers={"HX-Redirect": "/login"}
             )
         return RedirectResponse("/login", status.HTTP_303_SEE_OTHER)
+
+    if marker:
+
+        @app.middleware("http")
+        async def _mark_activity(
+            request: Request, call_next: Callable[[Request], Awaitable[Response]]
+        ) -> Response:
+            if request.url.path != "/health":  # fly's health checks are not use
+                marker.touch()
+            return await call_next(request)
 
     @app.get("/health", include_in_schema=False)
     def health() -> dict[str, str]:

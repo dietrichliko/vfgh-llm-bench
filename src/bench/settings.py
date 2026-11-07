@@ -11,12 +11,15 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 SESSION_SECRET = "BENCH_SESSION_SECRET"
 OIDC_CLIENT_SECRET = "BENCH_OIDC_CLIENT_SECRET"
 RIS_MCP_API_KEY = "RIS_MCP_API_KEY"  # shared by the ris-mcp server and the worker
+BACKUP_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID"  # off-site backup bucket (Tigris on fly.io)
+BACKUP_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY"
+FLY_API_TOKEN = "FLY_API_TOKEN"  # fly.io: deploy token of the bridge app only
 
 
 class Settings(BaseSettings):
@@ -40,6 +43,25 @@ class Settings(BaseSettings):
     study_repo_branch: str = "main"
     git_commit: str = ""  # of this app, set at image build; recorded in environment.yaml
     image_digest: str = ""
+
+    # `bench all` (fly.io): stop after this many minutes without requests or open jobs;
+    # 0 = never. The web process marks activity by touching activity_file.
+    idle_stop_minutes: int = 0
+    activity_file: Path | None = None
+    # off-site backup to an S3 bucket (fly.io: Tigris sets BUCKET_NAME and the AWS_*
+    # secrets); empty = no off-site backup. Made by `bench all` only after changes.
+    backup_bucket: str = Field(
+        default="", validation_alias=AliasChoices("BENCH_BACKUP_BUCKET", "BUCKET_NAME")
+    )
+    backup_prefix: str = "backups/"
+    backup_interval_hours: float = 6.0  # while the machine runs
+    backup_keep_days: int = 14  # all backups this recent; older: the newest of each week
+    # fly.io: `bench all` starts the machines of this app (the u:ai bridge) when it starts
+    # and stops them when it stops; the worker calls it over the private network, not
+    # through fly.io's proxy, which cuts requests silent for 60 s. Empty = not managed.
+    fly_bridge_app: str = ""
+    fly_bridge_health_url: str = ""  # waited for after the start, e.g. …internal:8000/health
+    fly_api_url: str = "http://_api.internal:4280"  # Machines API inside fly.io
 
     oidc_issuer: str = ""
     oidc_client_id: str = ""

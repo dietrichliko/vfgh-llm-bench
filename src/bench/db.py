@@ -43,6 +43,17 @@ def migrate(engine: Engine) -> None:
     command.upgrade(alembic_config(engine), "head")
 
 
+def pending_migration(engine: Engine) -> bool:
+    """True if the database has a schema that a migration would change (not if empty)."""
+    from alembic.runtime.migration import MigrationContext
+    from alembic.script import ScriptDirectory
+
+    head = ScriptDirectory.from_config(alembic_config(engine)).get_current_head()
+    with engine.connect() as conn:
+        current = MigrationContext.configure(conn).get_current_revision()
+    return current is not None and current != head
+
+
 def get_session(request: Request) -> Iterator[Session]:
     with Session(request.app.state.engine) as session:
         yield session

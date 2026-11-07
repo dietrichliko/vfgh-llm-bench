@@ -81,6 +81,56 @@ def _backup(args: argparse.Namespace) -> int:
     return 0
 
 
+def _all(args: argparse.Namespace) -> int:
+    from bench.backup import store_from_settings
+    from bench.flymachines import FlyMachines
+    from bench.settings import FLY_API_TOKEN, get_settings
+    from bench.supervisor import Supervisor, default_commands
+
+    settings = get_settings()
+    commands = default_commands(args.port, args.mcp_port)
+    bridge = None
+    if settings.fly_bridge_app:
+        token = settings.secret(FLY_API_TOKEN)
+        if token:
+            bridge = FlyMachines(
+                settings.fly_api_url,
+                token,
+                settings.fly_bridge_app,
+                settings.fly_bridge_health_url,
+            )
+        else:
+            logging.error("%s not set: %s is not started", FLY_API_TOKEN, settings.fly_bridge_app)
+    store = store_from_settings(settings)
+    return Supervisor(settings, commands, store, bridge=bridge).run()
+
+
+def _restore(args: argparse.Namespace) -> int:
+    from bench.backup import apply_pending_restore, stage_restore, store_from_settings
+    from bench.settings import get_settings
+
+    settings = get_settings()
+    store = store_from_settings(settings)
+    if args.list:
+        if store is None:
+            print("no backup bucket configured (BENCH_BACKUP_BUCKET)", file=sys.stderr)
+            return 1
+        for b in store.list():
+            print(f"{b.key}  {b.size / 1e6:8.1f} MB")
+        return 0
+    if not args.source:
+        print("give a backup (file or bucket key) or --list", file=sys.stderr)
+        return 2
+    staged = stage_restore(settings, args.source, store)
+    if args.now:
+        apply_pending_restore(settings.db_url)
+        print(f"restored {args.source}; the old database is kept beside it")
+    else:
+        print(f"staged {args.source} as {staged}; it replaces the database at the next")
+        print("start of `bench all` (fly.io: fly machine restart)")
+    return 0
+
+
 def _import_cases(args: argparse.Namespace) -> int:
     from sqlmodel import Session
 
@@ -186,6 +236,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=8000)
     p.set_defaults(func=_ris_mcp)
 
+    p = sub.add_parser(
+        "all", help="web, worker and ris-mcp in one machine, idle stop, backups (fly.io)"
+    )
+    p.add_argument("--port", type=int, default=8000)
+    p.add_argument("--mcp-port", type=int, default=8001)
+    p.set_defaults(func=_all)
+
     p = sub.add_parser("migrate", help="bring the database schema up to date")
     p.set_defaults(func=_migrate)
 
@@ -193,6 +250,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--target", type=Path)
     p.add_argument("--label")
     p.set_defaults(func=_backup)
+
+    p = sub.add_parser("restore", help="restore the database from a backup")
+    p.add_argument("source", nargs="?", help="backup file or key in the backup bucket")
+    p.add_argument("--list", action="store_true", help="list the backups in the bucket")
+    p.add_argument(
+        "--now", action="store_true", help="replace at once (web and worker must be stopped)"
+    )
+    p.set_defaults(func=_restore)
 
     p = sub.add_parser("import-cases", help="import VfGH regulation reviews from the RIS")
     p.add_argument("--from", dest="date_from", type=date.fromisoformat, required=True)

@@ -830,3 +830,24 @@ def test_condition_c_pages(client: TestClient, settings: Settings) -> None:
     assert "Recherche im RIS (1 Werkzeugaufrufe)" in page
     assert "hole_norm(dokument_oder_paragraf=" in page and "Halte- und Parkverbote" in page
     assert "2014-01-01 (vom Programm gesetzt" in page
+
+
+def test_open_jobs_keep_the_machine_running(
+    engine: sa.Engine, models: dict[str, ResolvedModel]
+) -> None:
+    from bench.supervisor import has_open_jobs
+
+    assert not has_open_jobs(engine)
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+    assert has_open_jobs(engine)  # queued in a running order
+    with Session(engine) as db:
+        order = db.get(Order, order_id)
+        assert order is not None
+        orders.set_status(db, order, OrderStatus.PAUSED, None, "Test")
+        db.commit()
+    assert not has_open_jobs(engine)  # paused orders may wait while the machine sleeps
+    with Session(engine) as db:
+        job = jobs_of(db, order_id)[0]
+        job.status = JobStatus.RUNNING
+        db.commit()
+    assert has_open_jobs(engine)  # a job in flight always counts
