@@ -4,6 +4,7 @@ import dataclasses
 import json
 import time
 from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import Any
 
 import httpx2
@@ -42,10 +43,21 @@ def _last_json(exchanges: list[Exchange]) -> dict[str, Any]:
     return {}
 
 
+def _plain(value: Any) -> Any:
+    """Decimal (Pydantic AI's own cost estimate) as float, so the dict can be stored as JSON."""
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, dict):
+        return {k: _plain(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_plain(v) for v in value]
+    return value
+
+
 def usage_dict(usage: RunUsage) -> dict[str, Any]:
     """Non-zero counters only; JSON-serialisable."""
     data = dataclasses.asdict(usage)
-    return {k: v for k, v in data.items() if v not in (0, None, {}, [])}
+    return {k: _plain(v) for k, v in data.items() if v not in (0, None, {}, [])}
 
 
 def reported_model_matches(requested: str, reported: str) -> bool:

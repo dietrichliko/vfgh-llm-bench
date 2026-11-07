@@ -77,3 +77,18 @@ async def test_ping_reports_errors_with_raw_exchange(settings: Settings, judge) 
 )
 def test_reported_model_matches(requested: str, reported: str, ok: bool) -> None:
     assert reported_model_matches(requested, reported) is ok
+
+
+def test_usage_with_a_decimal_cost_can_be_stored_as_json() -> None:
+    """Pydantic AI estimates a cost as Decimal for models it knows (the OpenRouter ones)."""
+    import json
+    from decimal import Decimal
+
+    from pydantic_ai import RunUsage
+
+    from bench.llm.ping import usage_dict
+
+    usage = RunUsage(input_tokens=10, output_tokens=5)
+    usage.cost = Decimal("0.0123")
+    data = usage_dict(usage)
+    assert json.loads(json.dumps(data)) == {"input_tokens": 10, "output_tokens": 5, "cost": 0.0123}
