@@ -105,3 +105,30 @@ async def test_nothing_recorded_outside_capture() -> None:
         with capture() as cap:
             pass
     assert cap.exchanges == []
+
+
+async def test_compressed_responses_are_decoded_once() -> None:
+    """OpenRouter answers gzip-compressed; the body must reach the client decoded once."""
+    import gzip
+    import json
+
+    body = json.dumps({"choices": [{"message": {"content": "OK"}}]}).encode()
+
+    def handler(_req: httpx2.Request) -> httpx2.Response:
+        packed = gzip.compress(body)
+        return httpx2.Response(
+            200,
+            content=packed,
+            headers={
+                "Content-Encoding": "gzip",
+                "Content-Length": str(len(packed)),
+                "Content-Type": "application/json",
+            },
+        )
+
+    async with make_http_client(httpx2.MockTransport(handler), backoff=0) as client:
+        with capture() as cap:
+            response = await _post(client)
+    assert response.json() == json.loads(body)
+    assert cap.exchanges[0].response_body == body.decode()  # recorded readable
+    assert cap.exchanges[0].response_headers["content-encoding"] == "gzip"  # as received

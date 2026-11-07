@@ -22,6 +22,7 @@ import httpx2
 TRANSIENT_STATUS = frozenset({429, 502, 503, 504})
 MAX_ATTEMPTS = 3
 _HIDDEN_HEADERS = frozenset({"authorization", "cookie", "x-api-key", "api-key"})
+_DECODED_HEADERS = frozenset({"content-encoding", "content-length"})
 
 
 @dataclass
@@ -93,9 +94,16 @@ class RecordingTransport(httpx2.AsyncBaseTransport):
             else:
                 self._record(request, body, attempt, t0, response=response, content=content)
                 if response.status_code not in TRANSIENT_STATUS or attempt == self._max_attempts:
+                    # aread() has already decoded the body (gzip, br, …): pass it on without
+                    # the encoding headers, or the client decodes it a second time
+                    headers = [
+                        (k, v)
+                        for k, v in response.headers.multi_items()
+                        if k.lower() not in _DECODED_HEADERS
+                    ]
                     return httpx2.Response(
                         response.status_code,
-                        headers=response.headers,
+                        headers=headers,
                         content=content,
                         request=request,
                         extensions=response.extensions,

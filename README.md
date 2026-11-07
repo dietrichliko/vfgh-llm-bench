@@ -76,9 +76,18 @@ for s in BENCH_OIDC_CLIENT_SECRET UAI_API_KEY OPENROUTER_API_KEY STUDY_REPO_DEPL
 done
 # u:ai bridge credentials: deploy/secrets/bridge-univie.env
 #   AAI_BRIDGE_CLIENT_ID=… AAI_BRIDGE_CLIENT_SECRET=… AAI_BRIDGE_API_KEY=…
+# UAI_API_KEY has the same value as AAI_BRIDGE_API_KEY.
+# Rootless Podman with SELinux (Fedora): the containers read the files as another user
+# and need the container label; the directory keeps them private on the host.
+chmod 700 deploy/secrets && chmod 644 deploy/secrets/*
+chcon -R -t container_file_t deploy/secrets
 GIT_COMMIT=$(git rev-parse HEAD) BENCH_DEV_LOGIN=1 BENCH_ADMIN_EMAILS=you@example.org \
   podman compose -f deploy/compose.yaml up --build           # http://localhost:8000
 ```
+
+`podman compose` needs a compose provider. Without one installed, `uvx podman-compose`
+works in its place (`uvx podman-compose -f deploy/compose.yaml up --build`). After a
+rebuild, podman-compose keeps the running containers on the old image: run `down` first.
 
 **Upgrading** an existing installation: new secrets in `compose.yaml` must exist as files,
 even if empty (compose refuses to start otherwise). Since the study repository was added:
