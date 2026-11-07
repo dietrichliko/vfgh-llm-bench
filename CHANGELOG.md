@@ -1,3 +1,14 @@
+## v0.2.0 (2026-11-07)
+
+### Feat
+
+- **deploy**: fly.io with the released image and a private u:ai bridge
+- **deploy**: bench all with idle stop, off-site backups and restore
+
+### Fix
+
+- **deploy**: review findings for bench all, restore and the bridge
+
 ## v0.1.0 (2026-11-07)
 
 ### Feat
