@@ -21,7 +21,6 @@ import os
 import signal
 import subprocess
 import sys
-import threading
 import time
 from collections.abc import Callable
 from types import FrameType
@@ -98,12 +97,20 @@ class Supervisor:
         self.idle_seconds = settings.idle_stop_minutes * 60.0
         self.activity = settings.activity_file or settings.data_dir / ".activity"
         self.marker = ActivityMarker(self.activity)
-        self.stop_requested = threading.Event()
+        # a plain flag: Event.set() in a signal handler can deadlock against Event.wait()
+        self.stop_requested = False
         self.children: dict[str, subprocess.Popen[bytes]] = {}
 
     def _on_signal(self, signum: int, _frame: FrameType | None) -> None:
         log.info("signal %s: stopping", signal.Signals(signum).name)
-        self.stop_requested.set()
+        self.stop_requested = True
+
+    def _sleep(self, seconds: float) -> bool:
+        """Sleep in short steps; True if a stop was requested."""
+        deadline = time.monotonic() + seconds
+        while not self.stop_requested and (left := deadline - time.monotonic()) > 0:
+            time.sleep(min(left, 0.5))
+        return self.stop_requested
 
     def _backup(self, label: str) -> None:
         if self.store is None:
@@ -120,10 +127,10 @@ class Supervisor:
             self._backup("pre-migrate")
         migrate(engine)
 
-    def start(self) -> None:
+    def start(self, names: list[str]) -> None:
         env = {**os.environ, "BENCH_ACTIVITY_FILE": str(self.activity)}
-        for name, cmd in self.commands.items():
-            self.children[name] = subprocess.Popen(cmd, env=env)
+        for name in names:
+            self.children[name] = subprocess.Popen(self.commands[name], env=env)
             log.info("started %s (pid %s)", name, self.children[name].pid)
 
     def stop(self) -> None:
@@ -157,32 +164,45 @@ class Supervisor:
 
     def _run(self) -> int:
         engine = make_engine(self.settings.db_url)
-        self.prepare(engine)
-        if self.bridge:
-            self.bridge.start()  # before the worker sends its first u:ai call
-        self.start()
+        code, reason = 1, "crash"
+        try:
+            self.prepare(engine)
+            # web first, so that the request that woke the machine is answered while the
+            # bridge boots; the worker, the only user of the bridge, after it
+            self.start([n for n in self.commands if n != "worker"])
+            if self.bridge:
+                self.bridge.start()
+            self.start([n for n in self.commands if n == "worker"])
+            code, reason = self._watch(engine)
+        except Exception:
+            log.exception("supervisor failed: stopping the machine")
+        finally:
+            self.stop()
+            if self.bridge:
+                self.bridge.stop()
+            self._backup(reason)
+            engine.dispose()
+        return code
+
+    def _watch(self, engine: Engine) -> tuple[int, str]:
         started = last_busy = last_backup = self.clock()
         interval = self.settings.backup_interval_hours * 3600.0
-        code, reason = 0, "stop"
-        while not self.stop_requested.wait(self.poll_seconds):
+        while not self._sleep(self.poll_seconds):
             dead = [n for n, c in self.children.items() if c.poll() is not None]
             if dead:
                 log.error("%s exited: stopping the machine", ", ".join(dead))
-                code, reason = 1, "crash"
-                break
+                return 1, "crash"
             now = self.clock()
-            if has_open_jobs(engine):
+            try:
+                if has_open_jobs(engine):
+                    last_busy = now
+            except Exception:  # e.g. database locked: count as busy, look again later
+                log.warning("could not check for open jobs", exc_info=True)
                 last_busy = now
             if interval > 0 and now - last_backup >= interval:
                 self._backup("periodic")
                 last_backup = now
             if self.idle(now, started, last_busy):
                 log.info("idle for %s min: stopping", self.settings.idle_stop_minutes)
-                reason = "idle"
-                break
-        self.stop()
-        if self.bridge:
-            self.bridge.stop()
-        self._backup(reason)
-        engine.dispose()
-        return code
+                return 0, "idle"
+        return 0, "stop"

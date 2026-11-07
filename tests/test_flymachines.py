@@ -1,5 +1,6 @@
 """Starting and stopping the u:ai bridge app on fly.io (Machines API mocked)."""
 
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -88,7 +89,28 @@ def test_failures_are_logged_not_raised() -> None:
     assert not machines(unhealthy).start()
 
 
-def test_supervisor_starts_the_bridge_first_and_stops_it_last(tmp_path: Path) -> None:
+def test_a_stopping_bridge_is_started_once_it_can_be() -> None:
+    fake = FakeFly(["stopping"])
+    refusals = iter([True, True, False])
+    inner = fake.handler
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/start") and next(refusals):
+            return httpx.Response(412, json={"error": "machine still stopping"})
+        return inner(request)
+
+    fm = FlyMachines(
+        API,
+        "FlyV1 fm2_secret",
+        "vfgh-bench-bridge",
+        transport=httpx.MockTransport(handler),
+        sleep=0.01,
+    )
+    assert fm.start()
+    assert fake.machines[0]["state"] == "started"
+
+
+def test_supervisor_order_web_bridge_worker(tmp_path: Path) -> None:
     s = Settings(data_dir=tmp_path / "data", idle_stop_minutes=15)
     migrate(make_engine(s.db_url))
     order: list[str] = []
@@ -101,12 +123,20 @@ def test_supervisor_starts_the_bridge_first_and_stops_it_last(tmp_path: Path) ->
         def stop(self) -> None:
             order.append("bridge stop")
 
-    sup = Supervisor(s, {}, None, poll_seconds=0.01, clock=iter_clock(), bridge=Bridge())
+    sleep = [sys.executable, "-c", "import time; time.sleep(60)"]
+    sup = Supervisor(
+        s,
+        {"web": sleep, "worker": sleep},
+        None,
+        poll_seconds=0.01,
+        clock=iter_clock(),
+        bridge=Bridge(),
+    )
     orig_start, orig_stop = sup.start, sup.stop
 
-    def start() -> None:
-        order.append("children start")
-        orig_start()
+    def start(names: list[str]) -> None:
+        order.append(f"start {','.join(names)}")
+        orig_start(names)
 
     def stop() -> None:
         order.append("children stop")
@@ -114,7 +144,27 @@ def test_supervisor_starts_the_bridge_first_and_stops_it_last(tmp_path: Path) ->
 
     sup.start, sup.stop = start, stop  # type: ignore[method-assign]
     assert sup.run() == 0
-    assert order == ["bridge start", "children start", "children stop", "bridge stop"]
+    # web answers the waking request while the bridge boots; the worker comes after it
+    assert order == ["start web", "bridge start", "start worker", "children stop", "bridge stop"]
+
+
+def test_a_failing_supervisor_still_cleans_up(tmp_path: Path) -> None:
+    s = Settings(data_dir=tmp_path / "data")
+    migrate(make_engine(s.db_url))
+    stopped: list[str] = []
+
+    class Bridge:
+        def start(self) -> bool:
+            raise RuntimeError("boom")
+
+        def stop(self) -> None:
+            stopped.append("bridge")
+
+    sleep = [sys.executable, "-c", "import time; time.sleep(60)"]
+    sup = Supervisor(s, {"web": sleep}, None, bridge=Bridge())
+    assert sup.run() == 1
+    assert stopped == ["bridge"]
+    assert sup.children["web"].poll() is not None  # web was stopped too
 
 
 def iter_clock() -> Any:

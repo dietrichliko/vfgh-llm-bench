@@ -23,7 +23,9 @@ FLY_API_TOKEN = "FLY_API_TOKEN"  # fly.io: deploy token of the bridge app only
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="BENCH_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_prefix="BENCH_", env_file=".env", extra="ignore", populate_by_name=True
+    )
 
     data_dir: Path = Path("/data")
     config_path: Path = Field(default=Path("/config/providers.yaml"), alias="BENCH_CONFIG")

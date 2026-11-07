@@ -101,7 +101,11 @@ def _all(args: argparse.Namespace) -> int:
             )
         else:
             logging.error("%s not set: %s is not started", FLY_API_TOKEN, settings.fly_bridge_app)
-    store = store_from_settings(settings)
+    try:
+        store = store_from_settings(settings)
+    except RuntimeError as exc:  # a backup misconfiguration must not keep the app down
+        logging.error("off-site backup off: %s", exc)
+        store = None
     return Supervisor(settings, commands, store, bridge=bridge).run()
 
 

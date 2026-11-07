@@ -15,6 +15,7 @@ import gzip
 import hashlib
 import json
 import logging
+import os
 import shutil
 import sqlite3
 from collections.abc import Iterable
@@ -170,26 +171,44 @@ def prune_plan(backups: Iterable[RemoteBackup], now: datetime, keep_days: int) -
     return [b.key for b in old if b.key not in keep]
 
 
+def _file_state(db_path: Path) -> list[list[int]]:
+    """Size and mtime of the database and its WAL: unchanged files need no new copy."""
+    state = []
+    for suffix in ("", "-wal"):
+        try:
+            st = db_path.with_name(db_path.name + suffix).stat()
+            state.append([st.st_size, st.st_mtime_ns])
+        except OSError:
+            state.append([])
+    return state
+
+
 def offsite_backup(settings: Settings, store: Store, label: str) -> str | None:
     """Upload a backup if the database changed since the last upload; returns its key."""
-    if not _sqlite_path(settings.db_url).exists():
+    db_path = _sqlite_path(settings.db_url)
+    if not db_path.exists():
         return None
     local_dir = settings.data_dir / "backups" / "offsite"
     state_file = local_dir / "last.json"
-    # made aside first: an unchanged backup is dropped and must not replace a kept one
-    # of the same second
-    new, digest = make_backup(settings.db_url, local_dir / "new", label)
     try:
         last = json.loads(state_file.read_text())
     except (OSError, ValueError):
         last = {}
-    if last.get("sha256") == digest:
+    files = _file_state(db_path)  # before the copy: a write during it counts next time
+    if last.get("files") == files:
+        log.info("backup skipped: database files unchanged since %s", last.get("key"))
+        return None
+    # made aside first: an unchanged backup is dropped and must not replace a kept one
+    # of the same second
+    new, digest = make_backup(settings.db_url, local_dir / "new", label)
+    if last.get("sha256") == digest:  # files touched, content the same (e.g. checkpoint)
         new.unlink()
+        state_file.write_text(json.dumps({**last, "files": files}))
         log.info("backup skipped: database unchanged since %s", last.get("key"))
         return None
     path = new.rename(local_dir / new.name)
     key = store.upload(path)
-    state_file.write_text(json.dumps({"sha256": digest, "key": key}))
+    state_file.write_text(json.dumps({"sha256": digest, "key": key, "files": files}))
     log.info("backup uploaded: %s", key)
     for old in sorted(local_dir.glob("*" + SUFFIX), reverse=True)[LOCAL_KEEP:]:
         old.unlink()
@@ -211,38 +230,47 @@ def pending_path(db_path: Path) -> Path:
 
 
 def stage_restore(settings: Settings, source: str, store: Store | None) -> Path:
-    """Fetch a backup (local file or bucket key), check it and stage it for the next start."""
+    """Fetch a backup (local file or bucket key), check it and stage it for the next start.
+
+    Only a checked file ever reaches the pending path, so a broken download is never
+    swapped in. Run as root (``fly ssh console``), the file is given to the owner of the
+    data directory, the user the app runs as.
+    """
     db_path = _sqlite_path(settings.db_url)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     fetched = db_path.with_name(db_path.name + ".restore-download")
-    local = Path(source)
-    if local.is_file():
-        shutil.copyfile(local, fetched)
-    elif store is not None:
-        store.download(source, fetched)
-    else:
-        raise FileNotFoundError(f"{source}: no such file and no backup bucket configured")
-    staged = pending_path(db_path)
-    with fetched.open("rb") as f:
-        packed = f.read(2) == b"\x1f\x8b"
-    if packed:
-        with gzip.open(fetched, "rb") as f_in, staged.open("wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
-    else:
-        shutil.copyfile(fetched, staged)
-    fetched.unlink()
+    checking = db_path.with_name(db_path.name + ".restore-check")
     try:
-        with sqlite3.connect(staged) as db:
+        local = Path(source)
+        if local.is_file():
+            shutil.copyfile(local, fetched)
+        elif store is not None:
+            store.download(source, fetched)
+        else:
+            raise FileNotFoundError(f"{source}: no such file and no backup bucket configured")
+        with fetched.open("rb") as f:
+            packed = f.read(2) == b"\x1f\x8b"
+        if packed:
+            with gzip.open(fetched, "rb") as f_in, checking.open("wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        else:
+            shutil.copyfile(fetched, checking)
+        with sqlite3.connect(checking) as db:
             if db.execute("PRAGMA integrity_check").fetchone() != ("ok",):
                 raise ValueError(f"{source}: integrity check failed")
             if not db.execute(
                 "SELECT 1 FROM sqlite_master WHERE type='table' AND name='alembic_version'"
             ).fetchone():
                 raise ValueError(f"{source}: not a bench database")
-    except (sqlite3.DatabaseError, ValueError):
-        staged.unlink()
-        raise
-    return staged
+        if os.geteuid() == 0:
+            owner = db_path.parent.stat()
+            os.chown(checking, owner.st_uid, owner.st_gid)
+        staged = pending_path(db_path)
+        checking.rename(staged)
+        return staged
+    finally:
+        fetched.unlink(missing_ok=True)
+        checking.unlink(missing_ok=True)
 
 
 def apply_pending_restore(db_url: str) -> Path | None:

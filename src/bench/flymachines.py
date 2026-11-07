@@ -60,8 +60,7 @@ class FlyMachines:
                 return False
             for m in machines:
                 if m.get("state") not in RUNNING:
-                    self.client.post(f"/machines/{m['id']}/start").raise_for_status()
-                    log.info("starting %s machine %s", self.app, m["id"])
+                    self._start_machine(m["id"])
                 w = self.client.get(
                     f"/machines/{m['id']}/wait",
                     params={"state": "started", "timeout": 60},
@@ -72,6 +71,19 @@ class FlyMachines:
         except httpx.HTTPError as exc:
             log.error("could not start fly app %s: %s", self.app, exc)
             return False
+
+    def _start_machine(self, mid: str) -> None:
+        """Start; a machine still stopping refuses for a moment, so retry until it can."""
+        deadline = time.monotonic() + self.ready_timeout
+        while True:
+            r = self.client.post(f"/machines/{mid}/start")
+            if r.is_success:
+                log.info("starting %s machine %s", self.app, mid)
+                return
+            if time.monotonic() >= deadline:
+                r.raise_for_status()
+            log.info("%s machine %s not startable yet (%s): retrying", self.app, mid, r.status_code)
+            time.sleep(self.sleep)
 
     def _wait_healthy(self) -> bool:
         if not self.health_url:

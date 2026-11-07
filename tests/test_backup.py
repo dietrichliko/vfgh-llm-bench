@@ -85,6 +85,7 @@ def test_offsite_backup_only_after_changes(db_settings: Settings) -> None:
     first = offsite_backup(db_settings, store, "idle")
     assert first is not None and first.endswith("-idle.sqlite.gz")
     assert offsite_backup(db_settings, store, "idle") is None  # unchanged
+    assert not list((db_settings.data_dir / "backups" / "offsite" / "new").iterdir())
     _write(
         db_settings, "INSERT INTO audit_log (at, action, detail) VALUES ('2026-01-01', 'x', '{}')"
     )
@@ -149,6 +150,11 @@ def test_restore_refuses_a_foreign_file(db_settings: Settings, tmp_path: Path) -
         db.execute("CREATE TABLE t (x)")
     with pytest.raises(ValueError, match="not a bench database"):
         stage_restore(db_settings, str(other), None)
+    truncated = tmp_path / "truncated.sqlite.gz"
+    good, _ = make_backup(db_settings.db_url, tmp_path / "b")
+    truncated.write_bytes(good.read_bytes()[:200])
+    with pytest.raises(EOFError):
+        stage_restore(db_settings, str(truncated), None)
     junk = tmp_path / "junk.sqlite.gz"
     junk.write_bytes(gzip.compress(b"not a database at all" * 100))
     with pytest.raises(sqlite3.DatabaseError):
@@ -156,7 +162,8 @@ def test_restore_refuses_a_foreign_file(db_settings: Settings, tmp_path: Path) -
     with pytest.raises(FileNotFoundError):
         stage_restore(db_settings, "backups/missing.sqlite.gz", None)
     db_path = Path(db_settings.db_url.removeprefix("sqlite:///"))
-    assert not pending_path(db_path).exists()
+    assert not pending_path(db_path).exists()  # nothing unchecked is ever staged
+    assert not [p for p in db_path.parent.iterdir() if "restore" in p.name]  # no leftovers
 
 
 def test_pending_migration(tmp_path: Path) -> None:
@@ -166,3 +173,7 @@ def test_pending_migration(tmp_path: Path) -> None:
     assert not pending_migration(engine)
     command.downgrade(alembic_config(engine), "-1")
     assert pending_migration(engine)
+
+
+def test_the_bucket_can_be_set_by_field_name(tmp_path: Path) -> None:
+    assert Settings(data_dir=tmp_path, backup_bucket="b").backup_bucket == "b"

@@ -135,6 +135,8 @@ deploy/fly/deploy.sh 0.2.0
 
 **Upgrade** to a new release: `deploy/fly/deploy.sh X.Y.Z`. It deploys the image by
 digest and sets `BENCH_IMAGE_DIGEST`. A pending migration is preceded by a backup.
+Deploy only while no order is running (pause it first): the deploy stops the worker, and
+a call already sent ends as *unbekannt*, to be retried from the order page.
 
 **Restore** a backup:
 

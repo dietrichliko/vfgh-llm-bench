@@ -128,3 +128,23 @@ def test_web_marks_activity_but_not_health_checks(settings: Settings, tmp_path: 
         assert not marker.exists()
         client.get("/login")
         assert marker.exists()
+
+
+def test_a_failing_job_check_counts_as_busy(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import bench.supervisor as supervisor
+
+    def locked(_engine: object) -> bool:
+        raise RuntimeError("database is locked")
+
+    monkeypatch.setattr(supervisor, "has_open_jobs", locked)
+    s = settings.model_copy(update={"backup_interval_hours": 0})
+    sup = Supervisor(s, {"web": SLEEP}, None, poll_seconds=0.01, clock=jumping_clock(600))
+    stops = iter(range(5))
+
+    def sleep(seconds: float) -> bool:  # five polls, then a stop request
+        return next(stops, None) is None
+
+    sup._sleep = sleep  # type: ignore[method-assign]
+    assert sup.run() == 0  # never idle: the check failed every time, so it stayed up
