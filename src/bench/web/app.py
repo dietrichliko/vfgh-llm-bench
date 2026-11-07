@@ -19,6 +19,7 @@ from bench import __version__, auth, prompts
 from bench.activity import THROTTLE_SECONDS, ActivityMarker
 from bench.db import make_engine, migrate
 from bench.llm.http import make_http_client
+from bench.normsets import version_of
 from bench.providers import StudyConfig, load_config
 from bench.ris.client import RisClient
 from bench.rismcp.norms import RisClient as NormsRisClient
@@ -106,6 +107,7 @@ def create_app(
 
     templates = Jinja2Templates(directory=HERE / "templates")
     templates.env.globals["role_labels"] = ROLE_LABELS
+    templates.env.filters["norm_version"] = version_of
     app.state.templates = templates
 
     session_secret = settings.secret(SESSION_SECRET)

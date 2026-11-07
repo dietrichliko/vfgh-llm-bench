@@ -129,7 +129,7 @@ Verordnungen und ganze Gesetze werden nicht automatisch geholt und können unten
       {% endif %}
       <form method="post" action="/cases/{{ case.id }}/exclude">
         <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
-          <label>Grund<br><input type="text" name="reason" size="40" required></label>
+          <label>Fall ausschließen: Grund (nur dafür nötig)<br><input type="text" name="reason" size="40" required></label>
           <button type="submit" class="secondary">Ausschließen</button>
         </p>
       </form>

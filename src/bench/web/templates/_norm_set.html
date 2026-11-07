@@ -39,6 +39,7 @@ Diese Fassung erhalten die Modelle in Bedingung B.</p>
         {% elif it.state == "ambiguous" %}<span class="status warn">{{ norm_state_labels[it.state] }}</span>
         {% else %}<span class="status">{{ norm_state_labels[it.state] }}</span>{% endif %}
         {% if it.title %}{{ it.title }}{% if it.section %}, {{ it.section }}{% endif %}{% endif %}
+        {% if it.text and it.text | norm_version %}<br><span class="lead">Fassung: {{ it.text | norm_version }}</span>{% endif %}
         {% if it.note %}<br><span class="lead">{{ it.note }}</span>{% endif %}
         {% if it.state == "ambiguous" %}
         <form method="post" action="/cases/{{ case.id }}/norms/{{ draft.id }}/choose" style="margin-top: 0.3rem">

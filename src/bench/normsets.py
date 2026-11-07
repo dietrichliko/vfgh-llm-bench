@@ -169,6 +169,24 @@ def pick(hits: list[NormHit], title: str, label: str) -> list[NormHit]:
     return statutes or found
 
 
+_VERSION_BLOCK = re.compile(r"(?:^|\n)Kundmachungsorgan\n\n([^\n]+)")
+_IN_FORCE_BLOCK = re.compile(r"(?:^|\n)Inkrafttretensdatum\n\n([^\n]+)")
+
+
+def version_of(text: str | None) -> str | None:
+    """The version of a fetched norm, as the RIS states it, e.g. "LGBl.Nr. 41/2004 zuletzt
+    geändert durch LGBl.Nr. 17/2026 · in Kraft seit 01.04.2026". For the review: compare
+    with the "idF" in the decision's Rechtslage. None if the text has no such blocks."""
+    if not text:
+        return None
+    version = _VERSION_BLOCK.search(text)
+    in_force = _IN_FORCE_BLOCK.search(text)
+    parts = [version.group(1).strip()] if version else []
+    if in_force:
+        parts.append(f"in Kraft seit {in_force.group(1).strip()}")
+    return " · ".join(parts) or None
+
+
 def _empty_item(p: Proposal, n: int, source: str) -> dict[str, Any]:
     return {
         "id": n,

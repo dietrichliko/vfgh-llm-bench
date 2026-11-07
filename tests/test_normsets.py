@@ -369,6 +369,11 @@ def test_norm_pages(client: TestClient, settings: Settings) -> None:
         norm_set = db.exec(select(NormSet)).one()
         set_id = norm_set.id
     assert 'name="included" value="1"' in fragment and 'value="2"' in fragment
+    # the version is shown without opening the text, to compare with the decision's "idF"
+    assert (
+        "Fassung: BGBl. Nr. 159/1960 zuletzt geändert durch BGBl. I Nr. 39/2013"
+        " · in Kraft seit 31.03.2013" in fragment
+    )
 
     r = client.post(
         f"/cases/{case_id}/norms/{set_id}/select",
@@ -415,3 +420,21 @@ def test_propose_all(client: TestClient) -> None:
         "Alle freigegebenen Fälle mit Stichtag haben Normen"
         in client.get("/cases?filter=released").text
     )
+
+
+def test_version_of() -> None:
+    from bench.normsets import version_of
+
+    text = (
+        "Kurztitel\n\nJagdgesetz 2004, Tiroler\n\nKundmachungsorgan\n\n"
+        "LGBl.Nr. 41/2004 zuletzt geändert durch LGBl.Nr. 17/2026\n\n§/Artikel/Anlage\n\n"
+        "§ 52a\n\nInkrafttretensdatum\n\n01.04.2026\n\nText\n\n§ 52a ..."
+    )
+    assert version_of(text) == (
+        "LGBl.Nr. 41/2004 zuletzt geändert durch LGBl.Nr. 17/2026 · in Kraft seit 01.04.2026"
+    )
+    # municipal law from a PDF has no such blocks; a norm text that merely mentions the
+    # word does not count
+    assert version_of("Verordnung (Kundmachung im RIS)\n\nDer Gemeinderat …") is None
+    assert version_of("§ 1 Kundmachungsorgan ist das Amtsblatt.") is None
+    assert version_of(None) is None
