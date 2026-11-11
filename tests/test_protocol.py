@@ -83,6 +83,17 @@ def test_freeze_needs_a_pinned_provider_and_warns_on_sampling(
     assert [w.split(":")[0] for w in sampling] == ["free", "fallback", "bridge"]
 
 
+def test_release_rule_needs_release_dates(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    with Session(engine) as db:
+        s = protocol.create_study(db, "r", "R", None)
+        protocol.save_draft(db, s, draft([], eligibility="release"), None)
+        r = protocol.resolve(db, s, models)
+    assert "alpha: kein Veröffentlichungsdatum (released)" in r.problems
+    assert r.config["eligibility"] == "release"
+
+
 async def test_freeze_writes_the_protocol_files(
     engine: sa.Engine,
     settings: Settings,

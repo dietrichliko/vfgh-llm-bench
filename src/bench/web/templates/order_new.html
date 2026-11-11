@@ -40,6 +40,9 @@ wegen des Wissensstands eines Modells wegfallen und was der Auftrag ungefähr ko
         <label>Formulierungen<br><select name="phrasings">{% for n in range(1, phrasings + 1) %}<option{% if n == phrasings %} selected{% endif %}>{{ n }}</option>{% endfor %}</select></label>
         <label>Wiederholungen<br><input type="number" name="repetitions" value="1" min="1" max="10"></label>
         <label>Abstand zum Wissensstand (Monate)<br><input type="number" name="cutoff_months" value="3" min="0" max="24"></label>
+        <label>Fälle je Modell<br><select name="eligibility">
+          <option value="cutoff" selected>Abstand zum Wissensstand</option>
+          <option value="release">nach der Veröffentlichung des Modells</option></select></label>
         <label>Kostengrenze (USD, optional)<br><input type="text" name="cost_cap_usd" inputmode="decimal"></label>
       </p>
     </fieldset>

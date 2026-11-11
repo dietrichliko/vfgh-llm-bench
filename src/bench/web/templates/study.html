@@ -36,7 +36,10 @@ Protokollversion mit Begründung.</p>
         <td><input type="number" name="rep_{{ c }}" min="1" max="20" value="{{ d.repetitions if d else (5 if c == 'A' else 1) }}" style="width: 5rem"></td>
         <td><input type="number" name="phr_{{ c }}" min="1" max="3" value="{{ d.phrasings if d else (3 if c == 'A' else 1) }}" style="width: 5rem"></td></tr>{% endfor %}</tbody>
   </table>
-  <p><label>Abstand zum Wissensstand (Monate) <input type="number" name="cutoff_months" min="0" value="{{ draft.get('cutoff_months', 3) }}" style="width: 5rem"></label></p>
+  <p><label>Abstand zum Wissensstand (Monate) <input type="number" name="cutoff_months" min="0" value="{{ draft.get('cutoff_months', 3) }}" style="width: 5rem"></label>
+    <label>Fälle je Modell <select name="eligibility">
+      <option value="cutoff"{% if draft.get('eligibility', 'cutoff') == 'cutoff' %} selected{% endif %}>Abstand zum Wissensstand</option>
+      <option value="release"{% if draft.get('eligibility') == 'release' %} selected{% endif %}>nach der Veröffentlichung des Modells</option></select></label></p>
 
   <h3>Modelle</h3>
   {% for role, label in (("tested", "Prüflinge"), ("judge", "Richter"), ("writer", "Gegenbegründungen"), ("extractor", "Referenzgründe")) %}

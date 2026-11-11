@@ -20,7 +20,8 @@
     <dt>Fälle</dt><dd>{{ order.case_ids | length }}</dd>
     <dt>Formulierungen</dt><dd>{{ order.phrasings }}</dd>
     <dt>Wiederholungen</dt><dd>{{ order.repetitions }}</dd>
-    <dt>Abstand zum Wissensstand</dt><dd>{{ order.cutoff_months }} Monate</dd>
+    {% if order.eligibility == "release" %}<dt>Fälle je Modell</dt><dd>nach der Veröffentlichung des Modells entschieden</dd>
+    {% else %}<dt>Abstand zum Wissensstand</dt><dd>{{ order.cutoff_months }} Monate</dd>{% endif %}
     {% endif %}
     {% if order.snapshot.get("tool_call_limit") %}<dt>Werkzeugaufrufe</dt><dd>höchstens {{ order.snapshot.tool_call_limit }} je Aufruf (Bedingung C)</dd>{% endif %}
     <dt>Kostengrenze</dt><dd>{% if order.cost_cap_usd is not none %}{{ "%.2f" | format(order.cost_cap_usd) }} USD{% else %}keine{% endif %}</dd>

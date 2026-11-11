@@ -76,6 +76,7 @@ def assess(
     model_keys: Annotated[list[str], Form()] = [],  # noqa: B006
     repetitions: Annotated[int, Form()] = 1,
     cutoff_months: Annotated[int, Form()] = 3,
+    eligibility: Annotated[str, Form()] = "cutoff",
     cost_cap_usd: Annotated[str, Form()] = "",
 ) -> Response:
     """An assessment order over every case with a pair."""
@@ -90,7 +91,9 @@ def assess(
     )
     try:
         cap = float(cost_cap_usd) if cost_cap_usd.strip() else None
-        order = opposing.create_assess(db, cases, models, user.id, repetitions, cutoff_months, cap)
+        order = opposing.create_assess(
+            db, cases, models, user.id, repetitions, cutoff_months, cap, eligibility=eligibility
+        )
     except ValueError as exc:
         db.rollback()
         return _back(str(exc))

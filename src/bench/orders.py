@@ -54,8 +54,22 @@ def months_after(d: date, months: int) -> date:
     return date(year, month, min(d.day, calendar.monthrange(year, month)[1]))
 
 
-def eligible(case: Case, rm: ResolvedModel, cutoff_months: int) -> bool:
-    """Only decisions issued at least ``cutoff_months`` after the model's training cutoff."""
+ELIGIBILITY = {
+    "cutoff": "mindestens die angegebenen Monate nach dem Wissensstand entschieden",
+    "release": "nach der Veröffentlichung des Modells entschieden",
+}
+
+
+def eligible(case: Case, rm: ResolvedModel, cutoff_months: int, rule: str = "cutoff") -> bool:
+    """Whether a case may go to a model.
+
+    ``cutoff``: decided at least ``cutoff_months`` after the model's training cutoff.
+    ``release``: decided after the model was released, so the decision cannot be in its
+    training data whatever the real cutoff is (cutoffs are often unconfirmed).
+    """
+    if rule == "release":
+        released = rm.config.released
+        return released is not None and case.decision_date > released
     if rm.config.cutoff is None:
         return False
     return case.decision_date >= months_after(rm.config.cutoff, cutoff_months)
@@ -97,8 +111,17 @@ def plan(
     repetitions: int,
     phrasings: int,
     cutoff_months: int,
+    eligibility: str = "cutoff",
 ) -> Plan:
     problems = check_models(models, conditions)
+    if eligibility not in ELIGIBILITY:
+        problems.append(f"Unbekannte Regel {eligibility}")
+    if eligibility == "release":
+        problems += [
+            f"{rm.name}: kein Veröffentlichungsdatum (released)"
+            for rm in models
+            if rm.config.released is None
+        ]
     if any(c.status != CaseStatus.RELEASED for c in cases):
         problems.append("Nur freigegebene Fälle können verwendet werden")
     if not cases or not models or not conditions:
@@ -150,7 +173,7 @@ def plan(
                         continue
                     norm_chars = len(norm_set.text or "") if norm_set and condition == "B" else 0
                     for rm in models:
-                        if not eligible(case, rm, cutoff_months):
+                        if not eligible(case, rm, cutoff_months, eligibility):
                             if repetition == phrasing == 1 and condition == conditions[0]:
                                 excluded[rm.key].append(case.id or 0)
                             continue
@@ -240,8 +263,9 @@ def create(
     cutoff_months: int,
     cost_cap_usd: float | None,
     user_id: int | None,
+    eligibility: str = "cutoff",
 ) -> Order:
-    p = plan(db, cases, models, conditions, repetitions, phrasings, cutoff_months)
+    p = plan(db, cases, models, conditions, repetitions, phrasings, cutoff_months, eligibility)
     if p.problems:
         raise ValueError("; ".join(p.problems))
     if cost_cap_usd is not None and p.estimated_cost_usd > cost_cap_usd:
@@ -258,6 +282,7 @@ def create(
         repetitions=repetitions,
         phrasings=phrasings,
         cutoff_months=cutoff_months,
+        eligibility=eligibility,
         cost_cap_usd=cost_cap_usd,
         estimated_cost_usd=p.estimated_cost_usd,
         job_count=len(p.jobs),

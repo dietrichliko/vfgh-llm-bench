@@ -64,6 +64,7 @@ class Order(SQLModel, table=True):
     repetitions: int
     phrasings: int
     cutoff_months: int
+    eligibility: str = Field(default="cutoff", max_length=16)  # cutoff | release (orders.py)
     cost_cap_usd: float | None = None
     estimated_cost_usd: float = 0.0
     job_count: int = 0

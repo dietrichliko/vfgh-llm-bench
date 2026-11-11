@@ -31,7 +31,7 @@ import yaml
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import __version__, prompts, providers
+from bench import __version__, orders, prompts, providers
 from bench.models import (
     Case,
     CaseParse,
@@ -202,6 +202,13 @@ def resolve(db: Session, s: Study, models: dict[str, ResolvedModel]) -> Resolved
             }
     if not model_cfg["tested"]:
         out.problems.append("Kein getestetes Modell gewählt")
+    rule = draft.get("eligibility", "cutoff")
+    if rule not in orders.ELIGIBILITY:
+        out.problems.append(f"Unbekannte Regel für die Fälle: {rule}")
+    elif rule == "release":
+        for key in model_cfg["tested"]:
+            if models[key].config.released is None:
+                out.problems.append(f"{key}: kein Veröffentlichungsdatum (released)")
     if not model_cfg["judge"]:
         out.warnings.append("Kein Richtermodell gewählt (Ebenen 2, 3 und Kontamination)")
     prompt_cfg = {
@@ -214,6 +221,7 @@ def resolve(db: Session, s: Study, models: dict[str, ResolvedModel]) -> Resolved
         "models": model_cfg,
         "conditions": conditions,
         "cutoff_months": int(draft.get("cutoff_months", 3)),
+        "eligibility": draft.get("eligibility", "cutoff"),
         "prompts": prompt_cfg,
         "analysis_plan_sha256": sha(PLAN.read_bytes()),
     }
@@ -260,6 +268,7 @@ def files_for(
         "reason": reason,
         "conditions": config["conditions"],
         "cutoff_months": config["cutoff_months"],
+        "eligibility": config.get("eligibility", "cutoff"),
         "cases": len(config["cases"]),
         "models": {role: sorted(keys) for role, keys in config["models"].items()},
         "prompts": {k: f"v{v['version']} {v['sha256']}" for k, v in config["prompts"].items()},
@@ -395,6 +404,9 @@ def deviations(order: Order, config: dict[str, Any], started: datetime) -> list[
     frozen_cutoff = config["cutoff_months"]
     if order.task in ("decide", "assess", "probe") and order.cutoff_months != frozen_cutoff:
         out.append(f"Abstand zum Wissensstand {order.cutoff_months} statt {frozen_cutoff} Monate")
+    frozen_rule = config.get("eligibility", "cutoff")
+    if order.task in ("decide", "assess") and order.eligibility != frozen_rule:
+        out.append(f"Regel für die Fälle {order.eligibility} statt {frozen_rule}")
     if order.task in ("decide", "assess"):
         for cond in order.conditions:
             frozen_cond = config["conditions"].get(cond)

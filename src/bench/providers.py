@@ -83,6 +83,8 @@ class ModelConfig(_Strict):
     display_name: str | None = None
     family: str
     cutoff: date | None = None
+    cutoff_source: str | None = None  # where the cutoff comes from (model card, unconfirmed …)
+    released: date | None = None  # public release of the weights or the API (release rule)
     roles: list[Role] = Field(min_length=1)
     price: Price | None = None
     expected_output_tokens: int = Field(default=6000, ge=1)  # incl. thinking; for estimates

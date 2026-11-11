@@ -41,7 +41,9 @@ providers:
 
 models:
   # --- Tested: open-weight models on OpenRouter (conference scope) -------------------
-  # cutoff: PLACEHOLDER dates. Replace with the model card's training cutoff before use.
+  # cutoff: PLACEHOLDER dates. Replace with the model card's training cutoff before use;
+  # cutoff_source says where it comes from. released: the public release, needed for the
+  # release rule ("decided after the model was released"), e.g. released: 2026-04-24
   glm-5.3:
     provider: openrouter
     model: z-ai/glm-5.3

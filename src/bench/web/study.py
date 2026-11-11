@@ -152,6 +152,7 @@ async def draft(request: Request, user: AdminDep, db: DbDep) -> Response:
         },
         "conditions": conditions,
         "cutoff_months": max(0, ints("cutoff_months", 3)),
+        "eligibility": str(form.get("eligibility") or "cutoff"),
     }
     protocol.save_draft(db, s, config, user.id)
     db.commit()

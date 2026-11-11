@@ -39,6 +39,9 @@ Welche Seite dem VfGH entspricht, wertet die Analyse aus.</p>
     <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end">
       <label>Wiederholungen<br><input type="number" name="repetitions" min="1" max="10" value="1"></label>
       <label>Abstand zum Wissensstand (Monate)<br><input type="number" name="cutoff_months" min="0" value="3"></label>
+      <label>Fälle je Modell<br><select name="eligibility">
+          <option value="cutoff" selected>Abstand zum Wissensstand</option>
+          <option value="release">nach der Veröffentlichung des Modells</option></select></label>
       <label>Kostenobergrenze USD (optional)<br><input type="text" name="cost_cap_usd" inputmode="decimal"></label>
       <button type="submit">Auftrag anlegen</button>
     </p>

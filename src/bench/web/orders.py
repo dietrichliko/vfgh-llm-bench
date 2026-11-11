@@ -119,6 +119,7 @@ class OrderForm(BaseModel):
     repetitions: int = Field(default=1, ge=1, le=10)
     phrasings: int = Field(default=prompts.PHRASINGS, ge=1, le=prompts.PHRASINGS)
     cutoff_months: int = Field(default=3, ge=0, le=24)
+    eligibility: str = "cutoff"
     cost_cap_usd: str = ""
 
     def cost_cap(self) -> float | None:
@@ -211,6 +212,7 @@ def _preview_context(request: Request, db: Session, form: OrderForm) -> dict[str
         form.repetitions,
         form.phrasings,
         form.cutoff_months,
+        form.eligibility,
     )
     problems += p.problems
     cap = None if problems else form.cost_cap()
@@ -253,6 +255,7 @@ def order_create(
                 form.cutoff_months,
                 form.cost_cap(),
                 user.id,
+                form.eligibility,
             )
         except ValueError as exc:
             problems = str(exc).split("; ")

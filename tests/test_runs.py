@@ -1,6 +1,7 @@
 """Stage 3: prompts, order planning, the worker (LLM mocked), and the order and run pages."""
 
 import asyncio
+import dataclasses
 import json
 from collections.abc import Callable
 from datetime import date, timedelta
@@ -316,6 +317,28 @@ def test_plan_interleaves_and_applies_the_cutoff(
     ]
     assert [j.seq for j in p.jobs] == list(range(1, 13))
     assert p.jobs_by_model == {"alpha": 8, "beta": 4}
+
+
+def test_release_rule(engine: sa.Engine, models: dict[str, ResolvedModel]) -> None:
+    alpha = models["alpha"]
+    released = dataclasses.replace(
+        alpha, config=alpha.config.model_copy(update={"released": date(2025, 9, 1)})
+    )
+    with Session(engine) as db:
+        before = add_case(db, 1, date(2025, 9, 1))  # on the release day: not after it
+        after = add_case(db, 2, date(2025, 9, 2))
+        # the cutoff rule (alpha: 2025-01 + 3 months) takes both
+        assert orders.eligible(before, alpha, 3) and orders.eligible(after, alpha, 3)
+        assert not orders.eligible(before, released, 3, "release")
+        assert orders.eligible(after, released, 3, "release")
+        p = orders.plan(db, [before, after], [released], ["A"], 1, 1, 3, "release")
+        assert p.problems == [] and p.excluded == {"alpha": [before.id]}
+        missing = orders.plan(db, [after], [alpha], ["A"], 1, 1, 3, "release")
+        assert any("kein Veröffentlichungsdatum" in x for x in missing.problems)
+        order = orders.create(
+            db, "", [before, after], [released], ["A"], 1, 1, 3, None, None, "release"
+        )
+        assert order.eligibility == "release" and order.job_count == 1
 
 
 def test_plan_estimate(engine: sa.Engine, models: dict[str, ResolvedModel]) -> None:

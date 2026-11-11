@@ -132,6 +132,7 @@ def plan_assess(
     models: list[ResolvedModel],
     repetitions: int,
     cutoff_months: int,
+    eligibility: str = "cutoff",
 ) -> tuple[orders.Plan, dict[str, int]]:
     """Jobs, estimate and problems; ``skipped`` counts reasonings left out per reason."""
     problems = []
@@ -180,7 +181,7 @@ def plan_assess(
                     skipped["no_pair"] += 2 * len(models)
                 continue
             for rm in models:
-                if not orders.eligible(case, rm, cutoff_months):
+                if not orders.eligible(case, rm, cutoff_months, eligibility):
                     if repetition == 1:
                         excluded[rm.key].append(case.id or 0)
                     continue
@@ -234,8 +235,9 @@ def create_assess(
     cutoff_months: int = 3,
     cost_cap_usd: float | None = None,
     name: str = "",
+    eligibility: str = "cutoff",
 ) -> Order:
-    p, skipped = plan_assess(db, cases, models, repetitions, cutoff_months)
+    p, skipped = plan_assess(db, cases, models, repetitions, cutoff_months, eligibility)
     if p.problems:
         raise ValueError("; ".join(p.problems))
     if cost_cap_usd is not None and p.estimated_cost_usd > cost_cap_usd:
@@ -256,6 +258,7 @@ def create_assess(
         repetitions=repetitions,
         phrasings=1,
         cutoff_months=cutoff_months,
+        eligibility=eligibility,
         cost_cap_usd=cost_cap_usd,
         estimated_cost_usd=p.estimated_cost_usd,
         job_count=len(p.jobs),
