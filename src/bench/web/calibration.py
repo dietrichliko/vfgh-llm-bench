@@ -11,7 +11,7 @@ from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlmodel import Session, select
 
-from bench import calibration, citations
+from bench import calibration, citations, judges
 from bench.auth import AdminDep, DbDep, StaffDep
 from bench.judges import ANTRAG, ERGEBNIS, VALUE_LABELS
 from bench.llm.schemas import Entscheidung
@@ -39,7 +39,9 @@ def _item(db: Session, item_id: int) -> CalibrationItem:
 @router.get("", response_class=HTMLResponse)
 def overview(request: Request, user: StaffDep, db: DbDep, problem: str = "") -> HTMLResponse:
     is_admin = user.role is UserRole.ADMIN
-    strata = calibration.candidates(db) if is_admin else {}
+    subset = request.query_params.get("antworten", "alle")
+    subset = subset if subset in judges.SUBSETS else "alle"
+    strata = calibration.candidates(db, subset) if is_admin else {}
     return render(
         request,
         "calibration.html",
@@ -51,6 +53,8 @@ def overview(request: Request, user: StaffDep, db: DbDep, problem: str = "") -> 
         available={k: len(v) for k, v in strata.items()},
         default_size=calibration.DEFAULT_SIZE,
         default_double=calibration.DEFAULT_DOUBLE,
+        subset=subset,
+        subset_labels=judges.SUBSET_LABELS,
     )
 
 
@@ -66,9 +70,14 @@ def draw(
     size: Annotated[int, Form()],
     double: Annotated[int, Form()] = 0,
     seed: Annotated[str, Form()] = "",
+    subset: Annotated[str, Form()] = "alle",
 ) -> Response:
     try:
-        calibration.draw(db, size, double, user.id, int(seed) if seed.strip() else None)
+        if subset not in judges.SUBSETS:
+            raise ValueError(f"Unbekannte Auswahl {subset}")
+        calibration.draw(
+            db, size, double, user.id, int(seed) if seed.strip() else None, subset=subset
+        )
     except ValueError as exc:
         db.rollback()
         return _back(str(exc))

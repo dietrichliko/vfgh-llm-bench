@@ -41,11 +41,16 @@ def stratum_of(run: Run) -> str:
     return f"{run.condition} · {run.model_key}"
 
 
-def candidates(db: Session) -> dict[str, list[tuple[Run, int]]]:
+def candidates(db: Session, subset: str = "alle") -> dict[str, list[tuple[Run, int]]]:
     """Judged decide runs not yet drawn, with the checklist the judges used, per stratum.
 
-    A run whose judges used different checklist versions is left out.
+    A run whose judges used different checklist versions is left out. ``subset`` limits
+    the cells as for judge orders (``judges.SUBSETS``), e.g. phrasing 1, repetition 1:
+    one answer per case, model and condition.
     """
+    from bench.judges import SUBSETS  # avoid an import cycle
+
+    max_phrasing, max_repetition = SUBSETS[subset]
     drawn = set(db.exec(select(CalibrationItem.target_run_id)).all())
     used: defaultdict[int, set[int]] = defaultdict(set)
     for target_id, checklist_id in db.exec(
@@ -54,11 +59,14 @@ def candidates(db: Session) -> dict[str, list[tuple[Run, int]]]:
         used[target_id].add(checklist_id)
     ids = [i for i, c in used.items() if len(c) == 1 and i not in drawn]
     out: defaultdict[str, list[tuple[Run, int]]] = defaultdict(list)
-    for run in db.exec(
-        select(Run)
-        .where(col(Run.id).in_(ids), Run.task == "decide", Run.status == JobStatus.DONE)
-        .order_by(col(Run.id))
-    ).all():
+    query = select(Run).where(
+        col(Run.id).in_(ids), Run.task == "decide", Run.status == JobStatus.DONE
+    )
+    if max_phrasing is not None:
+        query = query.where(Run.phrasing <= max_phrasing)
+    if max_repetition is not None:
+        query = query.where(Run.repetition <= max_repetition)
+    for run in db.exec(query.order_by(col(Run.id))).all():
         out[stratum_of(run)].append((run, next(iter(used[run.id or 0]))))
     return dict(out)
 
@@ -88,14 +96,19 @@ def pick(
 
 
 def draw(
-    db: Session, n: int, double: int, user_id: int | None, seed: int | None = None
+    db: Session,
+    n: int,
+    double: int,
+    user_id: int | None,
+    seed: int | None = None,
+    subset: str = "alle",
 ) -> list[CalibrationItem]:
     """Add ``n`` items to the queue, ``double`` of them for a second rating."""
     if n < 1:
         raise ValueError("Mindestens eine Antwort ziehen")
     if not 0 <= double <= n:
         raise ValueError("Zweitbewertungen: zwischen 0 und der Zahl der Antworten")
-    strata = candidates(db)
+    strata = candidates(db, subset)
     available = sum(len(v) for v in strata.values())
     if available == 0:
         raise ValueError("Keine bewerteten Antworten, die noch nicht gezogen sind")
@@ -130,7 +143,7 @@ def draw(
         "calibration.draw",
         user_id=user_id,
         obj=f"calibration_draw:{number}",
-        detail={"items": len(items), "double": len(flagged), "seed": seed},
+        detail={"items": len(items), "double": len(flagged), "seed": seed, "subset": subset},
     )
     return items
 

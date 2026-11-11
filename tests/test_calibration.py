@@ -155,6 +155,30 @@ async def test_draw_queue_and_ratings(
         conn.execute(sa.text("DELETE FROM calibration_items"))
 
 
+async def test_draw_one_answer_per_case_model_and_condition(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=1, phrasings=2, repetitions=2)
+    await work(engine, settings, answer(json.dumps(CITED)))
+    with Session(engine) as db:
+        order = db.get(Order, order_id)
+        assert order is not None
+        case = db.get(Case, order.case_ids[0])
+        assert case is not None
+        confirm_checklist(db, case)
+        judges.create(db, [order_id], [models["judge"]], None)
+        db.commit()
+    await judge(engine, settings, json.dumps(VERDICT), [], ris_clients([], []))
+    with Session(engine) as db:
+        assert sum(len(v) for v in calibration.candidates(db).values()) == 4
+        assert sum(len(v) for v in calibration.candidates(db, "eine").values()) == 1
+        (item,) = calibration.draw(db, 1, 1, None, seed=3, subset="eine")
+        target = db.get(Run, item.target_run_id)
+        assert target is not None and (target.phrasing, target.repetition) == (1, 1)
+        with pytest.raises(ValueError, match="Keine bewerteten Antworten"):
+            calibration.draw(db, 1, 0, None, subset="eine")
+
+
 async def test_calibration_pages_are_blind(
     engine: sa.Engine,
     settings: Settings,
@@ -169,6 +193,10 @@ async def test_calibration_pages_are_blind(
         login(client, "admin@example.org")
         page = client.get("/calibration").text
         assert "Antworten ziehen" in page and "A · alpha" in page
+        page = client.get("/calibration?antworten=eine").text
+        assert '<option value="eine" selected>' in page
+        assert '<input type="hidden" name="subset" value="eine">' in page
+        assert 'name="size" min="1" value="6"' in page  # all of them by default
         r = client.post("/calibration/draw", data={"size": "9", "double": "0"})
         assert "Nur 6 bewertete Antworten" in r.text
         r = client.post("/calibration/draw", data={"size": "2", "double": "1", "seed": "3"})

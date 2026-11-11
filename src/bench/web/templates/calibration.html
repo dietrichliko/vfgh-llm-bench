@@ -39,14 +39,20 @@ ergibt sich, welchen Kriterien der Richtermodelle die Studie vertrauen kann.</p>
 
 <section class="panel no-print">
   <h3 style="margin-top: 0">Antworten ziehen</h3>
+  <form method="get" action="/calibration" style="margin: 0 0 0.5rem">
+    <label>Aus welchen Antworten <select name="antworten" onchange="this.form.submit()">
+      {% for k, label in subset_labels.items() %}<option value="{{ k }}"{% if k == subset %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></label> <noscript><button type="submit">zeigen</button></noscript>
+  </form>
   {% if available %}
   <p class="lead">Bewertete Antworten, die noch nicht gezogen sind:
     {% for k, n in available.items() %}<span class="mono">{{ k }}</span>: {{ n }}{% if not loop.last %}; {% endif %}{% endfor %}.
     Gezogen wird reihum je Bedingung und Modell, je Schicht zuerst Fälle, die noch wenig vorkommen.
     Die ersten Antworten jeder Ziehung, über die Schichten verteilt, bewertet eine zweite Person.</p>
   <form method="post" action="/calibration/draw" style="margin: 0">
+    <input type="hidden" name="subset" value="{{ subset }}">
     <p style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; margin: 0">
-      <label>Antworten<br><input type="number" name="size" min="1" value="{{ [default_size, available.values() | sum] | min }}" required></label>
+      <label>Antworten<br><input type="number" name="size" min="1" value="{{ (available.values() | sum) if subset != "alle" else [default_size, available.values() | sum] | min }}" required></label>
       <label>davon zweimal bewertet<br><input type="number" name="double" min="0" value="{{ [default_double, available.values() | sum] | min }}"></label>
       <label>Seed (optional)<br><input type="number" name="seed" min="0"></label>
       <button type="submit">ziehen</button>
