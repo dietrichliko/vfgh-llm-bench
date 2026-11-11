@@ -94,8 +94,9 @@ class ModelConfig(_Strict):
 
     @model_validator(mode="after")
     def _tested_needs_cutoff(self) -> "ModelConfig":
-        if Role.TESTED in self.roles and self.cutoff is None:
-            raise ValueError("a tested model needs a training cutoff ('cutoff')")
+        # without a cutoff the model only takes part under the release rule
+        if Role.TESTED in self.roles and self.cutoff is None and self.released is None:
+            raise ValueError("a tested model needs a training cutoff ('cutoff') or 'released'")
         return self
 
 

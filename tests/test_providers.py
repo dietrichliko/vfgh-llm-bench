@@ -40,6 +40,9 @@ def test_duplicate_key_rejected() -> None:
 def test_tested_model_needs_cutoff() -> None:
     with pytest.raises(ValidationError, match="training cutoff"):
         parse_config(CONFIG.replace("    cutoff: 2026-01-01\n", ""))
+    # a release date is enough: the model then takes part under the release rule only
+    config = parse_config(CONFIG.replace("    cutoff: 2026-01-01\n", "    released: 2026-04-01\n"))
+    assert all(m.cutoff is None for m in config.models.values() if m.released)
 
 
 def test_unknown_field_rejected() -> None:
