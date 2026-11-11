@@ -174,6 +174,7 @@ async def run_task[T: BaseModel](
     t0 = time.monotonic()
     status, output, error, usage = JobStatus.DONE, None, None, {}
     tools_sha256 = None
+    timed_out = False
     async with contextlib.AsyncExitStack() as stack:
         cap = stack.enter_context(capture())
         messages_seen = stack.enter_context(capture_run_messages())
@@ -200,9 +201,11 @@ async def run_task[T: BaseModel](
             output = result.output
             usage = usage_dict(result.usage)
         except TimeoutError:
-            # also when the endpoint keeps the connection alive without an answer
+            # also when the endpoint keeps the connection alive without an answer. Counted
+            # like an answer cut off at the token cap (a looping model), not retried.
+            timed_out = True
             status, error = (
-                JobStatus.FAILED,
+                JobStatus.NOT_EVALUABLE,
                 f"Zeitlimit von {rm.provider.max_run_seconds:g} s für den Lauf überschritten",
             )
         except UsageLimitExceeded as exc:
@@ -213,7 +216,7 @@ async def run_task[T: BaseModel](
             status, error = JobStatus.FAILED, f"{type(exc).__name__}: {exc}"
 
     raw, headers = _last_success(cap.exchanges)
-    if status is not JobStatus.FAILED and not raw:
+    if status is not JobStatus.FAILED and not raw and not timed_out:
         status = JobStatus.FAILED
     if status is not JobStatus.DONE and _finish_reason(raw) == "length":
         error = (

@@ -85,7 +85,7 @@ study data.
   caught in a loop. Not evaluable — itself a finding about the model.
 - **Zeitlimit (time limit):** the run exceeded `max_run_seconds`. Needed because
   OpenRouter keeps a connection alive while the model writes, so a plain read timeout
-  never fires.
+  never fires. Counts as not evaluable (wrong), like an answer cut off at the cap.
 - **Provider shown on a run:** OpenRouter picks a provider per call unless it is pinned
   in `providers.yaml`; for the study every tested model must be pinned (provider and
   quantization), otherwise one series mixes hosting setups.

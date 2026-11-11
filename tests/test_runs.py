@@ -1002,5 +1002,6 @@ async def test_the_run_time_limit_holds_without_an_answer(
         await asyncio.wait_for(worker.run_until_idle(), timeout=10)
     with Session(engine) as db:
         job = jobs_of(db, order_id)[0]
-    assert job.status is JobStatus.FAILED
+    # like an answer cut off at the token cap: the model's behaviour, not re-asked
+    assert job.status is JobStatus.NOT_EVALUABLE
     assert job.error == "Zeitlimit von 0.2 s für den Lauf überschritten"
