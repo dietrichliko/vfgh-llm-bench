@@ -20,8 +20,8 @@ from tests.test_calibration import REASONS, judged
 from tests.test_judges import models as models
 from tests.test_judges import settings as settings
 from tests.test_opposing import LAWFUL, UNLAWFUL, WRITER_CONFIG, written
+from tests.test_runs import answer, make_order, work
 from tests.test_runs import engine as engine
-from tests.test_runs import make_order, work
 
 # ── statistics, against values computed by hand ────────────────────────────────
 
@@ -130,6 +130,19 @@ def test_common_cases_compare_models_on_the_same_cases() -> None:
     assert set(common) == {"x", "y"}
     assert (common["x"].cases, common["x"].correct) == (1, 1)
     assert (common["y"].cases, common["y"].correct) == (1, 0)
+
+
+async def test_runs_from_another_model_are_left_out(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    make_order(engine, models, ["alpha"], n_cases=2)
+    await work(engine, settings, answer(model="vendor/omega"))
+    with Session(engine) as db:
+        assert metrics.decide_runs(db) == []
+        report = metrics.analyse(db)
+    assert report.outcome == []
+    (g,) = report.routing
+    assert (g.model_key, g.model_reported, g.runs, g.mismatch) == ("alpha", "vendor/omega", 2, 2)
 
 
 async def test_a_cell_without_an_answer_counts_as_wrong_after_two_attempts(

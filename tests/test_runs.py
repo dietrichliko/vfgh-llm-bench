@@ -191,8 +191,14 @@ def make_order(
 Handler = Callable[[httpx2.Request], httpx2.Response]
 
 
-def answer(content: str = json.dumps(ANSWER)) -> Handler:
-    return lambda req: httpx2.Response(200, json=chat_response(content, model="x"))
+def answer(content: str = json.dumps(ANSWER), model: str | None = None) -> Handler:
+    """The endpoint's answer; it reports the requested model unless ``model`` is given."""
+
+    def handle(req: httpx2.Request) -> httpx2.Response:
+        reported = model or json.loads(req.content)["model"]
+        return httpx2.Response(200, json=chat_response(content, model=reported))
+
+    return handle
 
 
 async def work(

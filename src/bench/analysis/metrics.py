@@ -107,7 +107,7 @@ def _decide(
     out = []
     for r in db.exec(query).all():
         cell = (r.case_id, r.model_key, r.condition, r.phrasing, r.repetition)
-        if cell in seen:
+        if cell in seen or r.model_mismatch:  # another model answered: not this model's run
             continue
         seen.add(cell)
         label = r.case_outcome if r.status is JobStatus.DONE else None
@@ -144,6 +144,32 @@ def _decide(
             )
         )
     return out, open_cells
+
+
+@dataclass
+class Routing:
+    """Who answered for a tested model: the endpoint's own report per run."""
+
+    model_key: str
+    provider: str  # as reported (OpenRouter: the upstream), "–" if not reported
+    model_reported: str
+    runs: int
+    mismatch: int  # runs left out: the reported model is not the configured one
+
+
+def routing(db: Session, order_ids: Iterable[int] | None = None) -> list[Routing]:
+    query = select(Run).where(
+        Run.task == "decide", col(Run.status).in_([JobStatus.DONE, JobStatus.NOT_EVALUABLE])
+    )
+    if order_ids is not None:
+        query = query.where(col(Run.order_id).in_(list(order_ids)))
+    counts: Counter[tuple[str, str, str]] = Counter()
+    bad: Counter[tuple[str, str, str]] = Counter()
+    for r in db.exec(query).all():
+        key = (r.model_key, r.provider_reported or "–", r.model_reported or "–")
+        counts[key] += 1
+        bad[key] += bool(r.model_mismatch)
+    return [Routing(*k, counts[k], bad[k]) for k in sorted(counts)]
 
 
 def truth(db: Session) -> dict[int, str]:
@@ -825,6 +851,7 @@ class Report:
     reasons_without_recalled: list[ReasonsResult]
     outcome_common: list[OutcomeResult] = field(default_factory=list)  # cases all models share
     pending: dict[str, int] = field(default_factory=dict)  # "model/condition" → open cells
+    routing: list[Routing] = field(default_factory=list)
     citation_baseline: citebaseline.Baseline | None = None  # the checker's own miss rate
 
 
@@ -862,4 +889,5 @@ def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
         citation_baseline=citebaseline.summary(db),
         outcome_common=common_cases(runs, t),
         pending={f"{m}/{c}": n for (m, c), n in sorted(pending(db, order_ids).items())},
+        routing=routing(db, order_ids),
     )

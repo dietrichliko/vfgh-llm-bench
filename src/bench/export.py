@@ -248,6 +248,7 @@ def metric_files(report: metrics.Report) -> Iterator[tuple[str, bytes, int]]:
         *csv_bytes([report.citation_baseline] if report.citation_baseline else []),
     )
     yield "metrics/stability.csv", *csv_bytes(report.stability)
+    yield "metrics/routing.csv", *csv_bytes(report.routing)
     yield "metrics/opposing.csv", *csv_bytes(report.opposing)
     yield "metrics/calibration.csv", *csv_bytes(report.calibration.agreements)
     yield (

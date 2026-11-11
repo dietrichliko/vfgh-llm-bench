@@ -12,6 +12,7 @@ from bench.providers import (
     output_spec,
     parse_config,
     resolve,
+    routing_problem,
 )
 from bench.settings import Settings
 from tests.conftest import CONFIG
@@ -76,3 +77,51 @@ def test_output_mode(settings: Settings) -> None:
     models = resolve(parse_config(CONFIG), settings)
     assert isinstance(output_spec(models["judge"], dict), PromptedOutput)
     assert isinstance(output_spec(models["glm"], dict), NativeOutput)
+
+
+ROUTING = """
+providers:
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_secret: K
+    extra_body: {usage: {include: true}}
+  direct:
+    base_url: http://bridge/v1
+    api_key_secret: K
+models:
+  free:
+    provider: openrouter
+    model: a/free
+    family: a
+    cutoff: 2025-01-01
+    roles: [tested]
+  fallback:
+    provider: openrouter
+    model: a/fallback
+    family: a
+    cutoff: 2025-01-01
+    roles: [tested]
+    extra_body: {provider: {order: [deepinfra/fp8]}}
+  pinned:
+    provider: openrouter
+    model: a/pinned
+    family: a
+    cutoff: 2025-01-01
+    roles: [tested]
+    parameters: {temperature: 0.7}
+    extra_body: {provider: {order: [deepinfra/fp8], allow_fallbacks: false}}
+  bridge:
+    provider: direct
+    model: b
+    family: b
+    cutoff: 2025-01-01
+    roles: [tested]
+"""
+
+
+def test_routing_problem(settings: Settings) -> None:
+    models = resolve(parse_config(ROUTING), settings)
+    problems = {k: routing_problem(rm) for k, rm in models.items()}
+    assert problems["free"] and "provider.order" in problems["free"]
+    assert problems["fallback"] and "allow_fallbacks" in problems["fallback"]
+    assert problems["pinned"] is None and problems["bridge"] is None

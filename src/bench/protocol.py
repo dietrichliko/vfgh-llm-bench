@@ -31,7 +31,7 @@ import yaml
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import __version__, prompts
+from bench import __version__, prompts, providers
 from bench.models import (
     Case,
     CaseParse,
@@ -184,6 +184,15 @@ def resolve(db: Session, s: Study, models: dict[str, ResolvedModel]) -> Resolved
             if Role(role) not in rm.config.roles:
                 out.problems.append(f"{key} hat nicht die Rolle {role}")
                 continue
+            if role == "tested":
+                if why := providers.routing_problem(rm):
+                    out.problems.append(f"{key}: {why}")
+                missing = [p for p in providers.SAMPLING if p not in rm.config.parameters]
+                if missing:
+                    out.warnings.append(
+                        f"{key}: {', '.join(missing)} nicht in parameters festgelegt; "
+                        "es gelten die Vorgaben des Anbieters"
+                    )
             model_cfg[role][key] = {
                 "config_hash": rm.config_hash,
                 "model": rm.config.model,

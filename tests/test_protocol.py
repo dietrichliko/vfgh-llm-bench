@@ -63,6 +63,26 @@ async def frozen(
         return old.id or 0, case_ids
 
 
+def test_freeze_needs_a_pinned_provider_and_warns_on_sampling(
+    engine: sa.Engine, settings: Settings
+) -> None:
+    from bench.providers import parse_config, resolve
+    from tests.test_providers import ROUTING
+
+    models = resolve(parse_config(ROUTING), settings)
+    with Session(engine) as db:
+        s = protocol.create_study(db, "t", "T", None)
+        protocol.save_draft(
+            db, s, draft([], models={"tested": ["free", "fallback", "pinned", "bridge"]}), None
+        )
+        r = protocol.resolve(db, s, models)
+    assert any(p.startswith("free: OpenRouter-Anbieter nicht festgelegt") for p in r.problems)
+    assert any(p.startswith("fallback: OpenRouter darf") for p in r.problems)
+    assert not any(p.startswith(("pinned", "bridge")) for p in r.problems)
+    sampling = [w for w in r.warnings if "temperature" in w]
+    assert [w.split(":")[0] for w in sampling] == ["free", "fallback", "bridge"]
+
+
 async def test_freeze_writes_the_protocol_files(
     engine: sa.Engine,
     settings: Settings,

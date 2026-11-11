@@ -5,6 +5,7 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 ## 1 Data
 
 - **Cells:** the denominator is the planned cells (case, model, condition, phrasing, repetition) of the orders. A cell counts with its first run that has an answer (`done` or `not_evaluable`). A cell whose job ended without an answer (`failed`, `unknown`) is retried once; after two attempts it counts as an answer without a label, i.e. **wrong**. Cells still open are left out and their number is shown; cancelled cells are not planned any more.
+- **Who answered:** a run whose endpoint reports another model than the configured one (`model_mismatch`) is left out of every metric; the reported provider and model per tested model are listed. Freezing the protocol requires a pinned upstream for every tested model on OpenRouter (`provider.order` with `allow_fallbacks: false`) and warns if `temperature` is not stated in its `parameters`.
 - **Time limit:** a run that exceeds the wall-clock limit is `not_evaluable` (wrong), like an answer cut off at the token cap: both are a model that does not finish.
 - **Cases per model:** only cases that pass the model's cutoff rule (decided at least 3 months after its training cutoff); orders never plan the others.
 - **Outcome label:** one label per case: *unlawful*, *partly unlawful*, *dismissed*, *rejected*, *discontinued* (the confirmed outcome at release). A run's label comes from its operative part by the same rule. A run without a label (`not_evaluable`, or an operative part that maps to nothing) is **wrong**.

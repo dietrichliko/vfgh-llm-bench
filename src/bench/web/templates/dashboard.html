@@ -273,6 +273,16 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 </table>
 {% else %}<p>Kein Modell erinnert einen Studienfall; die Hauptergebnisse gelten unverändert.</p>{% endif %}
 
+{% if report.routing %}
+<h2>Wer hat geantwortet</h2>
+<p class="lead">Anbieter und Modell, wie der Endpunkt sie je Lauf meldet. Läufe, in denen ein anderes Modell geantwortet hat, sind in keiner Kennzahl enthalten.</p>
+<table>
+  <thead><tr><th>Modell</th><th>Anbieter</th><th>gemeldetes Modell</th><th class="r">Läufe</th><th class="r">anderes Modell</th></tr></thead>
+  <tbody>{% for g in report.routing %}<tr><td>{{ g.model_key }}</td><td class="mono">{{ g.provider }}</td><td class="mono">{{ g.model_reported }}</td>
+    <td class="r mono">{{ g.runs }}</td><td class="r mono">{% if g.mismatch %}<span class="status bad">{{ g.mismatch }}</span>{% else %}0{% endif %}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
 {% if report.stability %}
 <h2>Stabilität (Bedingung A)</h2>
 <table>

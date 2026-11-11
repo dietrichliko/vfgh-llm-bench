@@ -182,6 +182,26 @@ def max_output_tokens(rm: ResolvedModel) -> int | None:
     return rm.config.max_output_tokens or rm.provider.max_output_tokens
 
 
+def routing_problem(rm: ResolvedModel) -> str | None:
+    """Why the endpoint may answer with a different upstream from call to call, or None.
+
+    OpenRouter picks a provider per call (with other quantisations and defaults) unless
+    the request names one: ``provider: {order: [...], allow_fallbacks: false}``. Other
+    endpoints serve one upstream and count as pinned.
+    """
+    if "openrouter.ai" not in rm.provider.base_url:
+        return None
+    routing = {**rm.provider.extra_body, **rm.config.extra_body}.get("provider") or {}
+    if not (routing.get("order") or routing.get("only")):
+        return "OpenRouter-Anbieter nicht festgelegt (provider.order)"
+    if routing.get("allow_fallbacks") is not False:
+        return "OpenRouter darf auf andere Anbieter ausweichen (allow_fallbacks: false fehlt)"
+    return None
+
+
+SAMPLING = ("temperature",)  # what the protocol expects to be stated per tested model
+
+
 def model_settings(rm: ResolvedModel) -> OpenAIChatModelSettings:
     """Settings sent with every request: only what the config states, nothing invented."""
     settings: dict[str, Any] = {}
