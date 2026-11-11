@@ -1,3 +1,32 @@
+## v0.3.0 (2026-11-11)
+
+### Feat
+
+- **providers**: a tested model needs a cutoff or a release date
+- **cases**: printable page with the court's decision beside the models' answers
+- **calibration**: draw the expert's answers from a chosen subset of cells
+- **judges**: judge a chosen subset of the answers
+- **orders**: release rule: only cases decided after the model's release
+- **analysis**: within-case measure for level 5; pilot comparisons exploratory
+- **protocol**: pinned providers for tested models; leave out other models' runs
+- **analysis**: compare conditions run against run
+- **analysis**: count every planned cell, show what levels 2 and 3 rest on
+- **citations**: checker miss rate on the court's own citations
+- **llm**: cap answer length and run time per provider
+- **cases**: button to remove the Stichtag
+- **cases**: show the fetched norm version in the review, clearer exclusion label
+
+### Fix
+
+- **llm**: a run over the time limit is not evaluable
+- **ris-mcp**: read "erster/letzter Satz" as part of a norm citation
+- **citations**: a lookup miss is not a fabricated citation
+- **orders**: cutoff rule uses the real month end
+- **orders**: retry re-sends only failed and unknown jobs
+- **worker**: keep the paid answer when post-processing fails
+- **llm**: store usage with Pydantic AI's Decimal cost estimate
+- **llm**: decode compressed responses only once
+
 ## v0.2.0 (2026-11-07)
 
 ### Feat

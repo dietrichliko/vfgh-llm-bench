@@ -1,6 +1,6 @@
 [project]
 name = "bench"
-version = "0.2.0"
+version = "0.3.0"
 description = "Web application for the study whether LLMs reason like the Austrian Constitutional Court"
 license = "MIT"
 license-files = ["LICENSE"]
