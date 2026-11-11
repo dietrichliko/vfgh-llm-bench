@@ -1,5 +1,6 @@
 """Reference checklists: extraction as a helper task, expert review and versions."""
 
+import dataclasses
 import json
 from datetime import date
 from typing import Any
@@ -10,7 +11,7 @@ import sqlalchemy as sa
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from bench import checklists, orders
+from bench import checklists, orders, tasks
 from bench.llm.http import make_http_client
 from bench.models import (
     Case,
@@ -81,6 +82,44 @@ async def test_extraction_creates_version_1(
     user = requests[0]["messages"][-1]["content"]
     assert user == "geheim" and "Antrag im Fall" not in user
     assert requests[0]["model"] == "vendor/helper"
+
+
+def _boom(*args: Any) -> Any:
+    raise ValueError("kaputt")
+
+
+@pytest.mark.parametrize(
+    ("hook", "message"),
+    [("on_done", "Nachbearbeitung fehlgeschlagen"), ("validate", "Prüfung der Antwort")],
+)
+async def test_a_failing_hook_keeps_the_paid_answer(
+    engine: sa.Engine,
+    settings: Settings,
+    models: dict[str, ResolvedModel],
+    monkeypatch: pytest.MonkeyPatch,
+    hook: str,
+    message: str,
+) -> None:
+    original = tasks.HELPERS["extract_reasons"]
+    helper = (
+        dataclasses.replace(original, on_done=_boom)
+        if hook == "on_done"
+        else dataclasses.replace(original, validate=_boom)
+    )
+    monkeypatch.setitem(tasks.HELPERS, "extract_reasons", helper)
+    order_id, _ = await extract(engine, settings, models)
+    with Session(engine) as db:
+        order = db.get(Order, order_id)
+        assert order is not None and order.status is OrderStatus.DONE
+        jobs = jobs_of(db, order_id)
+        assert {j.status for j in jobs} == {JobStatus.NOT_EVALUABLE}
+        for job in jobs:
+            assert job.error is not None and message in job.error and "kaputt" in job.error
+            run = db.get(Run, job.last_run_id)
+            assert run is not None and run.output == REASONS
+            # the run keeps what the model exchange gave; a failing check is part of it
+            assert run.status is (JobStatus.DONE if hook == "on_done" else JobStatus.NOT_EVALUABLE)
+        assert db.exec(select(ReferenceChecklist)).all() == []
 
 
 def test_helper_needs_the_role(engine: sa.Engine, models: dict[str, ResolvedModel]) -> None:

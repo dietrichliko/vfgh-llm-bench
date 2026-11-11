@@ -358,11 +358,13 @@ class Worker:
             order = db.get(Order, job.order_id)
             assert order is not None
             status, error = result.status, result.error
-            problem = (
-                helper.validate(db, order, job, output)
-                if status is JobStatus.DONE and helper and helper.validate and output is not None
-                else None
-            )
+            problem = None
+            if status is JobStatus.DONE and helper and helper.validate and output is not None:
+                try:
+                    problem = helper.validate(db, order, job, output)
+                except Exception as exc:  # a bug in the check must not lose the answer
+                    log.exception("job %s: check of the answer failed", job.id)
+                    problem = f"Prüfung der Antwort fehlgeschlagen: {exc}"
             if problem:
                 status, error = JobStatus.NOT_EVALUABLE, problem
             run = Run(
@@ -402,9 +404,22 @@ class Worker:
                 duration_ms=result.duration_ms,
             )
             db.add(run)
-            db.flush()
+            # The answer is paid for: store it before any post-processing can fail.
+            db.commit()
+            run_id = run.id
             if helper is not None and status is JobStatus.DONE:
-                helper.on_done(db, run)
+                try:
+                    helper.on_done(db, run)
+                    db.flush()
+                except Exception as exc:
+                    log.exception("job %s: post-processing of run %s failed", job.id, run_id)
+                    db.rollback()
+                    status = JobStatus.NOT_EVALUABLE
+                    error = f"Nachbearbeitung fehlgeschlagen: {exc}"
+                    # runs are append-only: the run keeps the status of the model exchange,
+                    # the job says that nothing was derived from it
+                    order = db.get(Order, job.order_id)
+                    assert order is not None
             stored = db.get(Job, job.id)
             assert stored is not None
             stored.status = status
