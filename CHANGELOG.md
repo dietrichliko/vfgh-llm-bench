@@ -1,3 +1,9 @@
+## v0.3.1 (2026-11-12)
+
+### Fix
+
+- **db**: one process migrates at a time
+
 ## v0.3.0 (2026-11-11)
 
 ### Feat
