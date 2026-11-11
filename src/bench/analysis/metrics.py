@@ -574,6 +574,8 @@ class OpposingResult:
     auc: Interval | None
     partly_cases: int
     partly_sound: dict[str, float | None]  # side → share judged sound (partly unlawful cases)
+    # within each case: court side rated higher than the sham side (ties ½), mean over cases
+    court_higher: Interval | None = None
 
 
 def opposing(
@@ -612,6 +614,9 @@ def opposing(
         def area(ps: Sequence[tuple[float, float]]) -> float | None:
             return auc([a for a, _ in ps], [b for _, b in ps])
 
+        def within(ps: Sequence[tuple[float, float]]) -> float | None:
+            return mean_or_none([1.0 if a > b else 0.5 if a == b else 0.0 for a, b in ps])
+
         n_both = sum(a >= SOUND and b >= SOUND for a, b in pairs)
         results.append(
             OpposingResult(
@@ -621,6 +626,7 @@ def opposing(
                 auc=bootstrap(pairs, area),
                 partly_cases=max((len(v) for v in partly.values()), default=0),
                 partly_sound={s: mean_or_none(v) for s, v in sorted(partly.items())},
+                court_higher=bootstrap(pairs, within),
             )
         )
     return results

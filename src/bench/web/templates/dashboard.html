@@ -199,10 +199,11 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
     <circle cx="{{ p.cx }}" cy="{{ p.cy }}" r="6" fill="{{ series[0] }}" stroke="#fcfcfb" stroke-width="2"><title>{{ p.model }}: Treffer {{ p.x }} %, beide tragfähig {{ p.y }} %</title></circle>
     <text x="{{ p.cx + 10 }}" y="{{ p.ly }}" class="label">{{ p.model }}</text>{% endfor %}
   </svg>
-  <details><summary>Tabelle</summary><table><thead><tr><th>Modell</th><th class="r">Treffer A</th><th class="r">beide tragfähig</th><th class="r">AUC</th><th class="r">Fälle</th><th>teilweise gesetzwidrig: tragfähig</th></tr></thead>
+  <details><summary>Tabelle</summary><table><thead><tr><th>Modell</th><th class="r">Treffer A</th><th class="r">beide tragfähig</th><th class="r">AUC</th><th class="r">im Fall höher</th><th class="r">Fälle</th><th>teilweise gesetzwidrig: tragfähig</th></tr></thead>
     <tbody>{% for o in report.opposing %}<tr><td>{{ o.model_key }}</td>
       <td class="r mono">{% for p in sc.points %}{% if p.model == o.model_key %}{{ p.x }} %{% endif %}{% endfor %}</td>
       <td class="r mono">{{ iv(o.both_sound) }}{{ ivr(o.both_sound) }}</td><td class="r mono">{{ "–" if o.auc is none else num(o.auc.estimate) }}{% if o.auc %} [{{ num(o.auc.low) }}–{{ num(o.auc.high) }}]{% endif %}</td>
+      <td class="r mono" title="Anteil der Fälle, in denen die Begründung für das Ergebnis des VfGH besser bewertet wird als die Gegenbegründung (gleich: ½)">{{ iv(o.court_higher) }}{{ ivr(o.court_higher) }}</td>
       <td class="r mono">{{ o.cases }}</td>
       <td>{% if o.partly_cases %}{{ o.partly_cases }} Fälle: {% for side, v in o.partly_sound.items() %}{{ "gesetzwidrig" if side == "unlawful" else "nicht gesetzwidrig" }} {{ "–" if v is none else ((v*100)|round|int ~ " %") }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}–{% endif %}</td></tr>{% endfor %}</tbody></table></details>
   {% else %}<p>Noch keine Einschätzungen von Gegenbegründungen.</p>{% endif %}

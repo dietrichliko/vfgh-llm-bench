@@ -44,6 +44,7 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 - **Court side:** *unlawful* cases → the reasoning for unlawfulness; *dismissed* → the reasoning against. **Primary metrics use these two kinds only.** Partly unlawful cases get their own row: share judged sound per side.
 - **Judged sound on both sides:** share of cases where both reasonings are sound.
 - **AUC:** probability that the court-side reasoning gets the higher value than the sham one (ties ½), over all case pairs of the model (Mann–Whitney); interval by bootstrap over cases.
+- **Within the case:** share of cases in which the court-side reasoning gets the higher value than the sham one of the same case (ties ½); interval by bootstrap over cases. The AUC compares across cases and so mixes in how convincing each case's writing is; this measure does not. Neither knows whether the court-side reasoning reaches the outcome for the court's reasons.
 
 ## 7 Judges and calibration
 
@@ -60,4 +61,6 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 ## 9 Reporting
 
 - All intervals 95 %. With about 20 cases, results are descriptive; confirmatory are only the hypotheses registered at OSF (publication.md §4).
+- **Pilot:** every comparison is exploratory. McNemar p-values (conditions; each model against the *always unlawful* baseline) are reported without correction for multiplicity and support no claim.
+- **Full study:** "a model beats the baseline" is tested per model by exact McNemar on its cases (model right vs baseline right, discordant pairs), with **Holm** correction over the tested models; the comparison of conditions likewise, Holm over models per pair of conditions.
 - Every figure and export names the protocol tag and hash it is based on.

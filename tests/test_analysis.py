@@ -266,5 +266,6 @@ async def test_opposing_auc_and_partly_cases(
         assert result.cases == 2
         assert result.both_sound is not None and result.both_sound.estimate == 0.0
         assert result.auc is not None and result.auc.estimate == 1.0
+        assert result.court_higher is not None and result.court_higher.estimate == 1.0
         assert result.partly_cases == 1
         assert result.partly_sound == {"lawful": 0.0, "unlawful": 1.0}
