@@ -345,6 +345,33 @@ async def test_plan_applies_checklist_and_family_rules(
             judges.create(db, [order_id], [models["alpha"]], None)
 
 
+async def test_judge_a_subset_of_the_cells(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=1, phrasings=2, repetitions=3)
+    await work(engine, settings, answer(json.dumps(CITED)))
+    with Session(engine) as db:
+        order = db.get(Order, order_id)
+        assert order is not None
+        case = db.get(Case, order.case_ids[0])
+        assert case is not None
+        confirm_checklist(db, case)
+        db.commit()
+        cells = {
+            k: sorted((r.phrasing, r.repetition) for r in judges.targets(db, [order_id], k))
+            for k in judges.SUBSETS
+        }
+        assert len(cells["alle"]) == 6
+        assert cells["erste"] == [(1, 1), (2, 1)]
+        assert cells["eine"] == [(1, 1)]
+        first = judges.create(db, [order_id], [models["judge"]], None, subset="erste")
+        assert first.job_count == 2 and first.snapshot["subset"] == "erste"
+        rest = judges.create(db, [order_id], [models["judge"]], None)  # the rest later
+        assert rest.job_count == 4
+        with pytest.raises(ValueError, match="Unbekannte Auswahl"):
+            judges.create(db, [order_id], [models["judge"]], None, subset="x")
+
+
 # ── citation check and judging ─────────────────────────────────────────────────
 
 
@@ -496,13 +523,19 @@ async def test_judge_pages(
             f"/orders/{order_id}/judge", data={"model_keys": ["judge-a"]}, follow_redirects=False
         )
         assert "problem=" in r.headers["location"]
+        page = client.get(f"/orders/{order_id}?antworten=eine").text
+        assert '<option value="eine" selected>' in page
+        assert '<input type="hidden" name="subset" value="eine">' in page
         r = client.post(
-            f"/orders/{order_id}/judge", data={"model_keys": ["judge"]}, follow_redirects=False
+            f"/orders/{order_id}/judge",
+            data={"model_keys": ["judge"], "subset": "eine"},
+            follow_redirects=False,
         )
         assert r.status_code == 303
         judge_url = r.headers["location"]
         page = client.get(judge_url).text
         assert "Bewertung durch Richtermodelle" in page and "Bewertete Antworten" in page
+        assert "(nur Formulierung 1, Wiederholung 1)" in page
 
     await judge(engine, settings, json.dumps(VERDICT), [], ris_clients([], []))
     with Session(engine) as db:

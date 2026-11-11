@@ -42,7 +42,7 @@
 {% endif %}
 {% if order.task == "judge" %}
 <details open><summary>Bewertete Antworten</summary>
-  <p>Aus Auftrag {% for i in order.snapshot.get("source_orders", []) %}<a href="/orders/{{ i }}">{{ i }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.
+  <p>Aus Auftrag {% for i in order.snapshot.get("source_orders", []) %}<a href="/orders/{{ i }}">{{ i }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% if order.snapshot.get("subset", "alle") != "alle" %} ({{ subset_labels[order.snapshot.subset] }}){% endif %}.
   Richter: {% for k in order.model_keys %}<span class="mono">{{ k }}</span>{% if not loop.last %}, {% endif %}{% endfor %}.</p>
   {% if order.snapshot.get("skipped") %}<p>Ausgelassen: {% for k, n in order.snapshot.skipped.items() %}{{ n }} × {{ skipped_labels.get(k, k) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
 </details>
@@ -77,7 +77,13 @@
 <h2 id="judges">Bewertung durch Richtermodelle</h2>
 <p class="lead">Die auswertbaren Antworten dieses Auftrags, gemessen an den bestätigten Referenzgründen; vorher prüft die Anwendung die Zitate im RIS. Ein Richter bewertet keine Modelle seiner eigenen Familie.</p>
 {% if problem %}<p class="status bad">{{ problem }}</p>{% endif %}
+<form method="get" action="/orders/{{ order.id }}#judges" class="no-print">
+  <label>Welche Antworten <select name="antworten" onchange="this.form.submit()">
+    {% for k, label in subset_labels.items() %}<option value="{{ k }}"{% if k == subset %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select></label> <noscript><button type="submit">zeigen</button></noscript>
+</form>
 <form method="post" action="/orders/{{ order.id }}/judge">
+  <input type="hidden" name="subset" value="{{ subset }}">
   <table>
     <thead><tr><th></th><th>Richtermodell</th><th>Bewertungen</th><th>Geschätzt</th><th>Ausgelassen</th></tr></thead>
     <tbody>

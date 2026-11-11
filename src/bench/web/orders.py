@@ -87,11 +87,16 @@ def _judges(request: Request) -> list[ResolvedModel]:
     return [rm for rm in resolved_models(request).values() if Role.JUDGE in rm.config.roles]
 
 
+def _subset(request: Request) -> str:
+    value = request.query_params.get("antworten", "alle")
+    return value if value in judges.SUBSETS else "alle"
+
+
 def _judge_plans(request: Request, db: Session, order: Order) -> list[dict[str, Any]]:
     """Per judge model: what judging this decide order's answers would mean."""
     if order.task != "decide":
         return []
-    runs = judges.targets(db, [order.id or 0])
+    runs = judges.targets(db, [order.id or 0], _subset(request))
     out = []
     for rm in _judges(request):
         p, skipped = judges.plan(db, runs, [rm])
@@ -303,6 +308,8 @@ def order_detail(request: Request, order_id: int, user: AdminDep, db: DbDep) -> 
         prompt_versions=prompt_versions,
         recent_runs=RECENT_RUNS,
         judge_plans=_judge_plans(request, db, order),
+        subset=_subset(request),
+        subset_labels=judges.SUBSET_LABELS,
         skipped_labels=SKIPPED_LABELS,
         assess_skipped_labels=ASSESS_SKIPPED_LABELS,
         problem=request.query_params.get("problem"),
@@ -323,6 +330,7 @@ def order_judge(
     db: DbDep,
     model_keys: Annotated[list[str], Form()] = [],  # noqa: B006
     cost_cap_usd: Annotated[str, Form()] = "",
+    subset: Annotated[str, Form()] = "alle",
 ) -> Response:
     """A judge order for the evaluable answers of this decide order."""
     order = _order(db, order_id)
@@ -334,7 +342,7 @@ def order_judge(
             raise ValueError("Unbekanntes Richtermodell")
         cap = OrderForm(cost_cap_usd=cost_cap_usd).cost_cap()
         judge_order = judges.create(
-            db, [order_id], [available[k] for k in model_keys], user.id, cap
+            db, [order_id], [available[k] for k in model_keys], user.id, cap, subset=subset
         )
     except ValueError as exc:
         url = f"/orders/{order_id}?problem={quote(str(exc))}#judges"

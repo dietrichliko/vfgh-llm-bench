@@ -63,19 +63,32 @@ def family_of(db: Session, run: Run, cache: dict[int, Order] | None = None) -> s
     return family
 
 
-def targets(db: Session, order_ids: list[int]) -> list[Run]:
-    """The evaluable decide runs of these orders, in the order they ran."""
-    return list(
-        db.exec(
-            select(Run)
-            .where(
-                col(Run.order_id).in_(order_ids),
-                Run.task == "decide",
-                Run.status == JobStatus.DONE,
-            )
-            .order_by(col(Run.id))
-        ).all()
+# which answers of a decide order are judged: (largest phrasing, largest repetition)
+SUBSETS: dict[str, tuple[int | None, int | None]] = {
+    "alle": (None, None),
+    "erste": (None, 1),  # repetition 1 of each phrasing
+    "eine": (1, 1),  # phrasing 1, repetition 1
+}
+SUBSET_LABELS = {
+    "alle": "alle auswertbaren Antworten",
+    "erste": "Wiederholung 1 jeder Formulierung",
+    "eine": "nur Formulierung 1, Wiederholung 1",
+}
+
+
+def targets(db: Session, order_ids: list[int], subset: str = "alle") -> list[Run]:
+    """The evaluable decide runs of these orders (or a subset of the cells), as they ran."""
+    max_phrasing, max_repetition = SUBSETS[subset]
+    query = select(Run).where(
+        col(Run.order_id).in_(order_ids),
+        Run.task == "decide",
+        Run.status == JobStatus.DONE,
     )
+    if max_phrasing is not None:
+        query = query.where(Run.phrasing <= max_phrasing)
+    if max_repetition is not None:
+        query = query.where(Run.repetition <= max_repetition)
+    return list(db.exec(query.order_by(col(Run.id))).all())
 
 
 def answer_text(output: dict[str, Any]) -> str:
@@ -197,8 +210,11 @@ def create(
     user_id: int | None,
     cost_cap_usd: float | None = None,
     name: str = "",
+    subset: str = "alle",
 ) -> Order:
-    runs = targets(db, source_order_ids)
+    if subset not in SUBSETS:
+        raise ValueError(f"Unbekannte Auswahl {subset}")
+    runs = targets(db, source_order_ids, subset)
     p, skipped = plan(db, runs, judges)
     if p.problems:
         raise ValueError("; ".join(p.problems))
@@ -226,6 +242,7 @@ def create(
         snapshot={
             **orders.snapshot(db, judges, cases, p.jobs),
             "source_orders": source_order_ids,
+            "subset": subset,
             "checklists": {str(c.id): c.checklist_id for c in cases},
             "skipped": skipped,
         },
