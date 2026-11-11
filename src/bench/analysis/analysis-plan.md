@@ -16,7 +16,7 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 - **Cohen's κ** between majority label and VfGH label; **confusion matrix** VfGH × model.
 - **Baselines**, on the same cases as the model (they differ by cutoff): *always unlawful* (at case level the same as *follow the application*, see architecture.md §6). A model beats the baseline if its accuracy is higher; the comparison is descriptive.
 - **Common cases:** models differ in their cases (cutoff rule). Level 1 is also reported per condition on the cases every model of that condition was run on.
-- **Conditions compared** (A vs B, A vs C) per model on the cases run in both: **McNemar**, exact binomial test on the discordant pairs, two-sided.
+- **Conditions compared** (A vs B, A vs C) per model: **McNemar**, exact binomial test on the discordant pairs, two-sided. **Primary: one run against one run**, the cell with phrasing 1 and repetition 1 in both conditions, on the cases that have it in both. A majority of many runs against one run would favour the condition with more runs (the majority averages out sampling noise) for a reason unrelated to source access. The majority comparison is reported in addition only where both conditions have the same number of runs in every shared case.
 
 ## 3 Level 2: decisive reasons
 

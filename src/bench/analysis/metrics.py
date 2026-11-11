@@ -255,11 +255,29 @@ class Comparison:
     only_first: int  # right in the first condition only
     only_second: int
     p_value: float
+    basis: str = "cell"  # "cell": phrasing 1, repetition 1 in both; "majority"
 
 
-def compare(results: Sequence[OutcomeResult], truth: dict[int, str]) -> list[Comparison]:
-    """McNemar per model: A against each other condition, on the cases run in both."""
+FIRST_CELL = (1, 1)  # phrasing, repetition
+
+
+def compare(
+    runs: Sequence[DecideRun], results: Sequence[OutcomeResult], truth: dict[int, str]
+) -> list[Comparison]:
+    """McNemar per model: A against each other condition, on the cases run in both.
+
+    Primary on the same cell (phrasing 1, repetition 1), so that one run is set against
+    one run. The majority comparison is added only where both conditions have the same
+    number of runs in every shared case: a majority of 15 runs against one run would
+    reward A for averaging out noise, not for anything about source access.
+    """
     by = {(r.model_key, r.condition): r for r in results}
+    first: dict[tuple[str, str, int], DecideRun] = {}
+    count: Counter[tuple[str, str, int]] = Counter()
+    for r in runs:
+        count[r.model_key, r.condition, r.case_id] += 1
+        if (r.phrasing, r.repetition) == FIRST_CELL:
+            first[r.model_key, r.condition, r.case_id] = r
     out = []
     for (model, condition), a in sorted(by.items()):
         if condition != "A":
@@ -268,17 +286,33 @@ def compare(results: Sequence[OutcomeResult], truth: dict[int, str]) -> list[Com
             b = by.get((model, other))
             if b is None:
                 continue
-            shared = sorted(set(a.majority) & set(b.majority))
-            right_a = {c: a.majority[c] == truth[c] for c in shared}
-            right_b = {c: b.majority[c] == truth[c] for c in shared}
-            only_a = sum(right_a[c] and not right_b[c] for c in shared)
-            only_b = sum(right_b[c] and not right_a[c] for c in shared)
-            out.append(
-                Comparison(
-                    model, "A", other, len(shared), only_a, only_b, mcnemar_exact(only_a, only_b)
-                )
+            cells = sorted(
+                c for c in truth if (model, "A", c) in first and (model, other, c) in first
             )
+            right_a = {c: first[model, "A", c].label == truth[c] for c in cells}
+            right_b = {c: first[model, other, c].label == truth[c] for c in cells}
+            out.append(_mcnemar(model, other, cells, right_a, right_b, "cell"))
+            shared = sorted(set(a.majority) & set(b.majority))
+            if shared and all(count[model, "A", c] == count[model, other, c] for c in shared):
+                right_a = {c: a.majority[c] == truth[c] for c in shared}
+                right_b = {c: b.majority[c] == truth[c] for c in shared}
+                out.append(_mcnemar(model, other, shared, right_a, right_b, "majority"))
     return out
+
+
+def _mcnemar(
+    model: str,
+    other: str,
+    cases: list[int],
+    right_a: dict[int, bool],
+    right_b: dict[int, bool],
+    basis: str,
+) -> Comparison:
+    only_a = sum(right_a[c] and not right_b[c] for c in cases)
+    only_b = sum(right_b[c] and not right_a[c] for c in cases)
+    return Comparison(
+        model, "A", other, len(cases), only_a, only_b, mcnemar_exact(only_a, only_b), basis
+    )
 
 
 # ── judges ──────────────────────────────────────────────────────────────────────
@@ -815,7 +849,7 @@ def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
     gone = recalled(db, allowed)
     return Report(
         outcome=out,
-        comparisons=compare(out, t),
+        comparisons=compare(runs, out, t),
         reasons=reasons(runs, scores),
         citations=citations(runs, run_checks, scores),
         stability=stability(runs),

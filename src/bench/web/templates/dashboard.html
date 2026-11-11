@@ -156,7 +156,8 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
   {% else %}<p>Erst mit einer zweiten Bedingung.</p>{% endif %}
   <details><summary>Tabelle</summary><table><thead><tr><th>Modell</th>{% for c in s.conditions %}<th class="r">{{ c }}</th>{% endfor %}</tr></thead>
     <tbody>{% for ser in s.series %}<tr><td>{{ ser.model }}</td>{% for c in s.conditions %}<td class="r mono">{% for cc, v in ser.points %}{% if cc == c %}{{ v }} %{% endif %}{% endfor %}</td>{% endfor %}</tr>{% endfor %}</tbody></table>
-    {% if report.comparisons %}<p>McNemar (exakt): {% for m in report.comparisons %}{{ m.model_key }} A/{{ m.second }}: n = {{ m.cases }}, nur A richtig {{ m.only_first }}, nur {{ m.second }} richtig {{ m.only_second }}, p = {{ num(m.p_value, 3) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
+    {% if report.comparisons %}<p>McNemar (exakt), je ein Lauf gegen einen Lauf (Formulierung 1, Wiederholung 1){% if report.comparisons | selectattr("basis", "equalto", "majority") | list %}, dazu die Mehrheit, wo beide Bedingungen gleich viele Läufe haben{% endif %}:
+      {% for m in report.comparisons %}{{ m.model_key }} A/{{ m.second }}{% if m.basis == "majority" %} (Mehrheit){% endif %}: n = {{ m.cases }}, nur A richtig {{ m.only_first }}, nur {{ m.second }} richtig {{ m.only_second }}, p = {{ num(m.p_value, 3) }}{% if not loop.last %}; {% endif %}{% endfor %}.</p>{% endif %}
   </details>
 </section>
 

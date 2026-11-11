@@ -91,12 +91,32 @@ def test_outcome_by_majority_with_baseline_and_mcnemar() -> None:
     assert a.run_share == pytest.approx((2 / 3 + 0) / 2)
     assert a.baseline is not None and a.baseline.estimate == 0.5
     assert a.confusion == {("unlawful", "unlawful"): 1, ("dismissed", "none"): 1}
-    (cmp,) = metrics.compare(list(results.values()), TRUTH)
-    assert (cmp.second, cmp.cases, cmp.only_first, cmp.only_second) == ("C", 2, 1, 1)
-    assert cmp.p_value == 1.0
+    # A has 3 and 2 runs per case, C one: no majority comparison, and no shared first cell
+    (cmp,) = metrics.compare(RUNS, list(results.values()), TRUTH)
+    assert (cmp.basis, cmp.cases) == ("cell", 0)
     # sensitivity: without case 2 for model x
     (a2,) = [r for r in metrics.outcome(RUNS, TRUTH, {"x": {2}}) if r.condition == "A"]
     assert (a2.cases, a2.correct) == (1, 1)
+
+
+def test_conditions_are_compared_run_against_run() -> None:
+    a = [
+        DecideRun(10 * c + k, c, "x", "A", p, k, lbl)
+        for c, lbl in ((1, "unlawful"), (2, "unlawful"))
+        for p in (1, 2)
+        for k in (1, 2)
+    ]
+    a[0] = DecideRun(10, 1, "x", "A", 1, 1, "dismissed")  # first cell of case 1 wrong
+    c = [DecideRun(100 + i, i, "x", "C", 1, 1, "unlawful") for i in (1, 2)]
+    truth = {1: "unlawful", 2: "dismissed"}
+    runs = a + c
+    results = metrics.outcome(runs, truth)
+    (cell,) = metrics.compare(runs, results, truth)  # 4 runs against 1: no majority row
+    assert (cell.basis, cell.cases, cell.only_first, cell.only_second) == ("cell", 2, 0, 1)
+    # same number of runs in both conditions: the majority comparison is added
+    even = [r for r in runs if (r.phrasing, r.repetition) == (1, 1)]
+    bases = [m.basis for m in metrics.compare(even, metrics.outcome(even, truth), truth)]
+    assert bases == ["cell", "majority"]
 
 
 def test_common_cases_compare_models_on_the_same_cases() -> None:
