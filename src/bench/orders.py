@@ -4,6 +4,7 @@ A job is one LLM call: case × model × condition × phrasing × repetition. Job
 ``seq`` order, which interleaves cases and models, so a partial run is already comparable.
 """
 
+import calendar
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date
@@ -47,9 +48,10 @@ RETRYABLE_JOB_STATES = (JobStatus.FAILED, JobStatus.UNKNOWN)  # no answer arrive
 
 
 def months_after(d: date, months: int) -> date:
+    """The same day ``months`` later, or the last day of that month if it is shorter."""
     year, month = divmod(d.month - 1 + months, 12)
-    day = min(d.day, 28)
-    return date(d.year + year, month + 1, day)
+    year, month = d.year + year, month + 1
+    return date(year, month, min(d.day, calendar.monthrange(year, month)[1]))
 
 
 def eligible(case: Case, rm: ResolvedModel, cutoff_months: int) -> bool:

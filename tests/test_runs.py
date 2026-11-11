@@ -276,6 +276,23 @@ def test_render_only_replaces_input() -> None:
 # ── planning ────────────────────────────────────────────────────────────────────
 
 
+@pytest.mark.parametrize(
+    ("start", "months", "expected"),
+    [
+        (date(2025, 1, 31), 3, date(2025, 4, 30)),
+        (date(2025, 8, 31), 6, date(2026, 2, 28)),
+        (date(2023, 8, 31), 6, date(2024, 2, 29)),
+        (date(2025, 5, 30), 1, date(2025, 6, 30)),
+        (date(2025, 10, 31), 3, date(2026, 1, 31)),
+        (date(2025, 3, 15), 12, date(2026, 3, 15)),
+    ],
+)
+def test_months_after_keeps_the_day_up_to_the_month_end(
+    start: date, months: int, expected: date
+) -> None:
+    assert orders.months_after(start, months) == expected
+
+
 def test_plan_interleaves_and_applies_the_cutoff(
     engine: sa.Engine, models: dict[str, ResolvedModel]
 ) -> None:
