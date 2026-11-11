@@ -88,6 +88,7 @@ ARTEN = ("normen", "gemeinderecht", "bezirke")
 _NORM_MARK = re.compile(r"(§§?|Art\.?)\s*(\d+[a-z]?)", re.I)
 _NORM_SUB = re.compile(
     r"^\s*(?:Abs\.?\s*\d+[a-z]?|lit\.?\s*[a-z]{1,2}\b|Z\s*\d+[a-z]?|Satz\s*\d+|S\s*\d+\b"
+    r"|(?:erster|zweiter|dritter|vierter|fünfter|letzter|vorletzter)\s+(?:Satz|Halbsatz)\b"
     r"|Unterabs\.?\s*\d+|(?:,|und|bis|iVm|f\.?|ff\.?)\s*(?:§\s*)?\d*[a-z]?)",
     re.I,
 )

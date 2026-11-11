@@ -287,6 +287,8 @@ async def test_municipal_law_needs_a_state(ris: RisClient) -> None:
         ("StVO 1960 § 24", ("Paragraph", "24", "StVO 1960")),
         ("§§ 58, 60 AVG", ("Paragraph", "58", "AVG")),
         ("§ 94f Abs 1 lit b Z 2 StVO 1960", ("Paragraph", "94f", "StVO 1960")),
+        ("§44 Abs4 letzter Satz StVO 1960", ("Paragraph", "44", "StVO 1960")),
+        ("§36 Abs1 vorletzter Satz TJG 2004", ("Paragraph", "36", "TJG 2004")),
     ],
 )
 def test_parse_citation(citation: str, expected: tuple[str, str, str]) -> None:
