@@ -177,3 +177,24 @@ def test_pending_migration(tmp_path: Path) -> None:
 
 def test_the_bucket_can_be_set_by_field_name(tmp_path: Path) -> None:
     assert Settings(data_dir=tmp_path, backup_bucket="b").backup_bucket == "b"
+
+
+def test_parallel_migrations_wait_for_each_other(tmp_path: Path) -> None:
+    """Web and worker start together and both migrate: the second waits for the first."""
+    import subprocess
+    import sys
+
+    url = f"sqlite:///{tmp_path / 'bench.sqlite'}"
+    code = (
+        "import sys; from bench.db import make_engine, migrate; migrate(make_engine(sys.argv[1]))"
+    )
+    procs = [
+        subprocess.Popen(
+            [sys.executable, "-c", code, url], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        for _ in range(3)
+    ]
+    results = [(p.wait(timeout=120), p.stderr.read().decode() if p.stderr else "") for p in procs]
+    assert [rc for rc, _ in results] == [0, 0, 0], [err[-500:] for _, err in results]
+    assert not pending_migration(make_engine(url))
+    assert (tmp_path / "bench.sqlite.migrate.lock").exists()

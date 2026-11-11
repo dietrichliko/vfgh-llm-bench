@@ -1,6 +1,8 @@
 """Database engine, sessions and migrations (SQLModel on SQLAlchemy, SQLite by default)."""
 
+import fcntl
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -39,8 +41,31 @@ def alembic_config(engine: Engine) -> Config:
     return cfg
 
 
+@contextmanager
+def migration_lock(engine: Engine) -> Iterator[None]:
+    """One process migrates at a time; the others wait, then find nothing left to do.
+
+    Web and worker share the SQLite file and both migrate at start. Without the lock a
+    second process ran the same migration in parallel and failed ("table … already
+    exists"). The lock file sits next to the database, so it also works across containers
+    that share the volume. Not needed (and skipped) for in-memory or non-SQLite databases.
+    """
+    path = engine.url.database if engine.dialect.name == "sqlite" else None
+    if not path or path == ":memory:":
+        yield
+        return
+    lock = Path(path).with_name(Path(path).name + ".migrate.lock")
+    with lock.open("a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
 def migrate(engine: Engine) -> None:
-    command.upgrade(alembic_config(engine), "head")
+    with migration_lock(engine):
+        command.upgrade(alembic_config(engine), "head")
 
 
 def pending_migration(engine: Engine) -> bool:
