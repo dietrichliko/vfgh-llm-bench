@@ -93,7 +93,7 @@ async def test_dashboard_figures(
         assert "Leaderboard – Modell allein" in page
         assert "<strong>alpha</strong>" in page and "<strong>beta</strong>" in page
         assert "67 %" in page and "vorl." in page  # judges not calibrated yet
-        # figure 2: tenor A 67, citations not fabricated 67 (one of three not found)
+        # figure 2: tenor A 67, citations found in the RIS 67 (one of three not found)
         assert ">67<" in page
         # figure 3: glyphs, counts, no case links for viewers
         assert "✓" in page and "✗" in page and "2/3" in page

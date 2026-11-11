@@ -76,6 +76,27 @@ class CitationCheck(SQLModel, table=True):
     checked_at: datetime = Field(default_factory=utcnow)
 
 
+class CitationBaseline(SQLModel, table=True):
+    """One citation from the court's own considerations, run through the citation check.
+
+    Everything the VfGH cites exists, so the share of ``not_found`` among these is the
+    checker's own miss rate (``bench check-citations-baseline``). A new run of the command
+    replaces the rows of the cases it checks.
+    """
+
+    __tablename__ = "citation_baseline"
+
+    id: int | None = Field(default=None, primary_key=True)
+    case_id: int = Field(foreign_key="cases.id", index=True)
+    text: str
+    kind: str = Field(max_length=16)  # norm | decision
+    result: CitationResult = Field(max_length=16)
+    stichtag: date
+    source: str | None = None
+    note: str | None = None
+    checked_at: datetime = Field(default_factory=utcnow)
+
+
 class JudgeScore(SQLModel, table=True):
     """One judge's assessment of one decide run (levels 2 and 3); immutable (trigger).
 

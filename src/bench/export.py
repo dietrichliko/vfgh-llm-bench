@@ -40,6 +40,7 @@ from bench.models import (
     CalibrationRating,
     Case,
     CaseParse,
+    CitationBaseline,
     CitationCheck,
     ContaminationProbe,
     JudgeScore,
@@ -93,6 +94,7 @@ TABLES: list[tuple[str, type[SQLModel], str | None]] = [
     ("assessments", Assessment, "run_id"),
     ("contamination_probes", ContaminationProbe, "run_id"),
     ("norm_sets", NormSet, None),
+    ("citation_baseline", CitationBaseline, None),
 ]
 README = """# VfGH-LLM-Studie: Daten und Kennzahlen
 
@@ -241,6 +243,10 @@ def metric_files(report: metrics.Report) -> Iterator[tuple[str, bytes, int]]:
     yield "metrics/comparisons.csv", *csv_bytes(report.comparisons)
     yield "metrics/reasons.csv", *csv_bytes(report.reasons)
     yield "metrics/citations.csv", *csv_bytes(report.citations)
+    yield (
+        "metrics/citation_baseline.csv",
+        *csv_bytes([report.citation_baseline] if report.citation_baseline else []),
+    )
     yield "metrics/stability.csv", *csv_bytes(report.stability)
     yield "metrics/opposing.csv", *csv_bytes(report.opposing)
     yield "metrics/calibration.csv", *csv_bytes(report.calibration.agreements)

@@ -1,4 +1,4 @@
-"""Command line: ``bench serve | worker | ris-mcp | migrate | backup | check-providers``."""
+"""Command line: ``bench serve | worker | ris-mcp | migrate | backup | check-providers | …``."""
 
 import argparse
 import asyncio
@@ -219,6 +219,50 @@ def _check_providers(args: argparse.Namespace) -> int:
     return asyncio.run(run())
 
 
+def _check_citations_baseline(args: argparse.Namespace) -> int:
+    from sqlmodel import Session
+
+    from bench import citebaseline
+    from bench.db import make_engine, migrate
+    from bench.ris.client import RisClient as CaseLawClient
+    from bench.rismcp.norms import RisClient
+    from bench.settings import get_settings
+
+    engine = make_engine(get_settings().db_url)
+    migrate(engine)
+
+    async def go() -> int:
+        norms, case_law = RisClient(), CaseLawClient()
+        try:
+            return await citebaseline.run(engine, norms, case_law, args.case or None)
+        finally:
+            await norms.aclose()
+            await case_law.aclose()
+
+    n = asyncio.run(go())
+    with Session(engine) as db:
+        b = citebaseline.summary(db)
+    print(f"{n} citations checked")
+    if b is not None and b.share is not None:
+        print(
+            f"{b.cases} cases, {b.checkable} checkable: {b.not_found} not found "
+            f"({100 * b.share.estimate:.0f} %, 95 % CI {100 * b.share.low:.0f}–"
+            f"{100 * b.share.high:.0f} %)"
+        )
+        for kind, (missed, total) in b.by_kind.items():
+            print(f"  {kind}: {missed} of {total} not found")
+    if args.verbose:
+        from sqlmodel import select
+
+        from bench.models import CitationBaseline, CitationResult
+
+        with Session(engine) as db:
+            for row in db.exec(select(CitationBaseline)).all():
+                if row.result is not CitationResult.FOUND:
+                    print(f"  [{row.case_id}] {row.result.value:14} {row.text}  {row.note or ''}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(
         level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s"
@@ -277,6 +321,14 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("check-providers", help="send a short test prompt to each model")
     p.add_argument("model", nargs="*", help="model keys (default: all)")
     p.set_defaults(func=_check_providers)
+
+    p = sub.add_parser(
+        "check-citations-baseline",
+        help="miss rate of the citation check, on the court's own citations",
+    )
+    p.add_argument("--case", type=int, action="append", help="case id (default: all released)")
+    p.add_argument("-v", "--verbose", action="store_true", help="list what was not found")
+    p.set_defaults(func=_check_citations_baseline)
 
     args = parser.parse_args(argv)
     result: int = args.func(args)

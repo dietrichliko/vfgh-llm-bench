@@ -35,11 +35,12 @@ Berechnung nach dem Auswertungsplan (<code>docs/analysis-plan.md</code>).{% if s
 orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Intervalle in Klammern.
 {% if not report.calibration.calibrated.reasons %}<br><strong>Gründe</strong> und {% endif %}{% if not report.calibration.calibrated.citations %}<strong>Zitate ungenau</strong>{% endif %}
 {% if not report.calibration.calibrated.reasons or not report.calibration.calibrated.citations %} beruhen auf Richtermodellen, die noch nicht kalibriert sind (κ &lt; 0,7 oder zu wenige Expertenbewertungen): vorläufig.{% endif %}</p>
+{% if report.citation_baseline and report.citation_baseline.share %}<p class="lead">Zitate nicht im RIS gefunden: Auch von den eigenen Zitaten des VfGH findet die Prüfung {{ iv(report.citation_baseline.share) }} nicht (Abschnitt „Zitate“).</p>{% endif %}
 <div class="scroll">
 <table class="leader">
   <thead><tr><th>#</th><th>Modell</th><th>Stichtag</th><th class="r">Fälle</th><th>Tenor-Treffer</th><th class="r">Läufe richtig</th><th class="r">κ</th>
     <th class="r">Gründe{% if not report.calibration.calibrated.reasons %} <span class="flag" title="nicht kalibriert">vorl.</span>{% endif %}</th>
-    <th class="r">Zitate erfunden</th>
+    <th class="r">Zitate nicht im RIS gefunden</th>
     <th class="r">Zitate ungenau{% if not report.calibration.calibrated.citations %} <span class="flag" title="nicht kalibriert">vorl.</span>{% endif %}</th>
     {% if condition == "A" %}<th class="r">Instabil</th><th class="r">Beide tragfähig</th><th class="r">AUC</th>{% endif %}</tr></thead>
   <tbody>
@@ -64,7 +65,7 @@ orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Inte
       <td class="r mono">{{ "–" if r.run_share is none else ((r.run_share*100)|round|int ~ " %") }}</td>
       <td class="r mono">{{ num(r.kappa) }}</td>
       <td class="r mono">{{ iv(r.reasons) }}</td>
-      <td class="r mono">{{ iv(r.fabricated) }}</td>
+      <td class="r mono">{{ iv(r.not_found) }}</td>
       <td class="r mono">{{ iv(r.inaccurate) }}</td>
       {% if condition == "A" %}
       <td class="r mono">{{ iv(r.unstable) }}</td>
@@ -269,10 +270,11 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 
 <h2>Zitate</h2>
 <table>
-  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">prüfbar</th><th class="r">nicht gefunden</th><th class="r">nicht auflösbar</th><th class="r">bewertet</th><th class="r">erfunden</th><th class="r">ungenau</th></tr></thead>
+  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">prüfbar</th><th class="r">nicht gefunden</th><th class="r">nicht auflösbar</th><th class="r">bewertet</th><th class="r">nicht im RIS gefunden</th><th class="r">ungenau</th></tr></thead>
   <tbody>{% for c in report.citations %}<tr><td>{{ c.model_key }}</td><td>{{ c.condition }}</td><td class="r mono">{{ c.checkable }}</td><td class="r mono">{{ c.not_found }}</td>
-    <td class="r mono">{{ c.unresolvable }}</td><td class="r mono">{{ c.judged }}</td><td class="r mono">{{ iv(c.fabricated) }}{{ ivr(c.fabricated) }}</td><td class="r mono">{{ iv(c.inaccurate) }}{{ ivr(c.inaccurate) }}</td></tr>{% endfor %}</tbody>
+    <td class="r mono">{{ c.unresolvable }}</td><td class="r mono">{{ c.judged }}</td><td class="r mono">{{ iv(c.not_found_share) }}{{ ivr(c.not_found_share) }}</td><td class="r mono">{{ iv(c.inaccurate) }}{{ ivr(c.inaccurate) }}</td></tr>{% endfor %}</tbody>
 </table>
+{% include "_citation_baseline.html" %}
 {% endif %}
 </div>
 {% endblock %}

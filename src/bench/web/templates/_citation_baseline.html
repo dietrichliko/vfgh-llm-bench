@@ -1,0 +1,7 @@
+{% set b = report.citation_baseline %}
+<p class="lead">„Nicht im RIS gefunden“ heißt nicht „erfunden“: Die Prüfung findet auch echte Zitate nicht immer.
+{% if b and b.share %}Fehlerrate der Prüfung an den eigenen Zitaten des VfGH ({{ b.cases }} Fälle, {{ b.checkable }} prüfbare Zitate):
+<strong>{{ iv(b.share) }}</strong>{{ ivr(b.share) }} nicht gefunden
+({% for kind, (missed, n) in b.by_kind.items() %}{{ "Normen" if kind == "norm" else "Entscheidungen" }} {{ missed }} von {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}).
+Eine Rate in dieser Höhe sagt nichts über erfundene Zitate.
+{% else %}Die Fehlerrate der Prüfung ist noch nicht bestimmt (<code>bench check-citations-baseline</code>).{% endif %}</p>

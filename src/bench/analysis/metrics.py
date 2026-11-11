@@ -7,7 +7,7 @@ from statistics import fmean
 
 from sqlmodel import Session, col, select
 
-from bench import contamination
+from bench import citebaseline, contamination
 from bench.analysis.stats import (
     Interval,
     auc,
@@ -303,7 +303,7 @@ class CitationsResult:
     checkable: int
     not_found: int
     unresolvable: int
-    fabricated: Interval | None
+    not_found_share: Interval | None  # not found in the RIS, of the checkable ones
     judged: int
     inaccurate: Interval | None
 
@@ -357,7 +357,7 @@ def citations(
                 checkable=sum(d for _, d in fab),
                 not_found=sum(n for n, _ in fab),
                 unresolvable=unresolvable,
-                fabricated=bootstrap(fab, _ratio),
+                not_found_share=bootstrap(fab, _ratio),
                 judged=sum(d for _, d in inacc),
                 inaccurate=bootstrap(inacc, _ratio),
             )
@@ -703,6 +703,7 @@ class Report:
     recalled: Exclude
     outcome_without_recalled: list[OutcomeResult]
     reasons_without_recalled: list[ReasonsResult]
+    citation_baseline: citebaseline.Baseline | None = None  # the checker's own miss rate
 
 
 def allowed_runs(db: Session, order_ids: Iterable[int] | None) -> set[int] | None:
@@ -736,4 +737,5 @@ def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
         recalled=gone,
         outcome_without_recalled=outcome(runs, t, gone),
         reasons_without_recalled=reasons(runs, scores, gone),
+        citation_baseline=citebaseline.summary(db),
     )

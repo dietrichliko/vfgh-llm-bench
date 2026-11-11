@@ -81,7 +81,7 @@ class LeaderRow:
     run_share: float | None
     kappa: float | None
     reasons: Interval | None
-    fabricated: Interval | None
+    not_found: Interval | None
     inaccurate: Interval | None
     unstable: Interval | None
     both_sound: Interval | None
@@ -112,7 +112,7 @@ def leaderboard(
                 run_share=o.run_share,
                 kappa=o.kappa,
                 reasons=r.share if r else None,
-                fabricated=c.fabricated if c else None,
+                not_found=c.not_found_share if c else None,
                 inaccurate=c.inaccurate if c else None,
                 unstable=stab[k].share if condition == "A" and k in stab else None,
                 both_sound=opp[k].both_sound if condition == "A" and k in opp else None,
@@ -129,7 +129,7 @@ PROFILE_COLUMNS = [
     ("Tenor", "B"),
     ("Tenor", "C"),
     ("Gründe", "Anteil, A"),
-    ("Zitate", "nicht erfunden, A"),
+    ("Zitate", "im RIS gefunden, A"),
     ("Stabil", "Läufe, A"),
     ("Unterscheidung", "1 − beide tragf."),
     ("AUC", "× 100"),
@@ -139,7 +139,7 @@ PROFILE_COLUMNS = [
 def profiles(report: metrics.Report, models: list[str]) -> list[tuple[str, list[int | None]]]:
     acc = {(o.model_key, o.condition): est(o.accuracy) for o in report.outcome}
     reasons = {(r.model_key, r.condition): est(r.share) for r in report.reasons}
-    fab = {(c.model_key, c.condition): est(c.fabricated) for c in report.citations}
+    fab = {(c.model_key, c.condition): est(c.not_found_share) for c in report.citations}
     stab = {s.model_key: est(s.share) for s in report.stability}
     opp = {o.model_key: o for o in report.opposing}
     out = []

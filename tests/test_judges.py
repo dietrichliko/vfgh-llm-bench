@@ -13,10 +13,13 @@ import sqlalchemy as sa
 from fastapi.testclient import TestClient
 from sqlmodel import Session, col, select
 
-from bench import citations, judges, prompts
+from bench import citations, citebaseline, judges, prompts
 from bench.llm.http import make_http_client
 from bench.models import (
     Case,
+    CaseParse,
+    CaseStatus,
+    CitationBaseline,
     CitationCheck,
     CitationResult,
     Job,
@@ -35,7 +38,7 @@ from bench.settings import Settings
 from bench.worker import Worker
 from tests.conftest import chat_response, login
 from tests.test_rismcp import ris_handler
-from tests.test_runs import ANSWER, CONFIG, answer, jobs_of, make_order, work
+from tests.test_runs import ANSWER, CONFIG, add_case, answer, jobs_of, make_order, work
 from tests.test_runs import engine as engine
 
 JUDGE_CONFIG = (
@@ -512,3 +515,70 @@ async def test_judge_pages(
         assert "Referenzgründe 75 %" in page and "Keine eigene Ermittlung" in page
         page = client.get(f"/runs/{judge_run_id}").text
         assert f'Bewertung von <a href="/runs/{target_id}">' in page and "teilweise" in page
+
+
+# ── baseline: the checker on the court's own citations ─────────────────────────
+
+
+def test_extract_the_courts_citations() -> None:
+    text = (
+        "Mit dem auf Art139 Abs1 Z1 B–VG gestützten Antrag … §36 Abs1 TJG 2004 nicht im Lichte "
+        "(VfSlg 11.580/1987, 15.644/1999). §52 lita Z10a StVO 1960 verletzt; vgl. V341/2023 "
+        "und VwGH Ra 2023/03/0154. §1 Abs3 erster Satz der Zweiten Durchführungsverordnung; "
+        "Art14 FFH–RL; §36 Abs1 TJG 2004 erneut; im vorliegenden Verfahren V8/2026."
+    )
+    assert citebaseline.extract(text, "V8/2026 (V8/2026-17)") == [
+        ("Art139 Abs1 Z1 B–VG", "norm"),
+        ("§36 Abs1 TJG 2004", "norm"),
+        ("VfSlg 11.580/1987", "decision"),
+        ("§52 lita Z10a StVO 1960", "norm"),
+        ("V341/2023", "decision"),
+        ("Ra 2023/03/0154", "decision"),
+        ("Art14 FFH–RL", "norm"),
+    ]
+
+
+async def test_baseline_stores_results_and_summary(engine: sa.Engine) -> None:
+    with Session(engine) as db:
+        case = add_case(db, 1, date(2026, 9, 29), released=False)
+        parse = CaseParse(
+            case_id=case.id or 0,
+            parser_version="test",
+            xml_sha256="x",
+            input_section_count=1,
+            input_text="Antrag",
+            input_sha256="y",
+            reference_text="geheim",
+            sections=[
+                {
+                    "numeral": "IV",
+                    "title": "Erwägungen",
+                    "paragraphs": [
+                        {
+                            "text": "Nach § 24 Abs 1 lit a StVO 1960 und VfSlg 15.000/1997 "
+                            "sowie § 24a StVO 1960 und Art 49 AEUV."
+                        }
+                    ],
+                }
+            ],
+        )
+        db.add(parse)
+        db.flush()
+        case.released_parse_id = parse.id
+        case.status = CaseStatus.RELEASED
+        db.commit()
+    norms, case_law = ris_clients([], [])
+    assert await citebaseline.run(engine, norms, case_law) == 4
+    assert await citebaseline.run(engine, norms, case_law) == 4  # replaces, not adds
+    with Session(engine) as db:
+        rows = db.exec(select(CitationBaseline)).all()
+        assert [(r.text, r.result.value) for r in rows] == [
+            ("§ 24 Abs 1 lit a StVO 1960", "found"),
+            ("VfSlg 15.000/1997", "found"),
+            ("§ 24a StVO 1960", "not_found"),
+            ("Art 49 AEUV", "not_checkable"),
+        ]
+        b = citebaseline.summary(db)
+    assert b is not None and (b.cases, b.citations, b.checkable, b.not_found) == (1, 4, 3, 1)
+    assert b.share is not None and b.share.estimate == pytest.approx(1 / 3)
+    assert b.by_kind == {"decision": (0, 1), "norm": (1, 2)}

@@ -124,7 +124,9 @@ async def test_reasons_citations_calibration(
         # per run 3 checkable citations, one not found; found ones judged ja / teilweise
         for c in report.citations:
             assert (c.checkable, c.not_found, c.judged) == (9, 3, 6)
-            assert c.fabricated is not None and c.fabricated.estimate == pytest.approx(1 / 3)
+            assert c.not_found_share is not None and c.not_found_share.estimate == pytest.approx(
+                1 / 3
+            )
             assert c.inaccurate is not None and c.inaccurate.estimate == 0.0
         assert report.calibration.calibrated == {"reasons": False, "citations": False}
         assert report.stability == []  # one run per case
