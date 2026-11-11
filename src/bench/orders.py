@@ -43,6 +43,9 @@ TOOL_ROUNDS = 6
 TOOL_RESULT_TOKENS = 3000
 
 
+RETRYABLE_JOB_STATES = (JobStatus.FAILED, JobStatus.UNKNOWN)  # no answer arrived
+
+
 def months_after(d: date, months: int) -> date:
     year, month = divmod(d.month - 1 + months, 12)
     day = min(d.day, 28)
@@ -316,11 +319,15 @@ def set_status(
 
 
 def retry(db: Session, order: Order, user_id: int | None) -> int:
-    """Queue failed, not evaluable and unknown jobs again (earlier runs are kept)."""
+    """Queue failed and unknown jobs again (earlier runs are kept).
+
+    A ``not_evaluable`` job got an answer; it is never re-asked, so that a second try
+    cannot replace an answer that counts as wrong.
+    """
     jobs = db.exec(
         select(Job).where(
             Job.order_id == order.id,
-            col(Job.status).in_([JobStatus.FAILED, JobStatus.NOT_EVALUABLE, JobStatus.UNKNOWN]),
+            col(Job.status).in_(RETRYABLE_JOB_STATES),
         )
     ).all()
     for job in jobs:

@@ -36,7 +36,7 @@
     {% elif order.status.value == "paused" %}
     <form method="post" action="/orders/{{ order.id }}/resume"><button type="submit">Fortsetzen</button></form>
     {% endif %}
-    {% set retryable = p.by_status.get("failed", 0) + p.by_status.get("not_evaluable", 0) + p.by_status.get("unknown", 0) %}
+    {% set retryable = p.by_status.get("failed", 0) + p.by_status.get("unknown", 0) %}
     {% if retryable and order.status.value != "cancelled" %}
     <form method="post" action="/orders/{{ order.id }}/retry"
       onsubmit="return confirm('{{ retryable }} Aufrufe erneut senden? Das kann zusätzliche Kosten verursachen.')">

@@ -391,6 +391,25 @@ async def test_unparseable_answer_is_not_evaluable(
         assert run.output is None and run.usage
 
 
+async def test_retry_leaves_not_evaluable_jobs_alone(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=2)
+    await work(engine, settings, answer("Der Antrag ist begründet."))
+    with Session(engine) as db:
+        order = db.get(Order, order_id)
+        assert order is not None and order.status is OrderStatus.DONE
+        first, second = jobs_of(db, order_id)
+        second.status = JobStatus.UNKNOWN
+        db.commit()
+        assert orders.retry(db, order, None) == 1
+        db.commit()
+        db.refresh(first)
+        db.refresh(second)
+        assert first.status is JobStatus.NOT_EVALUABLE and first.error
+        assert second.status is JobStatus.QUEUED
+
+
 async def test_failures_pause_the_order(
     engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
 ) -> None:

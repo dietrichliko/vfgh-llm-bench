@@ -78,6 +78,9 @@ study data.
 
 - **unbekannt (unknown):** the worker stopped while a request was out; the model may have
   answered and been billed. Retry from the order page. Deploy only while no order runs.
+- **nicht auswertbar (not evaluable):** an answer arrived but does not fit the schema, or
+  the app could not process it. It counts as wrong and is never re-asked: "Aufrufe
+  wiederholen" re-sends only failed and unknown jobs.
 - **abgeschnitten (cut off):** the answer reached `max_output_tokens`; typical for a model
   caught in a loop. Not evaluable — itself a finding about the model.
 - **Zeitlimit (time limit):** the run exceeded `max_run_seconds`. Needed because
