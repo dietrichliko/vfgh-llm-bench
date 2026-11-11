@@ -43,6 +43,8 @@ def ris_handler(requests: list[httpx.Request]) -> Callable[[httpx.Request], http
         app = request.url.params.get("Applikation")
         if url == f"{API_BASE}/Bundesrecht":
             return httpx.Response(200, json=json.loads((FIX / "suche_stvo_24.json").read_text()))
+        if url == f"{API_BASE}/Landesrecht":
+            return httpx.Response(200, json=EMPTY)
         if url == f"{API_BASE}/Gemeinden":
             gr = json.loads((FIX / "suche_gr_steiermark.json").read_text())
             return httpx.Response(200, json=gr if app == "Gr" else EMPTY)

@@ -2,8 +2,9 @@
 
 import json
 from collections.abc import Callable
+from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import httpx2
@@ -29,7 +30,7 @@ from bench.models import (
 from bench.providers import ResolvedModel, load_config, resolve
 from bench.ris import judikatur
 from bench.ris.client import RisClient as CaseLawClient
-from bench.rismcp.norms import RisClient
+from bench.rismcp.norms import NormHit, NormText, RisClient
 from bench.settings import Settings
 from bench.worker import Worker
 from tests.conftest import chat_response, login
@@ -209,6 +210,89 @@ def test_classify_and_state() -> None:
     assert citations.state_of("§ 5 Stmk ROG 2010", "Stmk ROG 2010")[0] == "steiermark"
     assert citations.state_of("§ 3 TROG 2022", "TROG 2022") == ("tirol", "TROG 2022")
     assert citations.state_of("§ 24 StVO 1960", "StVO 1960") == (None, "StVO 1960")
+
+
+class FakeNorms:
+    """The RIS norm search as the citation check uses it: (scope, in force?) per law."""
+
+    def __init__(self, laws: dict[tuple[str, str, str], tuple[str, str, bool]]) -> None:
+        # (scope, title, section) → (document number, Kurztitel, in force on the Stichtag)
+        self.laws = laws
+        self.calls: list[tuple[str, date | None, str | None, str]] = []
+
+    async def search_sections(
+        self,
+        scope: str,
+        stichtag: date | None,
+        *,
+        paragraf: str,
+        abschnitt_typ: str = "Paragraph",
+        titel: str | None = None,
+        gesetzesnummer: str | None = None,
+    ) -> tuple[int, list[NormHit]]:
+        self.calls.append((scope, stichtag, titel, paragraf))
+        label = f"§ {paragraf}" if abschnitt_typ == "Paragraph" else f"Art. {paragraf}"
+        law = self.laws.get((scope, titel or "", label))
+        if law is None or (stichtag is not None and not law[2]):
+            return 0, []
+        hit = NormHit(law[0], law[1], abkuerzung=titel, paragraf=label, gesetzesnummer=law[0])
+        return 1, [hit]
+
+    async def get_document(self, number: str) -> NormText:
+        return NormText(number, "Gesetz", None, None, None, None, f"Text von {number}", "u")
+
+
+@pytest.mark.parametrize(
+    ("text", "result", "source", "note"),
+    [
+        ("Art 7 Abs 1 B-VG iVm Art 2 StGG", "found", "N1; N2", "B-VG: gefunden"),
+        ("§ 2 iVm § 5 StVO 1960", "not_found", "N3", "§ 2 StVO 1960: nicht gefunden"),
+        ("Art139 Abs1 Z1 B–VG", "found", "N4", None),
+        (
+            "§ 1 der Verordnung der Bezirkshauptmannschaft Imst vom 3.4.2020",
+            "not_checkable",
+            None,
+            "Verordnung",
+        ),
+        ("Art 49 AEUV", "not_checkable", None, "Unionsrecht"),
+        ("Art 14 FFH–RL", "not_checkable", None, "Unionsrecht"),
+        ("Art 8 EMRK", "not_checkable", None, "Staatsvertrag"),
+        ("§ 36 Abs 1 TJG 2004", "found", "T36", None),
+        ("§ 94b StVO 1960", "found", "OLD", "nicht in Kraft"),
+        ("§ 999 StVO 1960", "not_found", None, "nicht gefunden"),
+    ],
+)
+async def test_norm_citation_forms(
+    text: str, result: str, source: str | None, note: str | None
+) -> None:
+    ris = FakeNorms(
+        {
+            ("bund", "B-VG", "Art. 7"): ("N1", "B-VG", True),
+            ("bund", "StGG", "Art. 2"): ("N2", "StGG", True),
+            ("bund", "StVO 1960", "§ 5"): ("N3", "StVO", True),
+            ("bund", "B-VG", "Art. 139"): ("N4", "B-VG", True),
+            ("laender", "TJG 2004", "§ 36"): ("T36", "Tiroler Jagdgesetz 2004", True),
+            ("bund", "StVO 1960", "§ 94b"): ("OLD", "StVO", False),
+        }
+    )
+    outcome = await citations.check_norm(cast(RisClient, ris), text, date(2026, 9, 29))
+    assert outcome.result.value == result
+    assert outcome.source == source
+    if note is None:
+        assert outcome.note is None
+    else:
+        assert outcome.note is not None and note in outcome.note
+
+
+def test_split_compound() -> None:
+    assert citations.split_compound("§ 94d Z4 StVO 1960 in Verbindung mit § 43 Abs2 StVO") == [
+        "§ 94d Z4 StVO 1960",
+        "§ 43 Abs2 StVO",
+    ]
+    assert citations.split_compound("§ 43 Abs 1 iVm Abs 2 StVO 1960") == [
+        "§ 43 Abs 1 iVm Abs 2 StVO 1960"
+    ]
+    assert citations.split_compound("§ 2 iVm § 5 StVO 1960") == ["§ 2 StVO 1960", "§ 5 StVO 1960"]
 
 
 # ── judge prompt ────────────────────────────────────────────────────────────────

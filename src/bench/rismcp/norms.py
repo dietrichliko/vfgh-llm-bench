@@ -129,6 +129,9 @@ class NormText:
     url: str
 
 
+ALL_STATES = "*"  # Landesrecht without a state filter (citation check only)
+
+
 def normalize_scope(geltungsbereich: str) -> str | None:
     """``bund`` → None, otherwise the RIS name of the state (without umlauts)."""
     key = geltungsbereich.strip().lower()
@@ -424,11 +427,37 @@ class RisClient:
         )
         return len(kept), kept[:20]
 
+    async def search_sections(
+        self,
+        scope: str,
+        stichtag: date | None,
+        *,
+        paragraf: str,
+        abschnitt_typ: str = "Paragraph",
+        titel: str | None = None,
+        gesetzesnummer: str | None = None,
+    ) -> tuple[int, list[NormHit]]:
+        """Consolidated sections for the citation check (not a model tool).
+
+        ``scope``: ``bund``, a state, or ``laender`` for the law of all states.
+        ``stichtag`` None: every version, not only the one in force on a day.
+        """
+        land = ALL_STATES if scope == "laender" else normalize_scope(scope)
+        return await self._search_consolidated(
+            "",
+            land,
+            stichtag,
+            titel=titel,
+            paragraf=paragraf,
+            gesetzesnummer=gesetzesnummer,
+            abschnitt_typ=abschnitt_typ,
+        )
+
     async def _search_consolidated(
         self,
         suchbegriff: str,
         land: str | None,
-        stichtag: date,
+        stichtag: date | None,
         *,
         titel: str | None,
         paragraf: str | None,
@@ -438,9 +467,10 @@ class RisClient:
         endpoint = "Landesrecht" if land else "Bundesrecht"
         params = {
             "Applikation": "LrKons" if land else "BrKons",
-            "Fassung.FassungVom": stichtag.isoformat(),
             "DokumenteProSeite": "Twenty",
         }
+        if stichtag is not None:
+            params["Fassung.FassungVom"] = stichtag.isoformat()
         if suchbegriff:
             params["Suchworte"] = suchbegriff
         if titel:
@@ -455,7 +485,7 @@ class RisClient:
                     "Abschnitt.Bis": paragraf,
                 }
             )
-        if land:
+        if land and land != ALL_STATES:
             params[f"Bundesland.SucheIn{land}"] = "true"
         docs = await self._search(endpoint, params)
         total = int(docs.get("Hits", {}).get("#text", 0))

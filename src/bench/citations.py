@@ -4,7 +4,14 @@ The app checks this itself, without a model, before the first judge call on a ru
 judges then get the same results with the text found (norm text or headnote).
 
 - Norms are looked up in the version in force on the case's Stichtag (the decision date
-  if the case has none), with the same title rules as the condition B norm sets.
+  if the case has none), with the same title rules as the condition B norm sets. Federal
+  law first, unless the citation names a state; then the law of all states. A section not
+  in force on the Stichtag is looked up in all versions and counts as ``found`` with a
+  note (the court often applies repealed law). A regulation, EU law or a treaty the RIS
+  does not have is ``not_checkable``, not ``not_found``: most local regulations and most
+  EU law are not in the RIS, so a miss says nothing about the model.
+- Compound citations („Art 7 B-VG iVm Art 2 StGG“) are checked per part; the citation is
+  found if every checkable part is, not found if any part is not.
 - Decisions (VfGH, VwGH, OGH) are looked up by case number or VfSlg number.
 - Literature is not checkable.
 
@@ -27,10 +34,18 @@ from sqlalchemy import Engine
 from sqlmodel import Session, col, select
 
 from bench.models import Case, CitationCheck, CitationResult, Run
-from bench.normsets import STATE_PREFIX, pick, title_candidates
+from bench.normsets import _REGULATION, STATE_PREFIX, pick, title_candidates
 from bench.ris import judikatur
 from bench.ris.client import RisClient as CaseLawClient
-from bench.rismcp.norms import NotAllowedError, RisClient, RisError, document_url, parse_norm_zitat
+from bench.rismcp.norms import (
+    NormHit,
+    NormZitat,
+    NotAllowedError,
+    RisClient,
+    RisError,
+    document_url,
+    parse_norm_zitat,
+)
 
 EXCERPT_CHARS = 3000
 
@@ -113,8 +128,118 @@ def _transient(exc: Exception) -> bool:
     return bool(_TRANSIENT.search(str(exc)))
 
 
+# not in the RIS as a rule: a miss is not_checkable
+_EU = re.compile(
+    r"\((?:EU|EG|EWG)\)|\bEWG\b|Richtlinie|-RL\b|\bRL\b|\bAEUV\b|\bEUV\b|\bGRC\b|"
+    r"\bDSGVO\b|Unionsrecht|Gemeinschaftsrecht",
+)
+_TREATY = re.compile(r"\bEMRK\b|Abkommen|Übereinkommen|Konvention|Protokoll|Staatsvertrag")
+_IVM = re.compile(r"\s+(?:iVm|i\.\s?V\.\s?m\.|in Verbindung mit)\s+")
+
+
+def _unlisted(text: str, statute: str) -> str | None:
+    """Why a missed citation is not checkable, or None if the RIS should have it."""
+    if _EU.search(text):
+        return "Unionsrecht"
+    if _TREATY.search(text):
+        return "Staatsvertrag"
+    if _REGULATION.search(f" {statute} "):
+        return "Verordnung"
+    return None
+
+
+def split_compound(text: str) -> list[str]:
+    """„§ 2 iVm § 5 StVO“ → [„§ 2 StVO“, „§ 5 StVO“]; parts without a section mark go."""
+    parts = [p.strip(" ,;") for p in _IVM.split(text)]
+    parts = [p for p in parts if p and _NORM.search(p)]
+    if len(parts) <= 1:
+        return [text]
+    out = []
+    for k, part in enumerate(parts):
+        if parse_norm_zitat(part) is None:  # no statute: the next one that has it
+            statute = next((z.gesetz for p in parts[k + 1 :] if (z := parse_norm_zitat(p))), None)
+            if statute is None:
+                continue
+            part = f"{part} {statute}"
+        out.append(part)
+    return out or [text]
+
+
+def _newest(hits: list[NormHit], stichtag: date) -> list[NormHit]:
+    """All versions → the version in force last before the Stichtag first."""
+
+    def key(h: NormHit) -> tuple[bool, str]:
+        start = (h.in_kraft or "")[:10]
+        return (start <= stichtag.isoformat(), start)
+
+    return sorted(hits, key=key, reverse=True)
+
+
+async def _find(
+    ris: RisClient,
+    scopes: list[str],
+    z: NormZitat,
+    statute: str,
+    stichtag: date,
+    any_version: bool = False,
+) -> list[NormHit]:
+    for scope in scopes:
+        for title in title_candidates(statute):
+            kwargs = {"gesetzesnummer": title} if title.isdigit() else {"titel": title}
+            _, hits = await ris.search_sections(
+                scope,
+                None if any_version else stichtag,
+                paragraf=z.nummer,
+                abschnitt_typ=z.typ,
+                **kwargs,
+            )
+            if any_version:
+                hits = _newest(hits, stichtag)
+            if found := pick(hits, title, z.label):
+                return found
+    return []
+
+
 async def check_norm(ris: RisClient, text: str, stichtag: date) -> Outcome:
-    ref = text.strip()
+    parts = split_compound(text.strip().replace("–", "-"))
+    if len(parts) == 1:
+        return await _check_one(ris, parts[0], stichtag)
+    outcomes = [await _check_one(ris, part, stichtag) for part in parts]
+    return combine(parts, outcomes)
+
+
+def combine(parts: list[str], outcomes: list[Outcome]) -> Outcome:
+    """One result for a compound citation."""
+    results = {o.result for o in outcomes}
+    if CitationResult.NOT_FOUND in results:
+        result = CitationResult.NOT_FOUND
+    elif CitationResult.ERROR in results:
+        result = CitationResult.ERROR
+    elif CitationResult.FOUND in results:
+        result = CitationResult.FOUND
+    elif CitationResult.UNRESOLVABLE in results:
+        result = CitationResult.UNRESOLVABLE
+    else:
+        result = CitationResult.NOT_CHECKABLE
+    found = [
+        (p, o) for p, o in zip(parts, outcomes, strict=True) if o.result is CitationResult.FOUND
+    ]
+    share = EXCERPT_CHARS // max(len(found), 1)
+    excerpt = "\n\n".join(f"[{p}]\n{(o.excerpt or '')[:share]}".strip() for p, o in found)
+    notes = [
+        f"{p}: {RESULT_LABELS[o.result.value]}" + (f" ({o.note})" if o.note else "")
+        for p, o in zip(parts, outcomes, strict=True)
+    ]
+    return Outcome(
+        result,
+        "; ".join(o.source for _, o in found if o.source) or None,
+        found[0][1].url if found else None,
+        excerpt or None,
+        " · ".join(notes)[:1000],
+    )
+
+
+async def _check_one(ris: RisClient, ref: str, stichtag: date) -> Outcome:
     try:
         document_url(ref)
     except NotAllowedError:
@@ -122,18 +247,20 @@ async def check_norm(ris: RisClient, text: str, stichtag: date) -> Outcome:
         if z is None:
             return Outcome(CitationResult.UNRESOLVABLE, note="kein Normzitat erkannt")
         state, statute = state_of(ref, z.gesetz)
-        found = []
-        for title in title_candidates(statute):
-            kwargs = {"gesetzesnummer": title} if title.isdigit() else {"titel": title}
-            _, hits = await ris.search_norms(
-                "", state or "bund", stichtag, paragraf=z.nummer, abschnitt_typ=z.typ, **kwargs
-            )
-            if found := pick(hits, title, z.label):
-                break
+        scopes = [state] if state else ["bund", "laender"]
+        note = None
+        found = await _find(ris, scopes, z, statute, stichtag)
+        if not found and (found := await _find(ris, scopes, z, statute, stichtag, True)):
+            note = f"zum Stichtag {stichtag:%d.%m.%Y} nicht in Kraft; andere Fassung gefunden"
         if not found:
+            if why := _unlisted(ref, statute):
+                return Outcome(CitationResult.NOT_CHECKABLE, note=f"{why}, nicht im RIS gefunden")
             return Outcome(CitationResult.NOT_FOUND, note=f"{z.label} {statute} nicht gefunden")
         number = found[0].dokumentnummer
-        note = f"{len(found)} Rechtsvorschriften passen; die erste" if len(found) > 1 else None
+        if len(found) > 1:
+            note = "; ".join(
+                x for x in (note, f"{len(found)} Rechtsvorschriften passen; die erste") if x
+            )
     else:
         number, note = ref, None
     norm = await ris.get_document(number)
