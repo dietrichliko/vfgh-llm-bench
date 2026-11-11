@@ -11,7 +11,6 @@ answers are compared with the actual decisions.
 | [docs/architecture.md](docs/architecture.md) | How the application is built |
 | [docs/publication.md](docs/publication.md) | Study protocol in git, Zenodo, OSF |
 | [docs/analysis-plan.md](docs/analysis-plan.md) | How every metric is computed (frozen with the protocol) |
-| [docs/prior-work.md](docs/prior-work.md) | The predecessor project `vfgh-llm-begruendung` |
 
 **Status:** all planned stages are built (see the roadmap in `docs/architecture.md` §12).
 

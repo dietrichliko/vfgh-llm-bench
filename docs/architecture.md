@@ -1,6 +1,6 @@
 # Architecture
 
-As of 2026-11-06. This describes how the study in [paper.md](paper.md) is implemented. The predecessor project is summarised in [prior-work.md](prior-work.md), and publication in [publication.md](publication.md).
+As of 2026-11-06. This describes how the study in [paper.md](paper.md) is implemented. Publication is described in [publication.md](publication.md).
 
 ## 1 Decisions
 
