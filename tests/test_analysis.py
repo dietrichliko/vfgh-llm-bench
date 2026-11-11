@@ -9,9 +9,10 @@ from sqlmodel import Session, select
 
 from bench import calibration as calibration_queue
 from bench import opposing as opposing_module
+from bench import orders
 from bench.analysis import metrics, stats
 from bench.analysis.metrics import DecideRun
-from bench.models import Case, User, UserRole
+from bench.models import Case, Order, User, UserRole
 from bench.providers import ResolvedModel
 from bench.settings import Settings
 from tests.conftest import chat_response
@@ -20,7 +21,7 @@ from tests.test_judges import models as models
 from tests.test_judges import settings as settings
 from tests.test_opposing import LAWFUL, UNLAWFUL, WRITER_CONFIG, written
 from tests.test_runs import engine as engine
-from tests.test_runs import work
+from tests.test_runs import make_order, work
 
 # ── statistics, against values computed by hand ────────────────────────────────
 
@@ -96,6 +97,41 @@ def test_outcome_by_majority_with_baseline_and_mcnemar() -> None:
     # sensitivity: without case 2 for model x
     (a2,) = [r for r in metrics.outcome(RUNS, TRUTH, {"x": {2}}) if r.condition == "A"]
     assert (a2.cases, a2.correct) == (1, 1)
+
+
+def test_common_cases_compare_models_on_the_same_cases() -> None:
+    runs = [
+        DecideRun(1, 1, "x", "A", 1, 1, "unlawful"),
+        DecideRun(2, 2, "x", "A", 1, 1, "dismissed"),
+        DecideRun(3, 1, "y", "A", 1, 1, "dismissed"),  # y has case 1 only (cutoff)
+        DecideRun(4, 2, "x", "C", 1, 1, "dismissed"),  # one model in C: no common view
+    ]
+    common = {r.model_key: r for r in metrics.common_cases(runs, TRUTH)}
+    assert set(common) == {"x", "y"}
+    assert (common["x"].cases, common["x"].correct) == (1, 1)
+    assert (common["y"].cases, common["y"].correct) == (1, 0)
+
+
+async def test_a_cell_without_an_answer_counts_as_wrong_after_two_attempts(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+    broken = lambda req: httpx2.Response(500, json={"error": "kaputt"})  # noqa: E731
+    await work(engine, settings, broken)
+    with Session(engine) as db:
+        assert metrics.decide_runs(db) == []  # one attempt: still open
+        assert metrics.pending(db) == {("alpha", "A"): 1}
+        order = db.get(Order, order_id)
+        assert order is not None and orders.retry(db, order, None) == 1
+        db.commit()
+    await work(engine, settings, broken)
+    with Session(engine) as db:
+        (cell,) = metrics.decide_runs(db)
+        assert not cell.answered and cell.label is None and cell.id < 0
+        assert metrics.pending(db) == {}
+        report = metrics.analyse(db)
+    (o,) = report.outcome
+    assert (o.cases, o.correct, o.cells, o.no_answer) == (1, 0, 1, 1)
 
 
 def test_stability() -> None:

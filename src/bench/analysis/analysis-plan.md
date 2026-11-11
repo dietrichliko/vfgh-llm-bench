@@ -4,7 +4,8 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 
 ## 1 Data
 
-- **Runs:** decide runs with an answer (`done` or `not_evaluable`). Runs without an answer (`failed`, `unknown`, `cancelled`) are retried, not scored. If one cell (case, model, condition, phrasing, repetition) has several runs, the first one counts.
+- **Cells:** the denominator is the planned cells (case, model, condition, phrasing, repetition) of the orders. A cell counts with its first run that has an answer (`done` or `not_evaluable`). A cell whose job ended without an answer (`failed`, `unknown`) is retried once; after two attempts it counts as an answer without a label, i.e. **wrong**. Cells still open are left out and their number is shown; cancelled cells are not planned any more.
+- **Time limit:** a run that exceeds the wall-clock limit is `not_evaluable` (wrong), like an answer cut off at the token cap: both are a model that does not finish.
 - **Cases per model:** only cases that pass the model's cutoff rule (decided at least 3 months after its training cutoff); orders never plan the others.
 - **Outcome label:** one label per case: *unlawful*, *partly unlawful*, *dismissed*, *rejected*, *discontinued* (the confirmed outcome at release). A run's label comes from its operative part by the same rule. A run without a label (`not_evaluable`, or an operative part that maps to nothing) is **wrong**.
 
@@ -14,12 +15,14 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 - **Accuracy** = share of cases whose majority label equals the VfGH's, with a **Wilson** 95 % interval. Second column: share of correct runs per case, averaged over cases.
 - **Cohen's κ** between majority label and VfGH label; **confusion matrix** VfGH × model.
 - **Baselines**, on the same cases as the model (they differ by cutoff): *always unlawful* (at case level the same as *follow the application*, see architecture.md §6). A model beats the baseline if its accuracy is higher; the comparison is descriptive.
+- **Common cases:** models differ in their cases (cutoff rule). Level 1 is also reported per condition on the cases every model of that condition was run on.
 - **Conditions compared** (A vs B, A vs C) per model on the cases run in both: **McNemar**, exact binomial test on the discordant pairs, two-sided.
 
 ## 3 Level 2: decisive reasons
 
 - **Per judgment:** each reference reason scored ja = 1, teilweise = ½, nein = 0; the **mean of the judges** per reason; the run's share = mean over its reasons.
 - **Per model and condition:** mean over cases of the mean over the case's runs; 95 % interval by bootstrap over cases (2,000 resamples, percentile, fixed seed 20261106).
+- **Evaluable answers only:** levels 2 and 3 are measured on judged (`done`) answers; the number of judged answers is reported next to the number of cells, so a model with many unusable answers is not hidden behind its good ones.
 
 ## 4 Level 3: citations
 

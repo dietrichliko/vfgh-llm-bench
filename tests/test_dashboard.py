@@ -105,6 +105,9 @@ async def test_dashboard_figures(
         assert "Kreuztabelle VfGH (Zeilen) gegen alpha" in page
         # details
         assert "nicht kalibriert" in page and "Kein Modell erinnert einen Studienfall" in page
+        assert "Grundlage der Stufen 2 und 3" in page and "3 von 3" in page
+        assert "Gemeinsame Fälle" in page  # alpha and beta share all three cases
+        assert "ohne Antwort nach zwei Versuchen" not in page
         page = client.get("/dashboard?bedingung=A&modell=beta").text
         assert "Kreuztabelle VfGH (Zeilen) gegen beta" in page
         assert (

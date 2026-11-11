@@ -35,6 +35,10 @@ Berechnung nach dem Auswertungsplan (<code>docs/analysis-plan.md</code>).{% if s
 orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Intervalle in Klammern.
 {% if not report.calibration.calibrated.reasons %}<br><strong>Gründe</strong> und {% endif %}{% if not report.calibration.calibrated.citations %}<strong>Zitate ungenau</strong>{% endif %}
 {% if not report.calibration.calibrated.reasons or not report.calibration.calibrated.citations %} beruhen auf Richtermodellen, die noch nicht kalibriert sind (κ &lt; 0,7 oder zu wenige Expertenbewertungen): vorläufig.{% endif %}</p>
+{% set here = report.outcome | selectattr("condition", "equalto", condition) | list %}
+{% set lost = here | sum(attribute="no_answer") %}
+{% if lost or open_cells %}<p class="lead">Gezählt wird jeder geplante Lauf: {% if lost %}<strong>{{ lost }}</strong> ohne Antwort nach zwei Versuchen gelten als falsch
+({% for o in here if o.no_answer %}{{ o.model_key }} {{ o.no_answer }}{% if not loop.last %}, {% endif %}{% endfor %}){% endif %}{% if lost and open_cells %}; {% endif %}{% if open_cells %}<strong>{{ open_cells }}</strong> Läufe ohne Antwort sind noch offen (wiederholen) und fehlen in den Zahlen{% endif %}.</p>{% endif %}
 {% if report.citation_baseline and report.citation_baseline.share %}<p class="lead">Zitate nicht im RIS gefunden: Auch von den eigenen Zitaten des VfGH findet die Prüfung {{ iv(report.citation_baseline.share) }} nicht (Abschnitt „Zitate“).</p>{% endif %}
 <div class="scroll">
 <table class="leader">
@@ -247,6 +251,16 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 </table>
 {% endif %}
 
+{% if report.outcome_common %}
+<h2>Gemeinsame Fälle</h2>
+<p class="lead">Die Modelle haben wegen der Stichtagsregel verschiedene Fälle. Hier nur die Fälle, die alle Modelle einer Bedingung bearbeitet haben.</p>
+<table>
+  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">Fälle</th><th class="r">Tenor-Treffer</th><th class="r">„immer gesetzwidrig“</th></tr></thead>
+  <tbody>{% for o in report.outcome_common %}<tr><td>{{ o.model_key }}</td><td>{{ o.condition }}</td><td class="r mono">{{ o.cases }}</td>
+    <td class="r mono">{{ iv(o.accuracy) }}{{ ivr(o.accuracy) }}</td><td class="r mono">{{ iv(o.baseline) }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
+
 <h2>Sensitivität: ohne erinnerte Fälle</h2>
 {% if report.recalled %}
 <p class="lead">Fälle, die ein Modell nach seinem Stichtag aus Datum und Geschäftszahl erinnert, bleiben für dieses Modell weg:
@@ -275,6 +289,16 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
     <td class="r mono">{{ c.unresolvable }}</td><td class="r mono">{{ c.judged }}</td><td class="r mono">{{ iv(c.not_found_share) }}{{ ivr(c.not_found_share) }}</td><td class="r mono">{{ iv(c.inaccurate) }}{{ ivr(c.inaccurate) }}</td></tr>{% endfor %}</tbody>
 </table>
 {% include "_citation_baseline.html" %}
+
+<h3>Grundlage der Stufen 2 und 3</h3>
+<p class="lead">Gründe und Zitate werden nur an auswertbaren Antworten gemessen. Ein Modell mit vielen unbrauchbaren
+  Antworten wird hier an seinen brauchbaren gemessen; die Zahl der geplanten Läufe steht daneben.</p>
+<table>
+  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">Läufe gewertet</th><th class="r">Gründe bewertet</th><th class="r">Zitate geprüft</th></tr></thead>
+  <tbody>{% for o in report.outcome %}{% set r = (report.reasons | selectattr("model_key", "equalto", o.model_key) | selectattr("condition", "equalto", o.condition) | first) %}{% set c = (report.citations | selectattr("model_key", "equalto", o.model_key) | selectattr("condition", "equalto", o.condition) | first) %}
+    <tr><td>{{ o.model_key }}</td><td>{{ o.condition }}</td><td class="r mono">{{ o.cells }}</td>
+    <td class="r mono">{{ r.runs if r else 0 }} von {{ o.cells }}</td><td class="r mono">{{ c.runs if c else 0 }} von {{ o.cells }}</td></tr>{% endfor %}</tbody>
+</table>
 {% endif %}
 </div>
 {% endblock %}

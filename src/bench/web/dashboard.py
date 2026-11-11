@@ -389,6 +389,7 @@ def context(
         "scatter": scatter(report),
         "confusion": confusion(report, chosen, condition),
         "chosen": chosen,
+        "open_cells": sum(n for k, n in report.pending.items() if k.endswith(f"/{condition}")),
         "ramp": ramp,
         "pct": pct,
         "est": est,

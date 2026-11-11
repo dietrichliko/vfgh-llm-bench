@@ -28,6 +28,7 @@ from bench.models import (
     Case,
     CitationCheck,
     CitationResult,
+    Job,
     JobStatus,
     JudgeScore,
     OpposingReasoning,
@@ -63,10 +64,35 @@ class DecideRun:
     phrasing: int
     repetition: int
     label: str | None  # None: no outcome (counts as wrong)
+    answered: bool = True  # False: the cell's job ended without an answer (id = -job id)
+
+
+Cell = tuple[int, str, str, int, int]  # case, model, condition, phrasing, repetition
+NO_ANSWER = (JobStatus.FAILED, JobStatus.UNKNOWN)
+ATTEMPTS = 2  # a cell without an answer counts as wrong after this many attempts
 
 
 def decide_runs(db: Session, order_ids: Iterable[int] | None = None) -> list[DecideRun]:
-    """Decide runs with an answer; the first run per cell."""
+    """One entry per planned decide cell that is settled.
+
+    The first run with an answer (``done`` or ``not_evaluable``) of each cell; a cell whose
+    job ended without an answer (``failed``, ``unknown``) after ``ATTEMPTS`` attempts
+    counts as an answer without a label, i.e. wrong. Cells still open (queued, running,
+    fewer attempts) are left out and counted by ``pending``; cancelled cells are not
+    planned any more.
+    """
+    return _decide(db, order_ids)[0]
+
+
+def pending(db: Session, order_ids: Iterable[int] | None = None) -> Counter[tuple[str, str]]:
+    """(model, condition) → cells without an answer that may still get one."""
+    return _decide(db, order_ids)[1]
+
+
+def _decide(
+    db: Session, order_ids: Iterable[int] | None
+) -> tuple[list[DecideRun], Counter[tuple[str, str]]]:
+    order_ids = None if order_ids is None else list(order_ids)
     query = (
         select(Run)
         .where(
@@ -76,8 +102,8 @@ def decide_runs(db: Session, order_ids: Iterable[int] | None = None) -> list[Dec
         .order_by(col(Run.id))
     )
     if order_ids is not None:
-        query = query.where(col(Run.order_id).in_(list(order_ids)))
-    seen: set[tuple[int, str, str, int, int]] = set()
+        query = query.where(col(Run.order_id).in_(order_ids))
+    seen: set[Cell] = set()
     out = []
     for r in db.exec(query).all():
         cell = (r.case_id, r.model_key, r.condition, r.phrasing, r.repetition)
@@ -90,7 +116,34 @@ def decide_runs(db: Session, order_ids: Iterable[int] | None = None) -> list[Dec
                 r.id or 0, r.case_id, r.model_key, r.condition, r.phrasing, r.repetition, label
             )
         )
-    return out
+    jobs = select(Job).where(Job.task == "decide", col(Job.status).in_(NO_ANSWER))
+    if order_ids is not None:
+        jobs = jobs.where(col(Job.order_id).in_(order_ids))
+    attempts = Counter(db.exec(select(Run.job_id).where(Run.task == "decide")).all())
+    open_cells: Counter[tuple[str, str]] = Counter()
+    for j in db.exec(jobs.order_by(col(Job.id))).all():
+        cell = (j.case_id, j.model_key, j.condition, j.phrasing, j.repetition)
+        if cell in seen:
+            continue
+        seen.add(cell)
+        # an unknown job lost its last attempt without a stored run
+        tries = attempts[j.id or 0] + (j.status is JobStatus.UNKNOWN)
+        if tries < ATTEMPTS:
+            open_cells[j.model_key, j.condition] += 1
+            continue
+        out.append(
+            DecideRun(
+                -(j.id or 0),
+                j.case_id,
+                j.model_key,
+                j.condition,
+                j.phrasing,
+                j.repetition,
+                None,
+                answered=False,
+            )
+        )
+    return out, open_cells
 
 
 def truth(db: Session) -> dict[int, str]:
@@ -131,6 +184,8 @@ class OutcomeResult:
     baseline: Interval | None  # always unlawful, same cases
     confusion: dict[tuple[str, str], int]  # (VfGH, model) → cases; model "none" on a tie
     majority: dict[int, str | None]  # case → majority label
+    cells: int = 0  # settled cells (runs) behind the cases
+    no_answer: int = 0  # of them: no answer after the attempts, counted as wrong
 
 
 def majority_labels(by_case: dict[int, list[DecideRun]]) -> dict[int, str | None]:
@@ -166,9 +221,29 @@ def outcome(
                 baseline=wilson(sum(truth[c] == UNLAWFUL for c in labels), n),
                 confusion=dict(confusion),
                 majority=labels,
+                cells=sum(len(rs) for rs in by_case.values()),
+                no_answer=sum(not r.answered for rs in by_case.values() for r in rs),
             )
         )
     return results
+
+
+def common_cases(runs: Sequence[DecideRun], truth: dict[int, str]) -> list[OutcomeResult]:
+    """Level 1 per condition on the cases every model of that condition was run on.
+
+    Models differ in their cases (cutoff rule); this view compares them on the same ones.
+    """
+    out: list[OutcomeResult] = []
+    for condition in sorted({r.condition for r in runs}):
+        here = [r for r in runs if r.condition == condition and r.case_id in truth]
+        by_model: defaultdict[str, set[int]] = defaultdict(set)
+        for r in here:
+            by_model[r.model_key].add(r.case_id)
+        if len(by_model) < 2:
+            continue
+        shared = set.intersection(*by_model.values())
+        out += outcome([r for r in here if r.case_id in shared], truth)
+    return out
 
 
 @dataclass
@@ -265,8 +340,9 @@ class ReasonsResult:
     model_key: str
     condition: str
     cases: int
-    runs: int
+    runs: int  # judged runs: the share rests on evaluable answers only
     share: Interval | None
+    cells: int = 0  # all settled cells, for "n of m"
 
 
 def reasons(
@@ -287,7 +363,12 @@ def reasons(
             continue
         results.append(
             ReasonsResult(
-                model, condition, len(per_case), n_runs, bootstrap(per_case, mean_or_none)
+                model,
+                condition,
+                len(per_case),
+                n_runs,
+                bootstrap(per_case, mean_or_none),
+                cells=sum(len(rs) for rs in by_case.values()),
             )
         )
     return results
@@ -306,6 +387,8 @@ class CitationsResult:
     not_found_share: Interval | None  # not found in the RIS, of the checkable ones
     judged: int
     inaccurate: Interval | None
+    runs: int = 0  # runs with a citation check: evaluable answers only
+    cells: int = 0  # all settled cells, for "n of m"
 
 
 def checks(db: Session, run_ids: Iterable[int]) -> dict[int, list[CitationCheck]]:
@@ -332,6 +415,7 @@ def citations(
         fab: list[tuple[int, int]] = []
         inacc: list[tuple[int, int]] = []
         unresolvable = 0
+        checked_runs = sum(r.id in run_checks for rs in by_case.values() for r in rs)
         for rs in by_case.values():
             nf = ck = bad = judged = 0
             for r in rs:
@@ -360,6 +444,8 @@ def citations(
                 not_found_share=bootstrap(fab, _ratio),
                 judged=sum(d for _, d in inacc),
                 inaccurate=bootstrap(inacc, _ratio),
+                runs=checked_runs,
+                cells=sum(len(rs) for rs in by_case.values()),
             )
         )
     return results
@@ -703,6 +789,8 @@ class Report:
     recalled: Exclude
     outcome_without_recalled: list[OutcomeResult]
     reasons_without_recalled: list[ReasonsResult]
+    outcome_common: list[OutcomeResult] = field(default_factory=list)  # cases all models share
+    pending: dict[str, int] = field(default_factory=dict)  # "model/condition" → open cells
     citation_baseline: citebaseline.Baseline | None = None  # the checker's own miss rate
 
 
@@ -738,4 +826,6 @@ def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
         outcome_without_recalled=outcome(runs, t, gone),
         reasons_without_recalled=reasons(runs, scores, gone),
         citation_baseline=citebaseline.summary(db),
+        outcome_common=common_cases(runs, t),
+        pending={f"{m}/{c}": n for (m, c), n in sorted(pending(db, order_ids).items())},
     )
