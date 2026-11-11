@@ -246,3 +246,34 @@ async def test_calibration_pages_are_blind(
         r = client.post(f"/calibration/{item.id}", data=data, follow_redirects=False)
         assert "schon" in r.headers["location"] or "problem=" in r.headers["location"]
         assert "Antwort Nr." in client.get("/calibration").text
+
+
+async def test_printable_comparison_page(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    from bench.web.app import create_app
+    from tests.test_dashboard import as_role
+
+    await judged(engine, settings, models)
+    with Session(engine) as db:
+        run = db.exec(select(Run).where(Run.task == "decide").order_by(col(Run.id))).first()
+        assert run is not None
+        case_id = run.case_id
+    http_client = make_http_client(httpx2.MockTransport(lambda _r: httpx2.Response(500)))
+    settings = settings.model_copy(update={"database_url": str(engine.url)})
+    with TestClient(create_app(settings, http_client=http_client)) as client:
+        login(client, "admin@example.org")
+        assert f'href="/cases/{case_id}/vergleich"' in client.get(f"/cases/{case_id}").text
+        page = client.get(f"/cases/{case_id}/vergleich").text
+        assert "Der Verfassungsgerichtshof" in page and "Tragende Gründe (Referenz)" in page
+        assert "Keine eigene Ermittlung vor der Neuerlassung." in page  # the court's reason
+        assert (
+            '<span class="mono">alpha</span>' in page and '<span class="mono">beta</span>' in page
+        )
+        assert "Weil die gesetzliche Grundlage fehlt." in page  # the model's reason
+        assert "✓ wie der VfGH" in page
+        assert "<td>ja</td>" in page and "<td>teilweise</td>" in page  # judges' values
+        assert "nicht gefunden" in page  # citation check
+        client.cookies.clear()
+        as_role(client, engine, "viewer@example.org", UserRole.VIEWER)
+        assert client.get(f"/cases/{case_id}/vergleich").status_code == 403

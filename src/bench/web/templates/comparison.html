@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ case.case_number }}: Gericht und Modelle · VfGH-LLM-Studie{% endblock %}
+{% macro level(v) %}{% if v is none %}–{% elif v > 0.75 %}ja{% elif v >= 0.25 %}teilweise{% else %}nein{% endif %}{% endmacro %}
+{% block content %}
+<div class="comparison">
+<p class="no-print"><a href="/cases/{{ case.id }}">← Fall</a> ·
+  <a href="javascript:window.print()">drucken</a></p>
+<h1>{{ case.case_number }} vom {{ case.decision_date.strftime("%d.%m.%Y") }}</h1>
+<p class="lead">Die Entscheidung des VfGH neben den Antworten der Modelle. Nicht blind: die Modelle sind genannt.
+  {% if case.reference_date %}Stichtag {{ case.reference_date.strftime("%d.%m.%Y") }}.{% endif %}</p>
+<form method="get" class="no-print" style="margin: 0 0 1rem">
+  <label>Antworten <select name="antworten" onchange="this.form.submit()">
+    {% for k, label in subset_labels.items() %}<option value="{{ k }}"{% if k == subset %} selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select></label> <noscript><button type="submit">zeigen</button></noscript>
+</form>
+
+<h2>Der Verfassungsgerichtshof</h2>
+<div class="check">
+<p>Ergebnis: <strong>{{ outcome_labels.get((case.outcome or {}).get("case_outcome"), "nicht bestätigt") }}</strong></p>
+{% set items = (case.outcome or {}).get("items") or (parse.outcome_items if parse else []) %}
+{% if items %}
+<ul>{% for i in items if not i.get("accessory") %}<li>{% if i.get("outcome") %}<strong>{{ item_labels.get(i.outcome, i.outcome) }}</strong>: {% endif %}{{ i.get("text", "") }}</li>{% endfor %}</ul>
+{% endif %}
+<h3>Tragende Gründe (Referenz)</h3>
+{% if checklist %}
+<ol>{% for it in checklist.items %}<li>{{ it.text }}{% if it.rz %} <span class="lead">(Rz {{ it.rz | join(", ") }})</span>{% endif %}</li>{% endfor %}</ol>
+{% else %}<p>Noch keine bestätigten Referenzgründe.</p>{% endif %}
+</div>
+
+{% if not answers %}<p>Keine auswertbaren Antworten in dieser Auswahl.</p>{% endif %}
+{% for a in answers %}{% set r = a.run %}
+<section class="answer">
+<h2><span class="mono">{{ r.model_key }}</span> · Bedingung {{ r.condition }} ({{ conditions[r.condition] }})
+  <span class="lead">Formulierung {{ r.phrasing }}, Wiederholung {{ r.repetition }} · <a class="no-print" href="/runs/{{ r.id }}">Lauf {{ r.id }}</a></span></h2>
+<p>Ergebnis des Modells: <strong>{{ outcome_labels.get(r.case_outcome, "keines erkennbar") if r.case_outcome else ("nicht auswertbar" if r.status == "not_evaluable" else "keines erkennbar") }}</strong>
+  {% if a.right is true %}<span class="status ok">✓ wie der VfGH</span>{% elif a.right is false %}<span class="status bad">✗ anders als der VfGH</span>{% else %}<span class="status bad">✗ zählt als falsch</span>{% endif %}
+  {% if r.error %}<br><span class="lead">{{ r.error }}</span>{% endif %}</p>
+{% if r.output %}
+<div class="split">
+  <div>
+    <h3>Gründe des VfGH: vom Modell getroffen?</h3>
+    {% if checklist %}
+    <table>
+      <thead><tr><th>Referenzgrund</th><th>Richter</th><th>Expertin/Experte</th></tr></thead>
+      <tbody>{% for it in checklist.items %}<tr><td>{{ loop.index }}. {{ it.text }}</td>
+        <td>{{ level(a.judged.get(loop.index)) }}</td><td>{{ level(a.expert.get(loop.index)) }}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<p class="lead">Keine Referenzgründe.</p>{% endif %}
+  </div>
+  <div>
+    <h3>Tragende Gründe des Modells</h3>
+    <ol>{% for g in r.output.tragende_gruende %}<li>{{ g }}</li>{% endfor %}</ol>
+    <h3>Spruch</h3>
+    <ul>{% for s in r.output.spruch %}<li>{{ s.bestimmung }}: {{ s.ergebnis }}</li>{% endfor %}</ul>
+  </div>
+</div>
+<h3>Zitate</h3>
+{% if r.output.zitate %}
+<table>
+  <thead><tr><th>Zitat</th><th>Im RIS</th></tr></thead>
+  <tbody>{% for z in r.output.zitate %}{% set c = a.checks[loop.index0] if loop.index0 < a.checks | length else none %}
+    <tr><td>{{ z.text }}</td><td>{% if c %}<span class="status {{ 'ok' if c.result == 'found' else ('bad' if c.result == 'not_found' else 'warn') }}">{{ result_labels[c.result] }}</span>{% else %}nicht geprüft{% endif %}</td></tr>{% endfor %}</tbody>
+</table>
+{% else %}<p>keine</p>{% endif %}
+<details><summary>Begründung des Modells</summary><pre class="doc">{{ r.output.begruendung }}</pre></details>
+{% endif %}
+</section>
+{% endfor %}
+
+{% if considerations %}
+<section class="answer">
+<h2>Anhang: Erwägungen des VfGH</h2>
+{% for p in considerations %}<p>{% if p.rz %}<span class="lead mono">{{ p.rz }}</span> {% endif %}{{ p.text }}</p>{% endfor %}
+</section>
+{% endif %}
+</div>
+{% endblock %}

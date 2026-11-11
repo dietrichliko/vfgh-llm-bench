@@ -162,3 +162,12 @@ a.button { display: inline-block; text-decoration: none; font-family: var(--sans
 .viz-root svg .tick { font: 11px var(--mono); fill: #898781; }
 .viz-root svg .label { font: 12px var(--sans); fill: var(--fg); }
 .viz-root table.bars td, .viz-root table.bars th { padding: 0.2rem 0.4rem; border-bottom: 0; }
+
+/* Printable case comparison */
+.comparison section.answer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: 0.5rem; }
+@media print {
+  .comparison section.answer { break-before: page; border-top: none; }
+  .comparison .split { grid-template-columns: 1fr 1fr; }
+  .comparison pre.doc { white-space: pre-wrap; }
+}
+@media (max-width: 700px) { .comparison .split { grid-template-columns: 1fr; } }

@@ -28,6 +28,7 @@ from bench.web import (
     calibration,
     cases,
     checklists,
+    comparison,
     contamination,
     dashboard,
     opposing,
@@ -149,6 +150,7 @@ def create_app(
     app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
     app.include_router(auth.router)
     app.include_router(pages.router)
+    app.include_router(comparison.router)
     app.include_router(cases.router)
     app.include_router(prompt_pages.router)
     app.include_router(orders.router)

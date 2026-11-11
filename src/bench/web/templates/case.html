@@ -3,6 +3,7 @@
 {% block content %}
 <p class="no-print"><a href="/cases">← Fälle</a></p>
 <h1>VfGH {{ case.decision_date.strftime("%d.%m.%Y") }}, {{ case.case_number }}</h1>
+{% if case.status.value == "released" %}<p class="no-print"><a href="/cases/{{ case.id }}/vergleich">Gericht und Modelle nebeneinander (zum Drucken)</a></p>{% endif %}
 <p class="lead">
   {{ case.decision_type or "Entscheidung" }} · {{ case.areas | join(", ") or "ohne Index" }} ·
   <span class="mono">{{ case.doc_number }}</span> ·
