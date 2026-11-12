@@ -7,8 +7,10 @@
   already judged (or queued) by a judge is not planned again.
 - The order snapshot fixes the checklist version per case; a later revision does not
   change a planned judgment.
-- A valid answer must score every reference reason and every citation exactly once;
-  otherwise the run is not evaluable. A valid answer becomes a ``JudgeScore``.
+- A valid answer must score every reference reason exactly once and no citation twice;
+  otherwise the run is not evaluable. A valid answer becomes a ``JudgeScore``; a citation
+  the judge left out is stored as ``nicht_beurteilbar`` with ``filled: true`` (some judges
+  skip citations the answer only lists and never uses; the metrics leave that value out).
 """
 
 import json
@@ -298,7 +300,7 @@ def messages(
 
 
 def validate(db: Session, order: Order, job: Job, output: BaseModel) -> str | None:
-    """Every reference reason and every citation scored exactly once."""
+    """Every reference reason scored exactly once; citations at most once, none unknown."""
     assert isinstance(output, Bewertung)
     n = len(checklist_for(db, order, job.case_id).items)
     m = len(citations.citations_of(_target(db, job)))
@@ -306,9 +308,22 @@ def validate(db: Session, order: Order, job: Job, output: BaseModel) -> str | No
     cited = sorted(z.nr for z in output.zitate)
     if reasons != list(range(1, n + 1)):
         return f"Bewertung der Referenzgründe unvollständig: {reasons} statt 1–{n}"
-    if cited != list(range(1, m + 1)):
-        return f"Bewertung der Zitate unvollständig: {cited} statt 1–{m}"
+    if len(set(cited)) != len(cited) or not set(cited) <= set(range(1, m + 1)):
+        return f"Bewertung der Zitate fehlerhaft: {cited} statt 1–{m}"
     return None
+
+
+FILLED_NOTE = "Vom Richtermodell nicht bewertet; von der Anwendung ergänzt."
+
+
+def _with_missing(scored: list[dict[str, Any]], m: int) -> list[dict[str, Any]]:
+    """The judge's citation values, with every left-out number as ``nicht_beurteilbar``."""
+    by_nr = {c["nr"]: c for c in scored}
+    return [
+        by_nr.get(nr)
+        or {"nr": nr, "value": "nicht_beurteilbar", "note": FILLED_NOTE, "filled": True}
+        for nr in range(1, m + 1)
+    ]
 
 
 def from_run(db: Session, run: Run) -> JudgeScore:
@@ -326,10 +341,10 @@ def from_run(db: Session, run: Run) -> JudgeScore:
             {"nr": g.nr, "value": g.enthalten, "evidence": g.beleg}
             for g in sorted(output.gruende, key=lambda g: g.nr)
         ],
-        citations=[
-            {"nr": z.nr, "value": z.traegt, "note": z.begruendung}
-            for z in sorted(output.zitate, key=lambda z: z.nr)
-        ],
+        citations=_with_missing(
+            [{"nr": z.nr, "value": z.traegt, "note": z.begruendung} for z in output.zitate],
+            len(citations.citations_of(db.get(Run, run.target_run_id) or run)),
+        ),
         created_at=utcnow(),
     )
     db.add(score)

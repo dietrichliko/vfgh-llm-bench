@@ -90,7 +90,9 @@ class Bewertung(BaseModel):
     """Die Bewertung einer Antwort: Referenzgründe und Zitate, je mit ihrer Nummer."""
 
     gruende: list[GrundBewertung] = Field(description="Ein Eintrag je Referenzgrund")
-    zitate: list[ZitatBewertung] = Field(description="Ein Eintrag je Zitat; leer ohne Zitate")
+    zitate: list[ZitatBewertung] = Field(
+        description="Ein Eintrag je Zitat der Liste, auch für nicht herangezogene; leer ohne Zitate"
+    )
 
 
 class Gegenbegruendungen(BaseModel):

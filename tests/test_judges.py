@@ -480,6 +480,45 @@ async def test_incomplete_verdict_is_not_evaluable(
         assert db.exec(select(JudgeScore)).all() == []
 
 
+async def test_left_out_citations_are_filled_as_not_assessable(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = await decided(engine, settings, models)
+    with Session(engine) as db:
+        judge_order = judges.create(db, [order_id], [models["judge"]], None)
+        db.commit()
+        judge_order_id = judge_order.id or 0
+    verdict = {**VERDICT, "zitate": [VERDICT["zitate"][0], VERDICT["zitate"][2]]}  # 1 and 3
+    await judge(engine, settings, json.dumps(verdict), [], ris_clients([], []))
+    with Session(engine) as db:
+        job = jobs_of(db, judge_order_id)[0]
+        assert job.status is JobStatus.DONE
+        score = db.exec(select(JudgeScore)).one()
+        assert [c["nr"] for c in score.citations] == [1, 2, 3, 4]
+        assert [c.get("filled", False) for c in score.citations] == [False, True, False, True]
+        assert score.citations[1]["value"] == "nicht_beurteilbar"
+
+
+@pytest.mark.parametrize("numbers", [[1, 1, 2, 3, 4], [1, 2, 3, 4, 5]])
+async def test_repeated_or_unknown_citation_is_not_evaluable(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel], numbers: list[int]
+) -> None:
+    order_id = await decided(engine, settings, models)
+    with Session(engine) as db:
+        judge_order = judges.create(db, [order_id], [models["judge"]], None)
+        db.commit()
+        judge_order_id = judge_order.id or 0
+    zitate = [{"nr": n, "traegt": "ja", "begruendung": "laut Auszug"} for n in numbers]
+    await judge(
+        engine, settings, json.dumps({**VERDICT, "zitate": zitate}), [], ris_clients([], [])
+    )
+    with Session(engine) as db:
+        job = jobs_of(db, judge_order_id)[0]
+        assert job.status is JobStatus.NOT_EVALUABLE
+        assert job.error is not None and "Zitate fehlerhaft" in job.error
+        assert db.exec(select(JudgeScore)).all() == []
+
+
 async def test_ris_outage_requeues_and_pauses_before_the_llm_call(
     engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
 ) -> None:
