@@ -1,3 +1,15 @@
+## v0.4.0 (2026-11-12)
+
+### Feat
+
+- **worker**: wait for a rate-limited provider instead of failing the job
+
+### Fix
+
+- **worker**: a refused connection before a 429 still waits for the provider
+- **citations**: a regulation cited by its full name is not an invented source
+- **judges**: a left-out citation is not assessable, not a lost score
+
 ## v0.3.1 (2026-11-12)
 
 ### Fix
