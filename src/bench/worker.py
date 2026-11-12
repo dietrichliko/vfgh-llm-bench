@@ -8,7 +8,7 @@
 - The model configuration comes from the order's snapshot, not from the current file.
 - Cost caps (per order, total) are checked before every job.
 - After ``MAX_CONSECUTIVE_FAILURES`` failures in a row for one provider, its orders pause.
-- A job whose every attempt got HTTP 429 (the provider never ran it, nothing billed) goes
+- A job whose every attempt got HTTP 429 or never connected (nothing ran, nothing billed) goes
   back to the queue with a growing wait (``RATE_LIMIT_WAITS``, at least ``Retry-After``)
   instead of failing; only after the last wait does it fail. The run is still recorded.
 - Condition C: the model gets the ris-mcp tools over a connection fixed to the case's
@@ -38,6 +38,7 @@ from sqlalchemy import Engine, or_, update
 from sqlmodel import Session, col, select
 
 from bench import citations, orders, prompts
+from bench.llm.http import Exchange
 from bench.llm.schemas import Entscheidung
 from bench.llm.task import TaskResult, run_task
 from bench.models import (
@@ -69,12 +70,17 @@ RATE_LIMIT_WAITS = (1, 2, 4, 8, 16, 30, 30, 30)
 MAX_RETRY_AFTER = timedelta(hours=1)
 
 
+def _unsent(ex: Exchange) -> bool:
+    """The attempt never reached the provider (a broken connection after sending may have)."""
+    return ex.status is None and (ex.error or "").startswith("ConnectError")
+
+
 def only_rate_limited(result: TaskResult) -> bool:
-    """No answer, and every attempt was refused with 429: the provider ran nothing."""
+    """No answer; every attempt was refused with 429 or never connected: nothing ran."""
     return (
         result.status is JobStatus.FAILED
-        and bool(result.exchanges)
-        and all(ex.status == 429 for ex in result.exchanges)
+        and any(ex.status == 429 for ex in result.exchanges)
+        and all(ex.status == 429 or _unsent(ex) for ex in result.exchanges)
     )
 
 

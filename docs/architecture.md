@@ -150,7 +150,7 @@ Kept from the old project:
 - **No silent retries:**
   - The SDK's own retries are off (`max_retries=0`) and `output_retries=0`.
   - Our httpx transport retries only on 429/502/503/504 or a connection error, with backoff, and never retries a timeout, because the request may already be billed.
-  - Short backoff: 3 attempts, 5 s then 10 s. A job whose every attempt got 429 (the provider ran nothing, nothing billed; e.g. a shared upstream pool on OpenRouter) is not failed but put back in the queue with `not_before`: waits of 1, 2, 4, 8, 16, 30, 30, 30 minutes (about two hours, at least the provider's `Retry-After`, capped at 1 h), then it fails. Each refusal is still recorded as a run; the order page shows the waiting jobs and the next try. "Retry failed" starts the waits afresh. Added 2026-11-12 after GLM-5.3 on Baidu was refused twice in a row.
+  - Short backoff: 3 attempts, 5 s then 10 s. A job whose every attempt got 429 or never connected, with at least one 429 (the provider ran nothing, nothing billed; e.g. a shared upstream pool on OpenRouter) is not failed but put back in the queue with `not_before`: waits of 1, 2, 4, 8, 16, 30, 30, 30 minutes (about two hours, at least the provider's `Retry-After`, capped at 1 h), then it fails. Each refusal is still recorded as a run; the order page shows the waiting jobs and the next try. "Retry failed" starts the waits afresh. Added 2026-11-12 after GLM-5.3 on Baidu was refused twice in a row.
   - An unparseable answer is stored as **not evaluable**.
 - **Raw capture:** httpx event hooks store the exact request body, the raw response, all response headers (`X-Bridge-Version`, OpenRouter provider) and the duration. Pydantic AI's message history and usage are stored alongside.
 - **No fallbacks:**

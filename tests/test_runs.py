@@ -37,7 +37,7 @@ from bench.providers import ResolvedModel, load_config, resolve
 from bench.rismcp.norms import RisClient
 from bench.rismcp.server import mcp_app
 from bench.settings import Settings
-from bench.worker import RATE_LIMIT_WAITS, Worker, retry_after
+from bench.worker import RATE_LIMIT_WAITS, Worker, only_rate_limited, retry_after
 from tests.conftest import chat_response, login
 from tests.test_rismcp import ris_handler
 
@@ -545,6 +545,27 @@ async def test_other_transient_errors_still_fail(
     with Session(engine) as db:
         (job,) = jobs_of(db, order_id)
         assert job.status is JobStatus.FAILED and job.not_before is None
+
+
+@pytest.mark.parametrize(
+    ("first", "waits"),
+    [
+        ((None, "ConnectError: [Errno -3] Temporary failure in name resolution"), True),
+        ((None, "RemoteProtocolError: Server disconnected"), False),  # may have run
+        ((503, None), False),
+    ],
+)
+def test_what_counts_as_only_rate_limited(
+    first: tuple[int | None, str | None], waits: bool
+) -> None:
+    def ex(status: int | None, error: str | None) -> Exchange:
+        return Exchange(1, "POST", "u", {}, "", status, {}, "", error, 1)
+
+    exchanges = [ex(*first), ex(429, None), ex(429, None)]
+    result = TaskResult(JobStatus.FAILED, None, "429", 1, exchanges=exchanges)
+    assert only_rate_limited(result) is waits
+    connect_only = TaskResult(JobStatus.FAILED, None, "x", 1, exchanges=[ex(*first)] * 3)
+    assert only_rate_limited(connect_only) is False  # no 429 at all: a network problem
 
 
 def test_retry_after_forms() -> None:
