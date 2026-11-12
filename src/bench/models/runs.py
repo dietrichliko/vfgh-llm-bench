@@ -100,6 +100,8 @@ class Job(SQLModel, table=True):
     attempts: int = 0
     worker: str | None = Field(default=None, max_length=64)
     lease_until: datetime | None = None
+    not_before: datetime | None = None  # queued, waiting for a rate-limited provider
+    rate_limit_waits: int = 0  # times put back because the provider answered only 429
     sent_at: datetime | None = None  # set just before the request leaves
     started_at: datetime | None = None
     finished_at: datetime | None = None

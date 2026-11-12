@@ -8,6 +8,9 @@
 - The model configuration comes from the order's snapshot, not from the current file.
 - Cost caps (per order, total) are checked before every job.
 - After ``MAX_CONSECUTIVE_FAILURES`` failures in a row for one provider, its orders pause.
+- A job whose every attempt got HTTP 429 (the provider never ran it, nothing billed) goes
+  back to the queue with a growing wait (``RATE_LIMIT_WAITS``, at least ``Retry-After``)
+  instead of failing; only after the last wait does it fail. The run is still recorded.
 - Condition C: the model gets the ris-mcp tools over a connection fixed to the case's
   Stichtag (from the order snapshot); only providers with native tool calling run it.
 - Judge jobs: the citations of the run judged are checked in the RIS first (once per run,
@@ -23,14 +26,15 @@ import logging
 import socket
 import time
 from collections import defaultdict
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
 import httpx2
 from pydantic import BaseModel
 from pydantic_ai.mcp import MCPToolset
-from sqlalchemy import Engine, update
+from sqlalchemy import Engine, or_, update
 from sqlmodel import Session, col, select
 
 from bench import citations, orders, prompts
@@ -60,6 +64,37 @@ log = logging.getLogger(__name__)
 LEASE = timedelta(minutes=2)
 HEARTBEAT_SECONDS = 30.0
 MAX_CONSECUTIVE_FAILURES = 5
+# minutes to wait after a job got only 429s; about two hours in all, then the job fails
+RATE_LIMIT_WAITS = (1, 2, 4, 8, 16, 30, 30, 30)
+MAX_RETRY_AFTER = timedelta(hours=1)
+
+
+def only_rate_limited(result: TaskResult) -> bool:
+    """No answer, and every attempt was refused with 429: the provider ran nothing."""
+    return (
+        result.status is JobStatus.FAILED
+        and bool(result.exchanges)
+        and all(ex.status == 429 for ex in result.exchanges)
+    )
+
+
+def retry_after(result: TaskResult, now: datetime) -> timedelta | None:
+    """The provider's Retry-After (seconds or an HTTP date) on the last attempt, capped."""
+    if not result.exchanges:
+        return None
+    headers = {k.lower(): v for k, v in result.exchanges[-1].response_headers.items()}
+    value = headers.get("retry-after", "").strip()
+    if not value:
+        return None
+    if value.isdigit():
+        wait = timedelta(seconds=int(value))
+    else:
+        try:
+            when = parsedate_to_datetime(value)
+        except (TypeError, ValueError):
+            return None
+        wait = when.astimezone(UTC).replace(tzinfo=None) - now
+    return min(max(wait, timedelta(0)), MAX_RETRY_AFTER)
 
 
 def model_from_snapshot(order: Order, model_key: str, settings: Settings) -> ResolvedModel:
@@ -182,6 +217,7 @@ class Worker:
 
     def claim(self) -> Job | None:
         with Session(self.engine) as db:
+            now = utcnow()
             running_orders = {
                 o.id: o
                 for o in db.exec(select(Order).where(Order.status == OrderStatus.RUNNING)).all()
@@ -190,7 +226,11 @@ class Worker:
                 return None
             candidates = db.exec(
                 select(Job)
-                .where(Job.status == JobStatus.QUEUED, col(Job.order_id).in_(list(running_orders)))
+                .where(
+                    Job.status == JobStatus.QUEUED,
+                    col(Job.order_id).in_(list(running_orders)),
+                    or_(col(Job.not_before).is_(None), col(Job.not_before) <= now),
+                )
                 .order_by(col(Job.order_id), col(Job.seq))
                 .limit(200)
             ).all()
@@ -422,11 +462,30 @@ class Worker:
                     assert order is not None
             stored = db.get(Job, job.id)
             assert stored is not None
+            stored.last_run_id = run.id
+            stored.lease_until = None
+            if (
+                only_rate_limited(result)
+                and stored.rate_limit_waits < len(RATE_LIMIT_WAITS)
+                and order.status in (OrderStatus.RUNNING, OrderStatus.PAUSED)
+            ):
+                now = utcnow()
+                wait = timedelta(minutes=RATE_LIMIT_WAITS[stored.rate_limit_waits])
+                wait = max(wait, retry_after(result, now) or wait)
+                stored.rate_limit_waits += 1
+                stored.status, stored.worker, stored.sent_at = JobStatus.QUEUED, None, None
+                stored.not_before = now + wait
+                stored.error = (
+                    f"Anbieter ausgelastet (HTTP 429); neuer Versuch ab "
+                    f"{stored.not_before:%H:%M} UTC ({stored.rate_limit_waits}. von "
+                    f"{len(RATE_LIMIT_WAITS)} Wartezeiten)"
+                )
+                db.commit()
+                log.warning("job %s rate-limited, next try %s", job.id, stored.not_before)
+                return
             stored.status = status
             stored.error = error
-            stored.last_run_id = run.id
             stored.finished_at = utcnow()
-            stored.lease_until = None
 
             if status is JobStatus.FAILED:
                 self.failures[job.provider_key] += 1

@@ -7,7 +7,7 @@ A job is one LLM call: case × model × condition × phrasing × repetition. Job
 import calendar
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy import func
@@ -362,6 +362,8 @@ def retry(db: Session, order: Order, user_id: int | None) -> int:
         job.error = None
         job.lease_until = None
         job.sent_at = None
+        job.not_before = None
+        job.rate_limit_waits = 0
     if jobs and order.status in (OrderStatus.DONE, OrderStatus.PAUSED):
         order.status = OrderStatus.RUNNING
         order.status_reason = None
@@ -393,6 +395,8 @@ class Progress:
     spent_usd: float
     eta_seconds: float | None
     recent_errors: list[Job]
+    waiting: int = 0  # queued jobs waiting for a rate-limited provider
+    next_try: datetime | None = None
 
 
 def progress(db: Session, order: Order) -> Progress:
@@ -421,6 +425,13 @@ def progress(db: Session, order: Order) -> Progress:
         .order_by(col(Job.finished_at).desc())
         .limit(10)
     ).all()
+    waits = db.exec(
+        select(Job.not_before).where(
+            Job.order_id == order.id,
+            Job.status == JobStatus.QUEUED,
+            col(Job.not_before) > utcnow(),
+        )
+    ).all()
     return Progress(
         total=order.job_count,
         by_status=dict(by_status),
@@ -428,6 +439,8 @@ def progress(db: Session, order: Order) -> Progress:
         spent_usd=spent(db, order.id),
         eta_seconds=eta,
         recent_errors=list(errors),
+        waiting=len(waits),
+        next_try=min((w for w in waits if w is not None), default=None),
     )
 
 

@@ -8,6 +8,11 @@
     {{ finished }} von {{ p.total }} Aufrufen abgeschlossen
     {% if p.by_status.get("running") %}, {{ p.by_status["running"] }} laufen gerade{% endif %}
     {% if p.eta_seconds is not none %} · noch etwa {{ (p.eta_seconds / 60) | round(0, "ceil") | int }} Minuten{% endif %}</p>
+  {% if p.waiting %}
+  <p><strong>{{ p.waiting }} {{ "Aufruf wartet" if p.waiting == 1 else "Aufrufe warten" }}</strong>,
+    weil der Anbieter ausgelastet ist (HTTP 429); nächster Versuch ab {{ p.next_try.strftime("%H:%M") }} UTC.
+    Die Wartezeit wächst bei jeder Ablehnung (1, 2, 4, 8, 16, dann 30 Minuten), etwa zwei Stunden lang.</p>
+  {% endif %}
   <p>Kosten bisher: <strong>{{ "%.2f" | format(p.spent_usd) }} USD</strong> (geschätzt {{ "%.2f" | format(order.estimated_cost_usd) }} USD)</p>
 
   <table>

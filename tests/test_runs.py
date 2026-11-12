@@ -4,7 +4,7 @@ import asyncio
 import dataclasses
 import json
 from collections.abc import Callable
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -17,8 +17,8 @@ from sqlmodel import Session, col, select
 
 from bench import orders, prompts
 from bench.db import make_engine, migrate
-from bench.llm.http import make_http_client
-from bench.llm.task import TOOL_CALL_LIMIT
+from bench.llm.http import Exchange, make_http_client
+from bench.llm.task import TOOL_CALL_LIMIT, TaskResult
 from bench.models import (
     Case,
     CaseParse,
@@ -37,7 +37,7 @@ from bench.providers import ResolvedModel, load_config, resolve
 from bench.rismcp.norms import RisClient
 from bench.rismcp.server import mcp_app
 from bench.settings import Settings
-from bench.worker import Worker
+from bench.worker import RATE_LIMIT_WAITS, Worker, retry_after
 from tests.conftest import chat_response, login
 from tests.test_rismcp import ris_handler
 
@@ -479,6 +479,87 @@ async def test_failures_pause_the_order(
         order = db.get(Order, order_id)
         assert order is not None and order.status is OrderStatus.DONE
         assert len(db.exec(select(Run).where(Run.order_id == order_id)).all()) == 12
+
+
+async def test_a_rate_limited_job_waits_longer_each_time_then_fails(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+    busy = lambda req: httpx2.Response(429, json={"error": "ausgelastet"})  # noqa: E731
+    waits = []
+    for n in range(1, len(RATE_LIMIT_WAITS) + 1):
+        before = utcnow()
+        await work(engine, settings, busy)
+        with Session(engine) as db:
+            (job,) = jobs_of(db, order_id)
+            assert job.status is JobStatus.QUEUED and job.rate_limit_waits == n
+            assert job.not_before is not None and job.sent_at is None
+            assert job.error and "HTTP 429" in job.error
+            order = db.get(Order, order_id)
+            assert order is not None and order.status is OrderStatus.RUNNING
+            assert orders.progress(db, order).waiting == 1
+            waits.append(round((job.not_before - before).total_seconds() / 60))
+        await work(engine, settings, busy)  # not before its time: nothing is sent
+        with Session(engine) as db:
+            (job,) = jobs_of(db, order_id)
+            assert job.rate_limit_waits == n
+            job.not_before = utcnow() - timedelta(seconds=1)  # the wait is over
+            db.commit()
+    assert waits == list(RATE_LIMIT_WAITS)
+    await work(engine, settings, busy)
+    with Session(engine) as db:
+        (job,) = jobs_of(db, order_id)
+        assert job.status is JobStatus.FAILED  # after the last wait
+        runs = db.exec(select(Run).where(Run.order_id == order_id)).all()
+        assert len(runs) == len(RATE_LIMIT_WAITS) + 1  # every refusal is on record
+        order = db.get(Order, order_id)
+        assert order is not None
+        assert orders.retry(db, order, None) == 1
+        assert job.not_before is None and job.rate_limit_waits == 0
+        db.commit()
+    await work(engine, settings, answer())
+    with Session(engine) as db:
+        (job,) = jobs_of(db, order_id)
+        assert job.status is JobStatus.DONE
+
+
+async def test_retry_after_lengthens_the_wait(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+    before = utcnow()
+    await work(
+        engine, settings, lambda req: httpx2.Response(429, headers={"Retry-After": "600"}, json={})
+    )
+    with Session(engine) as db:
+        (job,) = jobs_of(db, order_id)
+        assert job.status is JobStatus.QUEUED and job.not_before is not None
+        assert timedelta(minutes=9) < job.not_before - before < timedelta(minutes=11)
+
+
+async def test_other_transient_errors_still_fail(
+    engine: sa.Engine, settings: Settings, models: dict[str, ResolvedModel]
+) -> None:
+    order_id = make_order(engine, models, ["alpha"], n_cases=1)
+    await work(engine, settings, lambda req: httpx2.Response(503, json={}))
+    with Session(engine) as db:
+        (job,) = jobs_of(db, order_id)
+        assert job.status is JobStatus.FAILED and job.not_before is None
+
+
+def test_retry_after_forms() -> None:
+    now = datetime(2026, 11, 12, 20, 0)
+
+    def result(value: str | None) -> TaskResult:
+        headers = {"Retry-After": value} if value is not None else {}
+        ex = Exchange(1, "POST", "u", {}, "", 429, headers, "", None, 1)
+        return TaskResult(JobStatus.FAILED, None, "429", 1, exchanges=[ex])
+
+    assert retry_after(result("120"), now) == timedelta(minutes=2)
+    assert retry_after(result("Thu, 12 Nov 2026 20:05:00 GMT"), now) == timedelta(minutes=5)
+    assert retry_after(result("99999"), now) == timedelta(hours=1)  # capped
+    assert retry_after(result("bald"), now) is None
+    assert retry_after(result(None), now) is None
 
 
 async def test_order_cost_cap_pauses_before_sending(
