@@ -63,7 +63,7 @@ SHORT_FORMS = {
 _SECTION = re.compile(r"(§|Art\.?)\s*(\d+[a-z]?)\b")
 _EU = re.compile(r"\((?:EU|EG|EWG)\)|\bEWG\b|Richtlinie|\bAEUV\b|\bGRC\b|Unionsrecht")
 _REGULATION = re.compile(
-    r"\b\w*[a-zäöüß]{3}(?:V|VO)\b|Verordnung|plan\b|Plan\b|Entwicklungskonzept|"
+    r"\b\w*[a-zäöüß]{3}(?:V|VO)\b|Verordnung|verordnung\b|plan\b|Plan\b|Entwicklungskonzept|"
     r"\s(?:des|der|vom)\s|kundgemacht|\bidF\b"
 )
 _STATUTE_WORD = re.compile(r"^(.*[a-zäöüß]{3})(OG|G|O)$")  # „Landes-StraßenverwaltungsG“

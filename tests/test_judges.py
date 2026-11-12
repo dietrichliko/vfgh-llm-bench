@@ -263,6 +263,19 @@ class FakeNorms:
         ("§ 36 Abs 1 TJG 2004", "found", "T36", None),
         ("§ 94b StVO 1960", "found", "OLD", "nicht in Kraft"),
         ("§ 999 StVO 1960", "not_found", None, "nicht gefunden"),
+        (
+            "§1 Abs3 Zweite Durchführungsverordnung zum Tiroler Jagdgesetz 2004, LGBl 43/2004",
+            "found",
+            "DV2",
+            None,
+        ),
+        (  # a regulation of that name exists, but not to this statute
+            "§ 1 Zweite Durchführungsverordnung zum Tiroler Fischereigesetz 2002",
+            "not_checkable",
+            None,
+            "Verordnung",
+        ),
+        ("§ 2 Parkverbotsverordnung Köstendorf", "not_checkable", None, "Verordnung"),
     ],
 )
 async def test_norm_citation_forms(
@@ -276,6 +289,11 @@ async def test_norm_citation_forms(
             ("bund", "B-VG", "Art. 139"): ("N4", "B-VG", True),
             ("laender", "TJG 2004", "§ 36"): ("T36", "Tiroler Jagdgesetz 2004", True),
             ("bund", "StVO 1960", "§ 94b"): ("OLD", "StVO", False),
+            ("tirol", "Zweite Durchführungsverordnung", "§ 1"): (
+                "DV2",
+                "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+                True,
+            ),
         }
     )
     outcome = await citations.check_norm(cast(RisClient, ris), text, date(2026, 9, 29))

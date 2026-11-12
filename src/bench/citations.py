@@ -200,6 +200,39 @@ async def _find(
     return []
 
 
+# „Zweite Durchführungsverordnung zum Tiroler Jagdgesetz 2004“: the RIS files it as
+# „Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung“
+_REGULATION_OF = re.compile(r"^(.*\S*verordnung)\s+(?:zum|zur|zu)\s+(.+)$", re.I)
+
+
+def _parent_words(parent: str) -> list[str]:
+    """Words of the parent statute a RIS title must contain, without the state's name."""
+    return [
+        w.lower()
+        for w in parent.split()
+        if not any(pattern.search(w) for pattern, _ in STATE_HINTS)
+    ]
+
+
+async def _find_regulation(
+    ris: RisClient,
+    scopes: list[str],
+    z: NormZitat,
+    statute: str,
+    stichtag: date,
+    any_version: bool = False,
+) -> list[NormHit]:
+    """A regulation cited as „X zum Y“: search for X, keep the hits whose title names Y."""
+    m = _REGULATION_OF.match(statute)
+    if m is None:
+        return []
+    name, words = m.group(1), _parent_words(m.group(2))
+    if not words:
+        return []
+    hits = await _find(ris, scopes, z, name, stichtag, any_version)
+    return [h for h in hits if all(w in h.kurztitel.lower() for w in words)]
+
+
 async def check_norm(ris: RisClient, text: str, stichtag: date) -> Outcome:
     parts = split_compound(text.strip().replace("–", "-"))
     if len(parts) == 1:
@@ -249,8 +282,13 @@ async def _check_one(ris: RisClient, ref: str, stichtag: date) -> Outcome:
         state, statute = state_of(ref, z.gesetz)
         scopes = [state] if state else ["bund", "laender"]
         note = None
-        found = await _find(ris, scopes, z, statute, stichtag)
-        if not found and (found := await _find(ris, scopes, z, statute, stichtag, True)):
+        found = await _find(ris, scopes, z, statute, stichtag) or await _find_regulation(
+            ris, scopes, z, statute, stichtag
+        )
+        if not found and (
+            found := await _find(ris, scopes, z, statute, stichtag, True)
+            or await _find_regulation(ris, scopes, z, statute, stichtag, True)
+        ):
             note = f"zum Stichtag {stichtag:%d.%m.%Y} nicht in Kraft; andere Fassung gefunden"
         if not found:
             if why := _unlisted(ref, statute):
