@@ -9,7 +9,8 @@
 # Secrets (fly secrets set --app vfgh-bench NAME=…): BENCH_SESSION_SECRET,
 # BENCH_OIDC_CLIENT_SECRET, OPENROUTER_API_KEY, UAI_API_KEY (= AAI_BRIDGE_API_KEY of the
 # bridge app), FLY_API_TOKEN (deploy token of the bridge app only: `bench all` starts and
-# stops the bridge), RIS_MCP_API_KEY, optionally STUDY_REPO_DEPLOY_KEY;
+# stops the bridge), RIS_MCP_API_KEY, BENCH_ADMIN_EMAILS (comma-separated; a secret only
+# to keep the addresses out of this public repo), optionally STUDY_REPO_DEPLOY_KEY;
 # `fly storage create` adds BUCKET_NAME and the AWS_* secrets of the backup bucket (Tigris).
 
 app = "vfgh-bench"
@@ -19,10 +20,14 @@ kill_timeout = 120  # children stop, then a last backup is uploaded
 
 [build]
 # deploy.sh passes the image by digest (--image); this tag is only the fallback
-image = "ghcr.io/dietrichliko/vfgh-llm-bench:0.2.0"
+image = "ghcr.io/dietrichliko/vfgh-llm-bench:0.4.0"
 
 [env]
-BENCH_PUBLIC_URL = "https://vfgh-bench.fly.dev"
+# custom domain: Cloudflare CNAME vfgh-llm-bench → vfgh-bench.fly.dev (DNS only), and
+# `fly certs add vfgh-llm-bench.mbi-ai.dev --app vfgh-bench`
+BENCH_PUBLIC_URL = "https://vfgh-llm-bench.mbi-ai.dev"
+# CERN SSO; the application also admits eduGAIN accounts (CERN Application Portal, default
+# role). Redirect URI: https://vfgh-llm-bench.mbi-ai.dev/auth/callback
 BENCH_OIDC_ISSUER = "https://auth.cern.ch/auth/realms/cern"
 BENCH_SECRETS_DIR = "/nonexistent"  # secrets arrive as environment variables
 BENCH_IDLE_STOP_MINUTES = "15"
@@ -32,8 +37,7 @@ BENCH_RIS_MCP_URL = "http://localhost:8001/mcp"
 BENCH_RIS_MCP_ALLOWED_HOSTS = "localhost:8001"
 BENCH_FLY_BRIDGE_APP = "vfgh-bench-bridge"  # deploy/fly/bridge.toml
 BENCH_FLY_BRIDGE_HEALTH_URL = "http://vfgh-bench-bridge.internal:8000/health"
-# BENCH_OIDC_CLIENT_ID = "…"
-# BENCH_ADMIN_EMAILS = "…"
+BENCH_OIDC_CLIENT_ID = "vfgh-law-bench"  # CERN Application Portal (not secret)
 # BENCH_STUDY_REPO_URL = "git@github.com:<owner>/vfgh-llm-bench-study.git"
 # BENCH_IMAGE_DIGEST is set by deploy.sh
 

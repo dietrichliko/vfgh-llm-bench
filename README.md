@@ -124,7 +124,12 @@ cp config/providers.yaml config/providers.fly.yaml          # then edit
 fly apps create vfgh-bench-bridge
 fly secrets set --app vfgh-bench-bridge --stage AAI_BRIDGE_CLIENT_ID=… \
     AAI_BRIDGE_CLIENT_SECRET=… AAI_BRIDGE_API_KEY=…
-fly deploy --config deploy/fly/bridge.toml --ha=false
+# fly.io cannot pull from registry.cern.ch: copy the (public) image into fly's registry
+skopeo copy --dest-creds "x:$(fly auth token)" \
+    docker://registry.cern.ch/mbi-vienna/aai-bridge:0.4.0 \
+    docker://registry.fly.io/vfgh-bench-bridge:aai-bridge-0.4.0
+fly deploy --config deploy/fly/bridge.toml --ha=false \
+    --image registry.fly.io/vfgh-bench-bridge:aai-bridge-0.4.0
 
 # 2. web app, volume and backup bucket
 fly apps create vfgh-bench
@@ -137,9 +142,22 @@ fly secrets set --app vfgh-bench --stage \
     UAI_API_KEY=…                       # = AAI_BRIDGE_API_KEY of the bridge
 fly secrets set --app vfgh-bench --stage \
     FLY_API_TOKEN="$(fly tokens create deploy --app vfgh-bench-bridge --expiry 8760h)"
-# set BENCH_OIDC_CLIENT_ID and BENCH_ADMIN_EMAILS in deploy/fly/web.toml, then:
-deploy/fly/deploy.sh 0.2.0
+fly secrets set --app vfgh-bench --stage BENCH_ADMIN_EMAILS=…   # not in the public repo
+# BENCH_OIDC_CLIENT_ID is in deploy/fly/web.toml (CERN application vfgh-law-bench), then:
+deploy/fly/deploy.sh 0.4.0
+
+# 3. own domain (DNS at Cloudflare): CNAME vfgh-llm-bench → vfgh-bench.fly.dev,
+#    "DNS only" (grey cloud), so that fly.io gets its own certificate
+fly certs add vfgh-llm-bench.mbi-ai.dev --app vfgh-bench
+fly certs show vfgh-llm-bench.mbi-ai.dev --app vfgh-bench    # until it is issued
 ```
+
+**Login:** CERN SSO (OIDC). Register the application in the
+[CERN Application Portal](https://application-portal.web.cern.ch) with the redirect URI
+`https://vfgh-llm-bench.mbi-ai.dev/auth/callback`; its default role must admit eduGAIN
+accounts for users from other universities (e.g. a University of Vienna account via
+"Home organisation – eduGAIN"). The app needs an e-mail address from the login. New
+accounts wait for an admin; addresses in `BENCH_ADMIN_EMAILS` are admins at once.
 
 **Upgrade** to a new release: `deploy/fly/deploy.sh X.Y.Z`. It deploys the image by
 digest and sets `BENCH_IMAGE_DIGEST`. A pending migration is preceded by a backup.

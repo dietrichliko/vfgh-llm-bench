@@ -10,7 +10,14 @@
 #   fly apps create vfgh-bench-bridge
 #   fly secrets set --app vfgh-bench-bridge --stage AAI_BRIDGE_CLIENT_ID=… \
 #       AAI_BRIDGE_CLIENT_SECRET=… AAI_BRIDGE_API_KEY=…
-#   fly deploy --config deploy/fly/bridge.toml --ha=false
+#   fly deploy --config deploy/fly/bridge.toml --ha=false \
+#       --image registry.fly.io/vfgh-bench-bridge:aai-bridge-0.4.0
+#
+# fly.io cannot resolve images on registry.cern.ch (HTTP 500, 2026-11-12), although the
+# image is public: copy it into the app's registry first, unchanged (same digest):
+#   skopeo copy --dest-creds "x:$(fly auth token)" \
+#       docker://registry.cern.ch/mbi-vienna/aai-bridge:0.4.0 \
+#       docker://registry.fly.io/vfgh-bench-bridge:aai-bridge-0.4.0
 #
 # The web app's secret UAI_API_KEY has the same value as AAI_BRIDGE_API_KEY.
 
