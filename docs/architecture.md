@@ -351,10 +351,10 @@ The conference shows the principle. A large study with frontier models as tested
 | Part | Conference setting |
 | --- | --- |
 | Cases | ~20 judgments, application proceedings, after the models' cutoffs |
-| Tested | 3–5 open models via OpenRouter, e.g. GLM-5.3, DeepSeek V4 Pro, a Qwen3.8 model, optionally a small one (Gemma 4 31B or Qwen-27B); final choice by training cutoff |
-| Optional | u:ai models (e.g. Gemini 3.1 Pro, Mistral Large 3) tested in A and B only, at no extra cost |
-| Judges | Claude Opus and GPT-5.5 (u:ai); neither family is tested |
-| Helpers | Gemini 3.1 Pro: reference checklist, opposing reasonings. If Gemma is tested, Gemini is not used as a judge |
+| Tested | Pilot (decision 2026-11-14): Mistral Small 3.2 (24 B, reportedly GovGPT's model), Gemma 4 31B, GLM-5.3, each via OpenRouter pinned to one hosting provider; eligibility by release date. Earlier plan: 3–5 open models, e.g. DeepSeek V4 Pro, a Qwen model |
+| Optional | u:ai models tested in A and B only, at no extra cost (not in the pilot) |
+| Judges | Claude Opus 4.8 and GPT-5.5 (u:ai); neither family is tested |
+| Helpers | Gemini 3.1 Pro: reference checklist (Google is tested via Gemma, so Gemini never judges). DeepSeek V4 Pro: opposing reasonings (a family neither tested nor judging) |
 | Conditions | A with 5 runs, C with 1 run, B optional |
 | Expert | 20 reference checklists, ~40 calibration ratings |
 | Cost | ~10–25 USD on OpenRouter; judges and helpers on the u:ai quota (~60–80 USD at list prices) |
