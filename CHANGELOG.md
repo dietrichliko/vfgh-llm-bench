@@ -1,3 +1,9 @@
+## v0.5.1 (2026-11-14)
+
+### Fix
+
+- **ris-mcp**: hole_norm returns the cited law, not a regulation named after it
+
 ## v0.5.0 (2026-11-14)
 
 ### Feat
