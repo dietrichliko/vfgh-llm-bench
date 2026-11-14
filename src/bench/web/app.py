@@ -21,7 +21,7 @@ from bench.db import make_engine, migrate
 from bench.images import with_figures
 from bench.llm.http import make_http_client
 from bench.normsets import version_of
-from bench.providers import StudyConfig, load_config
+from bench.providers import StudyConfig, load_config, provider_label
 from bench.ris.client import RisClient
 from bench.rismcp.norms import RisClient as NormsRisClient
 from bench.settings import SESSION_SECRET, Settings, get_settings
@@ -112,6 +112,7 @@ def create_app(
     templates.env.filters["norm_version"] = version_of
     templates.env.globals["app_version"] = __version__
     templates.env.filters["with_figures"] = with_figures
+    templates.env.filters["provider_label"] = provider_label
     app.state.templates = templates
 
     session_secret = settings.secret(SESSION_SECRET)

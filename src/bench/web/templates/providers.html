@@ -20,7 +20,7 @@ gepflegt und hier nur angezeigt. Schlüssel stehen nie in der Datei, nur ihre Na
   <tbody>
   {% for key, p in providers %}
     <tr>
-      <td><strong>{{ key }}</strong></td>
+      <td><strong>{{ key | provider_label }}</strong></td>
       <td class="mono">{{ p.base_url }}</td>
       <td>
         <code>{{ p.api_key_secret }}</code><br>
@@ -38,18 +38,23 @@ gepflegt und hier nur angezeigt. Schlüssel stehen nie in der Datei, nur ihre Na
 </table>
 
 <h2>Modelle</h2>
+<p class="lead">Alle Modelle bekommen nur Text, auch die, die Bilder lesen könnten; Abbildungen
+der Entscheidungen stehen als „[Abbildung]“ in der Eingabe.</p>
 <table>
   <thead>
-    <tr><th>Modell</th><th>Anbieter</th><th>Familie</th><th>Rollen</th><th>Wissensstand</th><th>Status</th><th>Test</th></tr>
+    <tr><th>Modell</th><th>Anbieter</th><th>Familie</th><th>Größe</th><th>Bilder</th><th>Rollen</th><th>Veröffentlicht</th><th>Wissensstand</th><th>Status</th><th>Test</th></tr>
   </thead>
   <tbody>
   {% for m in models %}
     <tr>
       <td><strong>{{ m.name }}</strong><br><span class="mono">{{ m.config.model }}</span></td>
-      <td>{{ m.provider_key }}</td>
+      <td>{{ m.provider_key | provider_label }}</td>
       <td>{{ m.config.family }}</td>
+      <td class="nowrap">{{ m.config.size or "–" }}</td>
+      <td>{% if m.config.vision is none %}–{% elif m.config.vision %}ja{% else %}<strong>nein</strong>, nur Text{% endif %}</td>
       <td>{% for r in m.config.roles %}{{ role_names[r.value] }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
-      <td>{{ m.config.cutoff or "–" }}</td>
+      <td class="nowrap">{{ m.config.released or "–" }}</td>
+      <td class="nowrap">{{ m.config.cutoff or "–" }}</td>
       <td>
         {% if m.available %}<span class="status ok">verfügbar</span>
         {% else %}<span class="status bad">Schlüssel fehlt</span>{% endif %}

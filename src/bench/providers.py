@@ -86,6 +86,9 @@ class ModelConfig(_Strict):
     cutoff_source: str | None = None  # where the cutoff comes from (model card, unconfirmed …)
     released: date | None = None  # public release of the weights or the API (release rule)
     roles: list[Role] = Field(min_length=1)
+    # descriptive only, for the overview; not part of the config hash (see DESCRIPTIVE)
+    size: str | None = None  # parameters, e.g. "31 B" or "1.6 T (MoE)"
+    vision: bool | None = None  # accepts images (the study sends text only)
     price: Price | None = None
     expected_output_tokens: int = Field(default=6000, ge=1)  # incl. thinking; for estimates
     max_output_tokens: int | None = Field(default=None, ge=1)  # overrides the provider's
@@ -157,10 +160,23 @@ class ResolvedModel:
         return self.config.display_name or self.key
 
 
+PROVIDER_LABELS = {"uai": "u:ai", "openrouter": "OpenRouter"}
+
+
+def provider_label(key: str) -> str:
+    """How a provider key is written for people: always „u:ai“, never „uai“."""
+    return PROVIDER_LABELS.get(key, key)
+
+
+# fields that describe a model but do not change a call: left out of the hash, so that
+# adding them does not invalidate the snapshots of existing orders
+DESCRIPTIVE = frozenset({"size", "vision"})
+
+
 def config_hash(provider: ProviderConfig, model: ModelConfig) -> str:
     data = {
         "provider": provider.model_dump(mode="json", by_alias=True),
-        "model": model.model_dump(mode="json", by_alias=True),
+        "model": model.model_dump(mode="json", by_alias=True, exclude=set(DESCRIPTIVE)),
     }
     raw = json.dumps(data, sort_keys=True, ensure_ascii=False).encode()
     return hashlib.sha256(raw).hexdigest()

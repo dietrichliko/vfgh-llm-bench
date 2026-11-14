@@ -15,7 +15,7 @@
     {% if stichtag %}<dt>Stichtag</dt><dd>{{ stichtag }} (vom Programm gesetzt, dem Modell nicht genannt)</dd>{% endif %}
     {% if run.norm_set_id %}<dt>Normen</dt><dd>freigegebener Satz {{ run.norm_set_id }} (<a href="/cases/{{ run.case_id }}">Fall</a>); der Text steht in der Benutzernachricht</dd>{% endif %}
     <dt>Wiederholung</dt><dd>{{ run.repetition }}</dd>
-    <dt>Modell</dt><dd><span class="mono">{{ run.model_id }}</span> über {{ run.provider_key }}
+    <dt>Modell</dt><dd><span class="mono">{{ run.model_id }}</span> über {{ run.provider_key | provider_label }}
       {% if run.model_reported %} · gemeldet: <span class="mono">{{ run.model_reported }}</span>{% endif %}
       {% if run.provider_reported %} · Anbieter: {{ run.provider_reported }}{% endif %}
       {% if run.model_mismatch %} <span class="status bad">anderes Modell gemeldet</span>{% endif %}</dd>

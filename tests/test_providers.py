@@ -7,10 +7,12 @@ from pydantic_ai import NativeOutput, PromptedOutput
 
 from bench.providers import (
     ToolMode,
+    config_hash,
     load_config,
     model_settings,
     output_spec,
     parse_config,
+    provider_label,
     resolve,
     routing_problem,
 )
@@ -74,6 +76,13 @@ def test_config_hash_changes_with_config(settings: Settings) -> None:
     b = resolve(parse_config(CONFIG), settings)["glm"].config_hash
     c = resolve(parse_config(CONFIG.replace("2026-01-01", "2026-02-01")), settings)["glm"]
     assert a == b != c.config_hash
+
+
+def test_size_and_vision_do_not_change_the_config_hash(settings: Settings) -> None:
+    plain = resolve(parse_config(CONFIG), settings)["glm"]
+    described = plain.config.model_copy(update={"size": "753 B", "vision": False})
+    assert config_hash(plain.provider, described) == plain.config_hash
+    assert provider_label("uai") == "u:ai" and provider_label("other") == "other"
 
 
 def test_output_mode(settings: Settings) -> None:

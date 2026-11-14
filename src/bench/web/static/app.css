@@ -240,3 +240,4 @@ figure.decision-image {
 figure.decision-image img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 figure.decision-image figcaption { margin-top: 0.35rem; font-size: 0.78rem; color: var(--muted); }
 @media print { figure.decision-image { break-inside: avoid; } }
+.nowrap { white-space: nowrap; }
