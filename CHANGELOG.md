@@ -1,3 +1,15 @@
+## v0.5.0 (2026-11-14)
+
+### Feat
+
+- **web**: model size, image input and release date on the overview; "u:ai"
+- **web**: show a decision's images on the case and comparison pages
+- **web**: own mark and favicon, clearer header, login explains eduGAIN
+
+### Fix
+
+- **fly**: trust the proxy's X-Forwarded-Proto, so pages link https assets
+
 ## v0.4.1 (2026-11-14)
 
 ### Fix
