@@ -111,10 +111,35 @@ def format_norm(norm: NormText, stichtag: date, teil: int) -> str:
     return f"{head}\n\n{parts[teil - 1]}"
 
 
+MAX_CHOICES = 8  # laws listed when a citation fits more than one
+
+
+def _choose(found: list[NormHit], gesetz: str) -> list[NormHit]:
+    """Among laws that fit, the act rather than its regulations, unless a regulation is cited."""
+    if len(found) <= 1 or "verordnung" in gesetz.lower():
+        return found
+    acts = [h for h in found if "verordnung" not in (h.kurztitel or "").lower()]
+    return acts or found
+
+
 async def resolve_and_fetch(
     ris: RisClient, dokument_oder_paragraf: str, stichtag: date, geltungsbereich: str
 ) -> NormText:
-    """A document number from ``suche_normen``, or a citation such as „§ 24 StVO 1960“."""
+    """A document number from ``suche_normen``, or a citation such as „§ 24 StVO 1960“.
+
+    A citation is resolved like the citation check does it: an exact abbreviation first,
+    then an act rather than the regulations named after it („§ 36 TJG 2004“ is the act,
+    not § 36 of a Durchführungsverordnung zum TJG 2004). With the default „bund“, a law
+    that is not federal is looked for in the state its name points to („Tiroler …“), or
+    else in all states. If several laws still fit, they are listed for the model to choose.
+    """
+    from bench.citations import (  # here: bench.normsets imports this module
+        _REGULATION_OF,
+        _parent_words,
+        state_of,
+    )
+    from bench.normsets import pick, title_candidates
+
     ref = dokument_oder_paragraf.strip()
     try:
         document_url(ref)
@@ -128,15 +153,39 @@ async def resolve_and_fetch(
             "Erwartet eine Dokumentnummer aus suche_normen (z. B. NOR40147678) oder ein "
             "Normzitat wie „§ 24 StVO 1960“ oder „Art 139 B-VG“"
         )
-    kwargs = {"gesetzesnummer": z.gesetz} if z.gesetz.isdigit() else {"titel": z.gesetz}
-    _, hits = await ris.search_norms(
-        "", geltungsbereich, stichtag, paragraf=z.nummer, abschnitt_typ=z.typ, **kwargs
-    )
-    # exactly the cited section, not „§ 58a“ for „§ 58“
-    exact = [h for h in hits if (h.paragraf or "").replace(" ", "") == z.label.replace(" ", "")]
-    if not exact:
-        raise RisError(f"{ref} in der Fassung {AT} nicht gefunden")
-    return await ris.get_document(exact[0].dokumentnummer)
+    state, statute = state_of(ref, z.gesetz)
+    scope = geltungsbereich.strip().lower()
+    searches = [(scope, z.gesetz if scope == "bund" else statute)]
+    if scope == "bund":  # the default: the law may well be a state's
+        searches.append((state or "laender", statute))
+    # „Zweite Durchführungsverordnung zum Tiroler Jagdgesetz 2004“: the RIS title is
+    # „Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung“
+    regulation = _REGULATION_OF.match(statute)
+    parent = _parent_words(regulation.group(2)) if regulation else []
+    if regulation and parent:
+        searches += [(where, regulation.group(1)) for where, _ in searches]
+    for where, name in searches:
+        for title in title_candidates(name):
+            kwargs = {"gesetzesnummer": title} if title.isdigit() else {"titel": title}
+            _, hits = await ris.search_sections(
+                where, stichtag, paragraf=z.nummer, abschnitt_typ=z.typ, **kwargs
+            )
+            if regulation and name == regulation.group(1):  # only those of the parent act
+                hits = [h for h in hits if all(w in (h.kurztitel or "").lower() for w in parent)]
+            # exactly the cited section („§ 58“ is not „§ 58a“), one hit per law
+            found = _choose(pick(hits, title, z.label), z.gesetz)
+            if len(found) == 1:
+                return await ris.get_document(found[0].dokumentnummer)
+            if found:
+                choices = "\n".join(
+                    f"- {h.dokumentnummer}: {h.kurztitel} {h.paragraf or ''}".rstrip()
+                    for h in found[:MAX_CHOICES]
+                )
+                raise RisError(
+                    f"{ref} passt auf mehrere Rechtsvorschriften; bitte hole_norm mit der "
+                    f"Dokumentnummer der gemeinten aufrufen:\n{choices}"
+                )
+    raise RisError(f"{ref} in der Fassung {AT} nicht gefunden")
 
 
 def create_server(ris: RisClient | None = None) -> MCPServer:

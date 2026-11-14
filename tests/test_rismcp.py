@@ -8,7 +8,7 @@ import json
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -309,3 +309,88 @@ def test_key_required() -> None:
         )
         r = c.post("/mcp", json={}, headers={"Authorization": "Bearer geheim"})
         assert r.status_code != 401
+
+
+# ── hole_norm by citation: the right law, also without the state (2026-11-14) ──────────
+
+ACT = "Jagdgesetz 2004, Tiroler"
+DVO1 = "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung"
+DVO2 = "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung"
+
+
+class SectionsRis:
+    """search_sections and get_document as resolve_and_fetch uses them (real RIS titles:
+    the act and its regulations all match the title „TJG 2004“, the regulations first)."""
+
+    def __init__(self) -> None:
+        self.searched: list[tuple[str, str]] = []
+        tirol = {
+            "§ 36": [("LTI1", DVO1, "TJG 2004"), ("LTI-ACT36", ACT, "TJG 2004")],
+            "§ 2": [("LTI8", DVO1, "TJG 2004"), ("LTI-ACT2", ACT, "TJG 2004")],
+        }
+        self.laws: dict[tuple[str, str, str], list[tuple[str, str, str]]] = {
+            ("tirol", "TJG 2004", label): hits for label, hits in tirol.items()
+        }
+        self.laws[("laender", "TJG 2004", "§ 36")] = tirol["§ 36"]
+        self.laws[("tirol", "Zweite Durchführungsverordnung", "§ 1")] = [
+            ("LTI-DVO2", DVO2, ""),
+            ("LTI-FISCH", "Fischereigesetz, Zweite Durchführungsverordnung", ""),
+        ]
+        self.laws[("laender", "Jagdgesetz", "§ 36")] = [
+            ("LTI-ACT36", ACT, "TJG 2004"),
+            ("LSB-36", "Jagdgesetz 1993", "JG"),
+        ]
+
+    async def search_sections(
+        self,
+        scope: str,
+        stichtag: Any,
+        *,
+        paragraf: str,
+        abschnitt_typ: str = "Paragraph",
+        titel: str | None = None,
+        gesetzesnummer: str | None = None,
+    ) -> tuple[int, list[Any]]:
+        from bench.rismcp.norms import NormHit
+
+        label = f"§ {paragraf}"
+        self.searched.append((scope, titel or ""))
+        hits = [
+            NormHit(n, k, abkuerzung=a or None, paragraf=label, gesetzesnummer=n)
+            for n, k, a in self.laws.get((scope, titel or "", label), [])
+        ]
+        return len(hits), hits
+
+    async def get_document(self, number: str) -> Any:
+        from bench.rismcp.norms import NormText
+
+        return NormText(number, "", None, None, None, None, f"Text von {number}", "u")
+
+
+@pytest.mark.parametrize(
+    ("citation", "scope", "document"),
+    [
+        ("§36 TJG 2004", "tirol", "LTI-ACT36"),  # the act, not § 36 of a regulation
+        ("§ 2 TJG 2004", "tirol", "LTI-ACT2"),
+        ("§36 TJG 2004", "bund", "LTI-ACT36"),  # default „bund“: looked for in the states
+        ("§ 1 Zweite Durchführungsverordnung zum Tiroler Jagdgesetz 2004", "bund", "LTI-DVO2"),
+    ],
+)
+async def test_hole_norm_finds_the_cited_law(citation: str, scope: str, document: str) -> None:
+    from datetime import date
+
+    ris = SectionsRis()
+    norm = await srv.resolve_and_fetch(cast(RisClient, ris), citation, date(2026, 9, 29), scope)
+    assert norm.dokumentnummer == document
+
+
+async def test_hole_norm_lists_the_laws_when_a_citation_is_ambiguous() -> None:
+    from datetime import date
+
+    from bench.rismcp.norms import RisError
+
+    with pytest.raises(RisError, match="mehrere") as exc:
+        await srv.resolve_and_fetch(
+            cast(RisClient, SectionsRis()), "§ 36 Jagdgesetz", date(2026, 9, 29), "bund"
+        )
+    assert "LTI-ACT36" in str(exc.value) and "LSB-36" in str(exc.value)
