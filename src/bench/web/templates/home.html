@@ -2,33 +2,47 @@
 {% block content %}
 <h1>Willkommen, {{ user.name }}</h1>
 
+{% macro tile(href, title, text) -%}
+<a class="tile" href="{{ href }}"><strong>{{ title }}</strong><span>{{ text }}</span></a>
+{%- endmacro %}
+
 {% if user.role.value == "pending" %}
 <p class="notice">Ihr Konto ist angelegt, aber noch nicht freigeschaltet. Bitte wenden Sie sich an
 die Projektleitung.</p>
 {% elif user.role.value == "admin" %}
-<ul>
-  <li><a href="/dashboard">Ergebnisse</a>: Leaderboard, Profile, alle Fälle und die vier Auswertungen</li>
-  <li><a href="/cases">Fälle</a>: Entscheidungen aus dem RIS importieren, prüfen und freigeben</li>
-  <li><a href="/prompts">Prompts</a>: Aufgabentexte für die Modelle ansehen und ändern</li>
-  <li><a href="/orders">Aufträge</a>: Fälle an Modelle schicken, Fortschritt und Kosten verfolgen</li>
-  <li><a href="/checklists">Referenzgründe</a>: tragende Gründe je Fall extrahieren lassen und prüfen</li>
-  <li><a href="/calibration">Kalibrierung</a>: Antworten für die Expertenbewertung ziehen</li>
-  <li><a href="/opposing">Gegenbegründungen</a>: schreiben lassen und von den Prüflingen einschätzen lassen</li>
-  <li><a href="/contamination">Kontamination</a>: prüfen, ob Modelle Entscheidungen schon kennen</li>
-  <li><a href="/study">Studie</a>: Aufbau festlegen, Protokoll einfrieren, Ergebnisse veröffentlichen</li>
-  <li><a href="/admin/providers">Anbieter &amp; Modelle</a>: Konfiguration prüfen und Modelle testen</li>
-  <li><a href="/admin/users">Benutzer</a>: Konten freischalten und Rollen vergeben</li>
-</ul>
+<h2>Auswertung</h2>
+<div class="tiles">
+  {{ tile("/dashboard", "Ergebnisse", "Leaderboard, Profile, alle Fälle und die vier Auswertungen") }}
+  {{ tile("/study", "Studie", "Aufbau festlegen, Protokoll einfrieren, Ergebnisse veröffentlichen") }}
+</div>
+<h2>Fälle und Läufe</h2>
+<div class="tiles">
+  {{ tile("/cases", "Fälle", "Entscheidungen aus dem RIS importieren, prüfen und freigeben") }}
+  {{ tile("/orders", "Aufträge", "Fälle an Modelle schicken, Fortschritt und Kosten verfolgen") }}
+  {{ tile("/prompts", "Prompts", "Aufgabentexte für die Modelle ansehen und ändern") }}
+</div>
+<h2>Bewertung</h2>
+<div class="tiles">
+  {{ tile("/checklists", "Referenzgründe", "tragende Gründe je Fall extrahieren lassen und prüfen") }}
+  {{ tile("/calibration", "Kalibrierung", "Antworten für die Expertenbewertung ziehen") }}
+  {{ tile("/opposing", "Gegenbegründungen", "schreiben lassen und von den Prüflingen einschätzen lassen") }}
+  {{ tile("/contamination", "Kontamination", "prüfen, ob Modelle Entscheidungen schon kennen") }}
+</div>
+<h2>Verwaltung</h2>
+<div class="tiles">
+  {{ tile("/admin/providers", "Anbieter & Modelle", "Konfiguration prüfen und Modelle testen") }}
+  {{ tile("/admin/users", "Benutzer", "Konten freischalten und Rollen vergeben") }}
+</div>
 {% elif user.role.value == "expert" %}
-<ul>
-  <li><a href="/checklists">Referenzgründe</a>: die tragenden Gründe je Fall bewerten und korrigieren</li>
-  <li><a href="/calibration">Kalibrierung</a>: Antworten der Modelle blind bewerten</li>
-  <li><a href="/dashboard">Ergebnisse</a>: die Auswertung</li>
-  <li><a href="/prompts">Prompts</a>: die Aufgabentexte für die Modelle lesen</li>
-</ul>
+<div class="tiles">
+  {{ tile("/checklists", "Referenzgründe", "die tragenden Gründe je Fall bewerten und korrigieren") }}
+  {{ tile("/calibration", "Kalibrierung", "Antworten der Modelle blind bewerten") }}
+  {{ tile("/dashboard", "Ergebnisse", "die Auswertung") }}
+  {{ tile("/prompts", "Prompts", "die Aufgabentexte für die Modelle lesen") }}
+</div>
 {% else %}
-<ul>
-  <li><a href="/dashboard">Ergebnisse</a>: Leaderboard, Profile, alle Fälle und die vier Auswertungen</li>
-</ul>
+<div class="tiles">
+  {{ tile("/dashboard", "Ergebnisse", "Leaderboard, Profile, alle Fälle und die vier Auswertungen") }}
+</div>
 {% endif %}
 {% endblock %}

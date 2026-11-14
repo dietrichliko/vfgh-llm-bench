@@ -109,6 +109,7 @@ def create_app(
     templates = Jinja2Templates(directory=HERE / "templates")
     templates.env.globals["role_labels"] = ROLE_LABELS
     templates.env.filters["norm_version"] = version_of
+    templates.env.globals["app_version"] = __version__
     app.state.templates = templates
 
     session_secret = settings.secret(SESSION_SECRET)

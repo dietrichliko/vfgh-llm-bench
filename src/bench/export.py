@@ -290,6 +290,7 @@ def dashboard_files(
     )
     env.globals["url_for"] = lambda _name, path: f"static/{path}"
     env.globals["role_labels"] = ROLE_LABELS
+    env.globals["app_version"] = __version__
     template = env.get_template("dashboard.html")
     for condition in sorted({o.condition for o in report.outcome}) or ["A"]:
         context = dashboard.context(db, config, condition, report=report, order_ids=order_ids)
@@ -297,7 +298,7 @@ def dashboard_files(
         if protocol:
             context["protocol_label"] = protocol
         yield f"dashboard/{condition}.html", template.render(**context).encode(), 1
-    for name in ("app.css",):
+    for name in ("app.css", "mark.svg", "favicon.svg"):
         yield f"dashboard/static/{name}", (WEB / "static" / name).read_bytes(), 1
 
 
