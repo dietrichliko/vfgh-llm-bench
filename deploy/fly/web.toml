@@ -30,6 +30,10 @@ BENCH_PUBLIC_URL = "https://vfgh-llm-bench.mbi-ai.dev"
 # role). Redirect URI: https://vfgh-llm-bench.mbi-ai.dev/auth/callback
 BENCH_OIDC_ISSUER = "https://auth.cern.ch/auth/realms/cern"
 BENCH_SECRETS_DIR = "/nonexistent"  # secrets arrive as environment variables
+# fly.io's proxy ends TLS and connects from its private network: trust its
+# X-Forwarded-Proto, or the pages link their CSS and scripts as http:// (blocked as mixed
+# content). Port 8000 is reachable only through the proxy.
+FORWARDED_ALLOW_IPS = "*"
 BENCH_IDLE_STOP_MINUTES = "15"
 BENCH_BACKUP_INTERVAL_HOURS = "6"
 BENCH_BACKUP_KEEP_DAYS = "14"
