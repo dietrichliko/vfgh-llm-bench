@@ -1,3 +1,9 @@
+## v0.4.1 (2026-11-14)
+
+### Fix
+
+- **supervisor**: web starts alone and answers before the others start
+
 ## v0.4.0 (2026-11-12)
 
 ### Feat
