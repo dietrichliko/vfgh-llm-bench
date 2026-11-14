@@ -276,6 +276,14 @@ class FakeNorms:
             "Verordnung",
         ),
         ("§ 2 Parkverbotsverordnung Köstendorf", "not_checkable", None, "Verordnung"),
+        (  # a list of sections, the law named once at the end, in the genitive (GLM-5.3)
+            "§2 Abs 1 und Abs 11 samt Anlage, §36 Abs 1 und Abs 2, "
+            "§52a des Tiroler Jagdgesetzes 2004",
+            "found",
+            "TJ2; TJ36; TJ52a",
+            "§52a des Tiroler Jagdgesetzes 2004: gefunden",
+        ),
+        ("§11b des Tiroler Jagdgesetzes 2004", "found", "TJ11b", None),
     ],
 )
 async def test_norm_citation_forms(
@@ -289,6 +297,22 @@ async def test_norm_citation_forms(
             ("bund", "B-VG", "Art. 139"): ("N4", "B-VG", True),
             ("laender", "TJG 2004", "§ 36"): ("T36", "Tiroler Jagdgesetz 2004", True),
             ("bund", "StVO 1960", "§ 94b"): ("OLD", "StVO", False),
+            ("tirol", "Tiroler Jagdgesetz 2004", "§ 2"): ("TJ2", "Jagdgesetz 2004, Tiroler", True),
+            ("tirol", "Tiroler Jagdgesetz 2004", "§ 36"): (
+                "TJ36",
+                "Jagdgesetz 2004, Tiroler",
+                True,
+            ),
+            ("tirol", "Tiroler Jagdgesetz 2004", "§ 52a"): (
+                "TJ52a",
+                "Jagdgesetz 2004, Tiroler",
+                True,
+            ),
+            ("tirol", "Tiroler Jagdgesetz 2004", "§ 11b"): (
+                "TJ11b",
+                "Jagdgesetz 2004, Tiroler",
+                True,
+            ),
             ("tirol", "Zweite Durchführungsverordnung", "§ 1"): (
                 "DV2",
                 "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
@@ -314,6 +338,12 @@ def test_split_compound() -> None:
         "§ 43 Abs 1 iVm Abs 2 StVO 1960"
     ]
     assert citations.split_compound("§ 2 iVm § 5 StVO 1960") == ["§ 2 StVO 1960", "§ 5 StVO 1960"]
+    assert citations.split_compound("§ 2 Abs 1, § 36 und § 52a TJG 2004") == [
+        "§ 2 Abs 1 TJG 2004",
+        "§ 36 TJG 2004",
+        "§ 52a TJG 2004",
+    ]
+    assert citations.split_compound("§§ 58, 60 AVG") == ["§§ 58, 60 AVG"]  # one section list
 
 
 # ── judge prompt ────────────────────────────────────────────────────────────────
@@ -470,11 +500,16 @@ async def test_citation_results_are_reused_across_runs(
     assert await citations.check_run(engine, norms, case_law, run_ids[0]) == 4
     asked = len(norm_requests) + len(case_requests)
     assert await citations.check_run(engine, norms, case_law, run_ids[0]) == 0
+    seen = len(norm_requests)
     assert await citations.check_run(engine, norms, case_law, run_ids[1]) == 4
-    assert len(norm_requests) + len(case_requests) == asked  # same Stichtag: nothing asked again
+    # same Stichtag: the hits are reused; only the miss (§ 24a) is looked up again, so that
+    # an improved check reaches it
+    again = [str(r.url) for r in norm_requests[seen:]] + [str(r.url) for r in case_requests[1:]]
+    assert again and all("24a" in url for url in again)
+    assert len(norm_requests) + len(case_requests) == asked + len(again)
     with Session(engine) as db:
         reused = db.exec(select(CitationCheck).where(CitationCheck.run_id == run_ids[1])).all()
-        assert sum(c.reused_from is not None for c in reused) == 3  # literature is not looked up
+        assert sum(c.reused_from is not None for c in reused) == 2  # the two hits
         reused[0].note = "geändert"
         db.add(reused[0])
         with pytest.raises(sa.exc.DatabaseError):

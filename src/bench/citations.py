@@ -135,6 +135,8 @@ _EU = re.compile(
 )
 _TREATY = re.compile(r"\bEMRK\b|Abkommen|Übereinkommen|Konvention|Protokoll|Staatsvertrag")
 _IVM = re.compile(r"\s+(?:iVm|i\.\s?V\.\s?m\.|in Verbindung mit)\s+")
+# a new section in a list: „§ 2 Abs 1, § 36 und § 52a TJG 2004“ (not „§§ 58, 60 AVG“)
+_LIST = re.compile(r"\s*(?:,|;|\bund\b|\bsowie\b)\s*(?=(?:§|Art\.?\s*\d))")
 
 
 def _unlisted(text: str, statute: str) -> str | None:
@@ -149,8 +151,10 @@ def _unlisted(text: str, statute: str) -> str | None:
 
 
 def split_compound(text: str) -> list[str]:
-    """„§ 2 iVm § 5 StVO“ → [„§ 2 StVO“, „§ 5 StVO“]; parts without a section mark go."""
-    parts = [p.strip(" ,;") for p in _IVM.split(text)]
+    """„§ 2 iVm § 5 StVO“ → [„§ 2 StVO“, „§ 5 StVO“]; parts without a section mark go.
+    Lists too: „§ 2 Abs 1, § 36 und § 52a TJG 2004“ → one part per section, each with
+    the law named after the last of them."""
+    parts = [q.strip(" ,;") for p in _IVM.split(text) for q in _LIST.split(p)]
     parts = [p for p in parts if p and _NORM.search(p)]
     if len(parts) <= 1:
         return [text]
@@ -359,13 +363,16 @@ def checks_for(db: Session, run_id: int) -> dict[int, CitationCheck]:
 
 
 def _earlier(db: Session, text: str, kind: str, stichtag: date) -> CitationCheck | None:
+    """An earlier hit for the same citation and Stichtag. Only hits are reused: a miss is
+    checked again, so that a later improvement of the check reaches it (a regulation or a
+    genitive name that an older check reported as not found)."""
     return db.exec(
         select(CitationCheck)
         .where(
             CitationCheck.text == text,
             CitationCheck.kind == kind,
             CitationCheck.stichtag == stichtag,
-            col(CitationCheck.result).in_([CitationResult.FOUND, CitationResult.NOT_FOUND]),
+            CitationCheck.result == CitationResult.FOUND,
         )
         .order_by(col(CitationCheck.id))
     ).first()

@@ -89,7 +89,9 @@ _NORM_MARK = re.compile(r"(§§?|Art\.?)\s*(\d+[a-z]?)", re.I)
 _NORM_SUB = re.compile(
     r"^\s*(?:Abs\.?\s*\d+[a-z]?|lit\.?\s*[a-z]{1,2}\b|Z\s*\d+[a-z]?|Satz\s*\d+|S\s*\d+\b"
     r"|(?:erster|zweiter|dritter|vierter|fünfter|letzter|vorletzter)\s+(?:Satz|Halbsatz)\b"
-    r"|Unterabs\.?\s*\d+|(?:,|und|bis|iVm|f\.?|ff\.?)\s*(?:§\s*)?\d*[a-z]?)",
+    r"|Unterabs\.?\s*\d+|samt\s+Anlagen?\b|Anlagen?\s*\d*\b"
+    # „und 3a“, „, § 60“, „f“; a letter only after a number („und Abs“ is not „und A“)
+    r"|(?:,|und|sowie|bis|iVm|f\.?|ff\.?)\s*(?:§\s*)?(?:\d+[a-z]?\b)?)",
     re.I,
 )
 MAX_LOCAL_PAGES = 5

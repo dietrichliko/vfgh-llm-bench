@@ -289,6 +289,8 @@ async def test_municipal_law_needs_a_state(ris: RisClient) -> None:
         ("§ 94f Abs 1 lit b Z 2 StVO 1960", ("Paragraph", "94f", "StVO 1960")),
         ("§44 Abs4 letzter Satz StVO 1960", ("Paragraph", "44", "StVO 1960")),
         ("§36 Abs1 vorletzter Satz TJG 2004", ("Paragraph", "36", "TJG 2004")),
+        ("§2 Abs 1 und Abs 11 samt Anlage TJG 2004", ("Paragraph", "2", "TJG 2004")),
+        ("§ 11b des Tiroler Jagdgesetzes 2004", ("Paragraph", "11b", "Tiroler Jagdgesetzes 2004")),
     ],
 )
 def test_parse_citation(citation: str, expected: tuple[str, str, str]) -> None:
@@ -394,3 +396,16 @@ async def test_hole_norm_lists_the_laws_when_a_citation_is_ambiguous() -> None:
             cast(RisClient, SectionsRis()), "§ 36 Jagdgesetz", date(2026, 9, 29), "bund"
         )
     assert "LTI-ACT36" in str(exc.value) and "LSB-36" in str(exc.value)
+
+
+def test_genitive_names_are_also_looked_up_in_the_nominative() -> None:
+    from bench.normsets import title_candidates
+
+    assert title_candidates("Tiroler Jagdgesetzes 2004") == [
+        "Tiroler Jagdgesetzes 2004",
+        "Tiroler Jagdgesetz 2004",
+    ]
+    assert "Allgemeines Verwaltungsverfahrensgesetz 1991" in title_candidates(
+        "Allgemeinen Verwaltungsverfahrensgesetzes 1991"
+    )
+    assert title_candidates("StVO 1960") == ["StVO 1960"]

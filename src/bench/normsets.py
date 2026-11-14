@@ -135,8 +135,22 @@ def parse_metadata(entry: str) -> list[Proposal]:
     return out
 
 
+# genitive of a law's name, as in „§ 11b des Tiroler Jagdgesetzes 2004“
+_GENITIVE_NOUN = re.compile(r"(gesetz|gesetzbuch|recht|vertrag|statut|abkommen)es\b", re.I)
+_GENITIVE_ADJ = re.compile(r"\b([A-ZÄÖÜ][a-zäöüß]+)en\b")  # „Allgemeinen“ → „Allgemeines“
+
+
+def nominative(statute: str) -> str:
+    """„Tiroler Jagdgesetzes 2004“ → „Tiroler Jagdgesetz 2004“; unchanged if not genitive."""
+    noun = _GENITIVE_NOUN.sub(r"\1", statute)
+    if noun == statute:
+        return statute
+    return _GENITIVE_ADJ.sub(r"\1es", noun)
+
+
 def title_candidates(statute: str) -> list[str]:
-    """The statute as cited, then with VfGH short forms spelled out („JagdG“ → „Jagdgesetz“)."""
+    """The statute as cited, then with VfGH short forms spelled out („JagdG“ → „Jagdgesetz“),
+    then in the nominative if it was cited in the genitive („des Tiroler Jagdgesetzes“)."""
     words = []
     for word in statute.split():
         if word in SHORT_FORMS:
@@ -146,7 +160,8 @@ def title_candidates(statute: str) -> list[str]:
             word = stem + {"G": "gesetz", "OG": "ordnungsgesetz", "O": "ordnung"}[suffix]
         words.append(word)
     expanded = " ".join(words)
-    return [statute] if expanded == statute else [statute, expanded]
+    out = [statute] if expanded == statute else [statute, expanded]
+    return out + [n for n in (nominative(t) for t in out) if n not in out]
 
 
 def _squash(s: str | None) -> str:
