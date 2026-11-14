@@ -124,12 +124,9 @@ cp config/providers.yaml config/providers.fly.yaml          # then edit
 fly apps create vfgh-bench-bridge
 fly secrets set --app vfgh-bench-bridge --stage AAI_BRIDGE_CLIENT_ID=… \
     AAI_BRIDGE_CLIENT_SECRET=… AAI_BRIDGE_API_KEY=…
-# fly.io cannot pull from registry.cern.ch: copy the (public) image into fly's registry
-skopeo copy --dest-creds "x:$(fly auth token)" \
-    docker://registry.cern.ch/mbi-vienna/aai-bridge:0.4.0 \
-    docker://registry.fly.io/vfgh-bench-bridge:aai-bridge-0.4.0
-fly deploy --config deploy/fly/bridge.toml --ha=false \
-    --image registry.fly.io/vfgh-bench-bridge:aai-bridge-0.4.0
+# fly.io cannot pull from registry.cern.ch: the script copies the (public) image into
+# fly's registry, checks the digest and deploys it from there (needs skopeo)
+deploy/fly/deploy-bridge.sh 0.4.0
 
 # 2. web app, volume and backup bucket
 fly apps create vfgh-bench
@@ -159,7 +156,8 @@ accounts for users from other universities (e.g. a University of Vienna account 
 "Home organisation – eduGAIN"). The app needs an e-mail address from the login. New
 accounts wait for an admin; addresses in `BENCH_ADMIN_EMAILS` are admins at once.
 
-**Upgrade** to a new release: `deploy/fly/deploy.sh X.Y.Z`. It deploys the image by
+**Upgrade** to a new release: `deploy/fly/deploy.sh X.Y.Z`; a new bridge version:
+`deploy/fly/deploy-bridge.sh X.Y.Z`. It deploys the image by
 digest and sets `BENCH_IMAGE_DIGEST`. A pending migration is preceded by a backup.
 Deploy only while no order is running (pause it first): the deploy stops the worker, and
 a call already sent ends as *unbekannt*, to be retried from the order page.
