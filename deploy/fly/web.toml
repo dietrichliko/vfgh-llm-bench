@@ -75,4 +75,4 @@ grace_period = "30s"
 
 [[vm]]
 size = "shared-cpu-1x"
-memory = "1gb"  # three Python processes
+memory = "2gb"  # four Python processes use ~550 MB idle; room for large orders
