@@ -18,6 +18,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from bench import __version__, auth, prompts
 from bench.activity import THROTTLE_SECONDS, ActivityMarker
 from bench.db import make_engine, migrate
+from bench.images import with_figures
 from bench.llm.http import make_http_client
 from bench.normsets import version_of
 from bench.providers import StudyConfig, load_config
@@ -110,6 +111,7 @@ def create_app(
     templates.env.globals["role_labels"] = ROLE_LABELS
     templates.env.filters["norm_version"] = version_of
     templates.env.globals["app_version"] = __version__
+    templates.env.filters["with_figures"] = with_figures
     app.state.templates = templates
 
     session_secret = settings.secret(SESSION_SECRET)

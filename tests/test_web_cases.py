@@ -9,8 +9,9 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
+from bench.images import aligned, files, with_figures
 from bench.llm.http import make_http_client
-from bench.models import Case, CaseStatus, ImportRun, SourceDocument
+from bench.models import Case, CaseParse, CaseStatus, ImportRun, SourceDocument
 from bench.settings import Settings
 from bench.web.app import create_app
 from tests.conftest import login
@@ -44,6 +45,43 @@ def _import(client: TestClient) -> None:
 def _case(client: TestClient, doc: str) -> Case:
     with Session(_engine(client)) as db:
         return db.exec(select(Case).where(Case.doc_number == doc)).one()
+
+
+def test_case_page_shows_the_images_where_models_see_a_placeholder(client: TestClient) -> None:
+    login(client, "admin@example.org")
+    _import(client)
+    pilot = _case(client, "JFT_20260302_25V00251_00")
+    with Session(_engine(client)) as db:
+        image = db.exec(
+            select(SourceDocument).where(
+                SourceDocument.case_id == pilot.id,
+                SourceDocument.name == "hauptdokument.img1is.png",
+            )
+        ).one()
+        parse = db.get(CaseParse, pilot.current_parse_id)
+        assert parse is not None and "[Abbildung]" in parse.input_text  # models: text only
+    html = client.get(f"/cases/{pilot.id}").text
+    url = f"/cases/{pilot.id}/documents/{image.id}"
+    assert f'<img src="{url}"' in html and "Abbildung 1 der Entscheidung" in html
+    assert client.get(url).headers["content-type"] == "image/png"
+
+
+def test_with_figures_escapes_and_keeps_unmatched_placeholders() -> None:
+    html = with_figures("a <b> [Abbildung] c [Abbildung]", ["/x/1", None])
+    assert "a &lt;b&gt;" in html and '<img src="/x/1"' in html
+    assert html.endswith("c [Abbildung]")  # no image known: the placeholder stays
+
+
+def test_images_are_matched_by_number_not_only_by_order() -> None:
+    xml = (
+        b'<risdok><binary nr="2"><src>/D/b.png</src></binary>'
+        b'<binary nr="1"><src>/D/a.png</src></binary></risdok>'
+    )
+    assert files(xml) == {2: "b.png", 1: "a.png"}
+    assert aligned(
+        "[Abbildung] und [Abbildung]", "\ue0002\ue001 und \ue0001\ue001", {1: "A", 2: "B"}
+    ) == ["B", "A"]
+    assert aligned("nur [Abbildung]", "\ue0002\ue001 und \ue0001\ue001", {1: "A"}) == []
 
 
 def test_cases_are_admin_only(client: TestClient) -> None:

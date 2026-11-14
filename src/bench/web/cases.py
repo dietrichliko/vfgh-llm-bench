@@ -11,6 +11,7 @@ from sqlmodel import Session, col, select
 
 from bench import cases, normsets
 from bench.auth import AdminDep, DbDep
+from bench.images import CaseImages
 from bench.models import (
     Case,
     CaseParse,
@@ -184,11 +185,14 @@ def case_detail(request: Request, case_id: int, user: AdminDep, db: DbDep) -> HT
         .order_by(col(SourceDocument.id))
     ).all()
     parse_count = len(db.exec(select(CaseParse.id).where(CaseParse.case_id == case_id)).all())
+    images = CaseImages(db, case, parse)
     return render(
         request,
         "case.html",
         user=user,
         parse=parse,
+        input_images=images.for_text("input_text"),
+        reference_images=images.for_text("reference_text"),
         docs=docs,
         parse_count=parse_count,
         parser_version=cases.PARSER_VERSION,

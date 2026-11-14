@@ -70,7 +70,7 @@
 {% if considerations %}
 <section class="answer">
 <h2>Anhang: Erwägungen des VfGH</h2>
-{% for p in considerations %}<p>{% if p.rz %}<span class="lead mono">{{ p.rz }}</span> {% endif %}{{ p.text }}</p>{% endfor %}
+{% for p in considerations %}<p>{% if p.rz %}<span class="lead mono">{{ p.rz }}</span> {% endif %}{{ p.text | with_figures(p.images) }}</p>{% endfor %}
 </section>
 {% endif %}
 </div>

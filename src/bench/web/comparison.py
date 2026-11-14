@@ -17,6 +17,7 @@ from sqlmodel import col, select
 from bench import citations, judges, orders
 from bench.analysis.metrics import POINTS, reason_values
 from bench.auth import AdminDep, DbDep
+from bench.images import CaseImages
 from bench.models import (
     CalibrationItem,
     CalibrationRating,
@@ -66,6 +67,12 @@ def _considerations(parse: CaseParse | None) -> list[dict[str, Any]]:
     ]
 
 
+def _with_images(db: DbDep, case: Case, parse: CaseParse | None) -> list[dict[str, Any]]:
+    """The considerations, each paragraph with the URLs of its images."""
+    images = CaseImages(db, case, parse)
+    return images.for_paragraphs(_considerations(parse), _considerations(images.marked))
+
+
 @router.get("/cases/{case_id}/vergleich", response_class=HTMLResponse)
 def comparison(request: Request, case_id: int, user: AdminDep, db: DbDep) -> HTMLResponse:
     case = db.get(Case, case_id)
@@ -112,7 +119,7 @@ def comparison(request: Request, case_id: int, user: AdminDep, db: DbDep) -> HTM
         parse=parse,
         checklist=checklist,
         answers=answers,
-        considerations=_considerations(parse),
+        considerations=_with_images(db, case, parse),
         subset=subset,
         subset_labels=judges.SUBSET_LABELS,
         outcome_labels=OUTCOME_LABELS,

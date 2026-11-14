@@ -149,11 +149,11 @@ Verordnungen und ganze Gesetze werden nicht automatisch geholt und können unten
 <div class="split">
   <section>
     <h3>Eingabe ({{ parse.input_section_count }} Abschnitte{% if parse.images_input %}, {{ parse.images_input }} Abbildung(en) als Platzhalter{% endif %})</h3>
-    <pre class="doc">{{ parse.input_text }}</pre>
+    <pre class="doc">{{ parse.input_text | with_figures(input_images) }}</pre>
   </section>
   <section>
     <h3>Referenz</h3>
-    <pre class="doc">{{ parse.reference_text }}</pre>
+    <pre class="doc">{{ parse.reference_text | with_figures(reference_images) }}</pre>
   </section>
 </div>
 {% endif %}

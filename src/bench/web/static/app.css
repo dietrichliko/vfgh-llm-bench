@@ -225,3 +225,18 @@ a.button { display: inline-block; text-decoration: none; font-family: var(--sans
   .comparison pre.doc { white-space: pre-wrap; }
 }
 @media (max-width: 700px) { .comparison .split { grid-template-columns: 1fr; } }
+
+/* Images of a decision (shown to people; models see only the placeholder) */
+figure.decision-image {
+  display: block;
+  margin: 0.75rem 0;
+  padding: 0.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  white-space: normal;
+  font-family: var(--sans);
+}
+figure.decision-image img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+figure.decision-image figcaption { margin-top: 0.35rem; font-size: 0.78rem; color: var(--muted); }
+@media print { figure.decision-image { break-inside: avoid; } }
