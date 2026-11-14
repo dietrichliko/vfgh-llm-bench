@@ -5,7 +5,9 @@ there. The supervisor:
 
 - swaps in a staged restore, backs up off-site if a migration is pending, migrates;
 - starts web, worker and ris-mcp as child processes and exits 1 if one of them dies
-  (fly.io restarts the machine);
+  (fly.io restarts the machine). Web starts alone, and the others only once it accepts
+  connections: on one shared CPU, three Python processes starting together kept web from
+  answering within the ~8 s that fly.io's proxy waits for a woken machine (2026-11-14);
 - uploads a backup every ``backup_interval_hours`` (only after changes);
 - stops with exit 0 after ``idle_stop_minutes`` without requests and without open jobs, so
   that fly.io leaves the machine stopped until the next request starts it. fly.io's own
@@ -16,9 +18,11 @@ there. The supervisor:
   a last backup.
 """
 
+import contextlib
 import logging
 import os
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -46,6 +50,7 @@ class Companion(Protocol):
 
 
 STOP_TIMEOUT = 30.0  # seconds a child gets to end after SIGTERM
+WEB_READY_TIMEOUT = 60.0  # seconds to wait for web before the others start anyway
 
 
 def default_commands(port: int, mcp_port: int) -> dict[str, list[str]]:
@@ -87,9 +92,11 @@ class Supervisor:
         poll_seconds: float = 15.0,
         clock: Callable[[], float] = time.time,
         bridge: Companion | None = None,
+        web_port: int | None = None,
     ) -> None:
         self.settings = settings
         self.bridge = bridge
+        self.web_port = web_port
         self.commands = commands
         self.store = store
         self.poll_seconds = poll_seconds
@@ -133,6 +140,23 @@ class Supervisor:
             self.children[name] = subprocess.Popen(self.commands[name], env=env)
             log.info("started %s (pid %s)", name, self.children[name].pid)
 
+    def wait_for_web(self, timeout: float = WEB_READY_TIMEOUT) -> bool:
+        """Until web accepts connections; False on timeout, if it died or on a stop."""
+        if self.web_port is None or "web" not in self.children:
+            return True
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if self.stop_requested or self.children["web"].poll() is not None:
+                return False
+            with (
+                contextlib.suppress(OSError),
+                socket.create_connection(("127.0.0.1", self.web_port), timeout=0.5),
+            ):
+                return True
+            time.sleep(0.1)
+        log.warning("web not ready after %.0f s: starting the others anyway", timeout)
+        return False
+
     def stop(self) -> None:
         for child in self.children.values():
             if child.poll() is None:
@@ -167,9 +191,13 @@ class Supervisor:
         code, reason = 1, "crash"
         try:
             self.prepare(engine)
-            # web first, so that the request that woke the machine is answered while the
-            # bridge boots; the worker, the only user of the bridge, after it
-            self.start([n for n in self.commands if n != "worker"])
+            # web alone first, so that the request that woke the machine is answered in
+            # time; then the rest while the bridge boots; the worker, the only user of
+            # the bridge, after it
+            self.start([n for n in self.commands if n == "web"])
+            self.wait_for_web()
+            if rest := [n for n in self.commands if n not in ("web", "worker")]:
+                self.start(rest)
             if self.bridge:
                 self.bridge.start()
             self.start([n for n in self.commands if n == "worker"])

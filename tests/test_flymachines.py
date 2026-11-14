@@ -1,6 +1,8 @@
 """Starting and stopping the u:ai bridge app on fly.io (Machines API mocked)."""
 
+import socket
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -146,6 +148,54 @@ def test_supervisor_order_web_bridge_worker(tmp_path: Path) -> None:
     assert sup.run() == 0
     # web answers the waking request while the bridge boots; the worker comes after it
     assert order == ["start web", "bridge start", "start worker", "children stop", "bridge stop"]
+
+
+def test_the_others_start_once_web_accepts_connections(tmp_path: Path) -> None:
+    s = Settings(data_dir=tmp_path / "data", idle_stop_minutes=15)
+    migrate(make_engine(s.db_url))
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+    slow_web = [  # listens only after a second, like web on a busy CPU
+        sys.executable,
+        "-c",
+        "import socket, time; time.sleep(1); s = socket.socket(); "
+        f"s.bind(('127.0.0.1', {port})); s.listen(); time.sleep(60)",
+    ]
+    sleep = [sys.executable, "-c", "import time; time.sleep(60)"]
+    sup = Supervisor(
+        s,
+        {"web": slow_web, "worker": sleep, "ris-mcp": sleep},
+        None,
+        poll_seconds=0.01,
+        clock=iter_clock(),
+        web_port=port,
+    )
+    ready_at_start: dict[str, bool] = {}
+    orig_start = sup.start
+
+    def start(names: list[str]) -> None:
+        for name in names:
+            try:
+                socket.create_connection(("127.0.0.1", port), timeout=0.2).close()
+                ready_at_start[name] = True
+            except OSError:
+                ready_at_start[name] = False
+        orig_start(names)
+
+    sup.start = start  # type: ignore[method-assign]
+    assert sup.run() == 0
+    assert ready_at_start == {"web": False, "ris-mcp": True, "worker": True}
+
+
+def test_a_dead_web_does_not_keep_the_others_waiting(tmp_path: Path) -> None:
+    s = Settings(data_dir=tmp_path / "data")
+    migrate(make_engine(s.db_url))
+    sup = Supervisor(s, {"web": [sys.executable, "-c", "pass"]}, None, web_port=1)
+    sup.start(["web"])
+    started = time.monotonic()
+    assert sup.wait_for_web(timeout=30) is False
+    assert time.monotonic() - started < 5
 
 
 def test_a_failing_supervisor_still_cleans_up(tmp_path: Path) -> None:

@@ -106,7 +106,7 @@ def _all(args: argparse.Namespace) -> int:
     except RuntimeError as exc:  # a backup misconfiguration must not keep the app down
         logging.error("off-site backup off: %s", exc)
         store = None
-    return Supervisor(settings, commands, store, bridge=bridge).run()
+    return Supervisor(settings, commands, store, bridge=bridge, web_port=args.port).run()
 
 
 def _restore(args: argparse.Namespace) -> int:
