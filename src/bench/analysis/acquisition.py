@@ -8,7 +8,9 @@ case's Stichtag. Per run, from the stored tool calls (``Run.tool_calls``):
   ``hole_norm`` (in any version);
 - **version correctness**: share of the fetched reference norms that the model fetched in
   the reference version (the same RIS document number; each version has its own);
-- **search effort**: number of tool calls, and how many the call limit cut off.
+- **search effort**: number of tool calls, how many the call limit cut off, the share of
+  runs with at least one call (a model that rarely searches answers in C much as in A)
+  and the share of calls that failed.
 
 A norm is identified by short title and section as the RIS itself states them (blocks
 "Kurztitel" and "§/Artikel/Anlage"), so the norm set and the tool results compare like with
@@ -207,6 +209,8 @@ class AcquisitionResult:
     version_correct: Interval | None  # pooled over the retrieved reference norms
     mean_calls: float | None  # over all C runs of the model
     cut_off: int  # calls the limit cut off, over all C runs
+    used_tools: Interval | None = None  # share of C runs with at least one tool call
+    failed: Interval | None = None  # share of executed calls that returned an error
 
 
 def acquisition(db: Session, run_ids: Sequence[int]) -> list[AcquisitionResult]:
@@ -228,20 +232,25 @@ def acquisition(db: Session, run_ids: Sequence[int]) -> list[AcquisitionResult]:
     per: defaultdict[str, list[Trajectory]] = defaultdict(list)
     for r in runs:
         per[r.model_key].append(trajectory(r, sets.get(r.case_id), checks[r.id or 0]))
-    out = []
-    for model, ts in sorted(per.items()):
-        with_ref = [t for t in ts if t.references]
-        refs = sum(len(t.references) for t in with_ref)
-        got = sum(t.retrieved for t in with_ref)
-        out.append(
-            AcquisitionResult(
-                model_key=model,
-                runs=len(with_ref),
-                references=refs,
-                recall=wilson(got, refs),
-                version_correct=wilson(sum(t.right_version for t in with_ref), got),
-                mean_calls=sum(t.calls for t in ts) / len(ts),
-                cut_off=sum(t.cut_off for t in ts),
-            )
-        )
-    return out
+    return [summarise(model, ts) for model, ts in sorted(per.items())]
+
+
+def summarise(model: str, ts: Sequence[Trajectory]) -> AcquisitionResult:
+    """One model's C runs: recall and version pooled over the reference norms."""
+    with_ref = [t for t in ts if t.references]
+    refs = sum(len(t.references) for t in with_ref)
+    got = sum(t.retrieved for t in with_ref)
+    return AcquisitionResult(
+        model_key=model,
+        runs=len(with_ref),
+        references=refs,
+        recall=wilson(got, refs),
+        version_correct=wilson(sum(t.right_version for t in with_ref), got),
+        mean_calls=sum(t.calls for t in ts) / len(ts) if ts else None,
+        cut_off=sum(t.cut_off for t in ts),
+        used_tools=wilson(sum(t.calls > 0 for t in ts), len(ts)),
+        failed=wilson(
+            sum(s.state == "error" for t in ts for s in t.steps),
+            sum(s.state != "limit" for t in ts for s in t.steps),
+        ),
+    )

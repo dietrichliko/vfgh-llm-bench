@@ -101,7 +101,7 @@ The dashboard ("Epistemisches Profil") leads with these dimensions; the outcome 
 - **Identity of a norm:** short title and section as the RIS states them (blocks *Kurztitel* and *§/Artikel/Anlage*); a later part of a long document is known by its document number.
 - **Reference-norm recall:** share of reference norms fetched with `hole_norm` in any version; pooled over the reference norms of a model's C runs, Wilson interval.
 - **Version correctness:** among the fetched reference norms, share fetched as the same RIS document as the reference version (each version has its own document number); pooled, Wilson interval. A version the tool marked as not in force on the Stichtag is shown on the run page.
-- **Search effort:** mean number of tool calls per C run, and the number of calls the limit cut off.
+- **Search effort:** mean number of tool calls per C run, the number of calls the limit cut off, the **share of C runs with at least one tool call** and the share of executed calls that returned an error (Wilson intervals). A model that rarely searches answers in C much as in A, so an A–C or B–C difference says something about acquisition only for the runs that used the tools (pilot test runs: DeepSeek V4 Flash answered without any tool call in 5 of 6 C runs on V8/2026).
 - **Cited:** a fetched document counts as cited if the citation check found the same document for one of the answer's citations (shown per step, no metric).
 
 ## 11 Human assessment: error categories, reviewability, time

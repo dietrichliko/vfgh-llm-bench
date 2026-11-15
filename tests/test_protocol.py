@@ -247,7 +247,9 @@ async def test_study_page_freeze_and_publish(
         dash = client.get("/dashboard").text
         assert "konf-2026-protocol-v1" in dash and "weichen ab" in dash
         assert "Noch keine ausgewerteten Läufe" in dash
-        assert "Ergebnis-Treffer (eine Dimension unter fünf)" in client.get("/dashboard?alle=1").text
+        assert (
+            "Ergebnis-Treffer (eine Dimension unter fünf)" in client.get("/dashboard?alle=1").text
+        )
 
     # a study order after the freeze
     with Session(engine) as db:

@@ -1,6 +1,6 @@
 from datetime import date
 
-from bench.analysis.acquisition import trajectory
+from bench.analysis.acquisition import summarise, trajectory
 from bench.models import CitationCheck, CitationResult, NormSet, Run
 
 
@@ -44,38 +44,40 @@ def call(name: str, result: str | None, error: bool = False, **args: object) -> 
     return {"id": "x", "name": name, "args": args, "result": result, "error": error}
 
 
+TOOL_CALLS = [
+    call(
+        "suche_normen",
+        "3 Treffer in der Fassung zum maßgeblichen Zeitpunkt (erste 3):\n\n- NOR40263000: …",
+        suchbegriff="Halteverbot",
+    ),
+    call(
+        "hole_norm",
+        norm_text("Straßenverkehrsordnung 1960", "§ 43", "NOR40263000"),
+        dokument_oder_paragraf="NOR40263000",
+    ),
+    # § 44 in an older version: retrieved, but not the reference version
+    call(
+        "hole_norm",
+        norm_text("Straßenverkehrsordnung 1960", "§ 44", "NOR40099999", outdated=True),
+        dokument_oder_paragraf="§ 44 StVO 1960",
+    ),
+    # second part of a long document: no title block, known by its number
+    call(
+        "hole_norm",
+        "Quelle: https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40263000/"
+        "NOR40263000.html\nTeil 2 von 2\n\n(5) …",
+        dokument_oder_paragraf="NOR40263000",
+        teil=2,
+    ),
+    call("hole_norm", "Kein Dokument", error=True, dokument_oder_paragraf="§ 1 XYZ"),
+    call("hole_norm", None, dokument_oder_paragraf="§ 99 StVO 1960"),
+]
+
+
 def test_trajectory_recall_version_and_citation() -> None:
     run = Run(
         condition="C",
-        tool_calls=[
-            call(
-                "suche_normen",
-                "3 Treffer in der Fassung zum maßgeblichen Zeitpunkt (erste 3):\n\n"
-                "- NOR40263000: …",
-                suchbegriff="Halteverbot",
-            ),
-            call(
-                "hole_norm",
-                norm_text("Straßenverkehrsordnung 1960", "§ 43", "NOR40263000"),
-                dokument_oder_paragraf="NOR40263000",
-            ),
-            # § 44 in an older version: retrieved, but not the reference version
-            call(
-                "hole_norm",
-                norm_text("Straßenverkehrsordnung 1960", "§ 44", "NOR40099999", outdated=True),
-                dokument_oder_paragraf="§ 44 StVO 1960",
-            ),
-            # second part of a long document: no title block, known by its number
-            call(
-                "hole_norm",
-                "Quelle: https://ogd.ris.bka.gv.at/Dokumente/Bundesnormen/NOR40263000/"
-                "NOR40263000.html\nTeil 2 von 2\n\n(5) …",
-                dokument_oder_paragraf="NOR40263000",
-                teil=2,
-            ),
-            call("hole_norm", "Kein Dokument", error=True, dokument_oder_paragraf="§ 1 XYZ"),
-            call("hole_norm", None, dokument_oder_paragraf="§ 99 StVO 1960"),
-        ],
+        tool_calls=TOOL_CALLS,
     )
     checks = [
         CitationCheck(
@@ -114,3 +116,16 @@ def test_trajectory_without_norm_set() -> None:
     run = Run(condition="C", tool_calls=[])
     t = trajectory(run)
     assert t.steps == [] and t.references == [] and t.recall is None and t.version_correct is None
+
+
+def test_summarise_pools_over_reference_norms() -> None:
+    searched = trajectory(Run(condition="C", tool_calls=TOOL_CALLS), NORM_SET)
+    silent = trajectory(Run(condition="C", tool_calls=[]), NORM_SET)  # answered from memory
+    no_set = trajectory(Run(condition="C", tool_calls=[TOOL_CALLS[0]]))
+    a = summarise("m", [searched, silent, no_set])
+    assert (a.runs, a.references, a.cut_off) == (2, 6, 1)
+    assert a.recall is not None and a.recall.estimate == 2 / 6
+    assert a.version_correct is not None and a.version_correct.estimate == 1 / 2
+    assert a.used_tools is not None and a.used_tools.estimate == 2 / 3
+    assert a.mean_calls == (6 + 0 + 1) / 3
+    assert a.failed is not None and a.failed.estimate == 1 / 6  # 6 executed calls, 1 error

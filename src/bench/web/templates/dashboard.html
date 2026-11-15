@@ -60,10 +60,10 @@ gewählten Bedingung. Dunkles Feld: Stärke, helles: Schwäche; „–“: nicht
 Fassung zum Stichtag). Abgerufen: mit <code>hole_norm</code> in irgendeiner Fassung; Fassung richtig: dasselbe
 RIS-Dokument wie die Referenzfassung. Gepoolt über die Normen, 95-%-Intervalle in Klammern.</p>
 <table>
-  <thead><tr><th>Modell</th><th class="r">Läufe mit Normensatz</th><th class="r">Referenznormen</th><th class="r">abgerufen</th><th class="r">Fassung richtig</th><th class="r">Ø Werkzeugaufrufe</th><th class="r">vom Limit abgeschnitten</th></tr></thead>
+  <thead><tr><th>Modell</th><th class="r">Läufe mit Normensatz</th><th class="r">Referenznormen</th><th class="r">abgerufen</th><th class="r">Fassung richtig</th><th class="r">Läufe mit Recherche</th><th class="r">Ø Werkzeugaufrufe</th><th class="r">Aufrufe mit Fehler</th><th class="r">vom Limit abgeschnitten</th></tr></thead>
   <tbody>{% for a in report.acquisition %}<tr><td>{{ a.model_key }}</td><td class="r mono">{{ a.runs }}</td><td class="r mono">{{ a.references }}</td>
     <td class="r mono">{{ iv(a.recall) }}{{ ivr(a.recall) }}</td><td class="r mono">{{ iv(a.version_correct) }}{{ ivr(a.version_correct) }}</td>
-    <td class="r mono">{{ num(a.mean_calls, 1) }}</td><td class="r mono">{{ a.cut_off }}</td></tr>{% endfor %}</tbody>
+    <td class="r mono">{{ iv(a.used_tools) }}{{ ivr(a.used_tools) }}</td><td class="r mono">{{ num(a.mean_calls, 1) }}</td><td class="r mono">{{ iv(a.failed) }}</td><td class="r mono">{{ a.cut_off }}</td></tr>{% endfor %}</tbody>
 </table>
 {% else %}<p>Noch keine Läufe in Bedingung C.</p>{% endif %}
 </section>
