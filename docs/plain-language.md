@@ -122,13 +122,13 @@ A model that answers "unlawful" for some other reason has matched the outcome, n
 
 ## The pilot
 
-The pilot uses the about 17 usable cases decided since June 2026, three open models and two ways of working.
+The pilot uses the about 17 usable cases decided since June 2026, four open models and two ways of working.
 
 **Cases.**
 
 - All judgments (Erkenntnisse) on applications under Art 139 B-VG decided from 1 June 2026. The RIS holds 20 today; about 15 to 17 of them are usable.
 - The court decides in sessions. After its December 2026 session the number should rise to about 25. This is an estimate from the earlier sessions.
-- June 2026 was chosen because Gemma 4 was published in April 2026 and Mistral Small 3.2 in June 2025, before any of these decisions existed.
+- June 2026 was chosen because Gemma 4 and DeepSeek V4 Flash were published in April 2026 and Mistral Small 3.2 in June 2025, before any of these decisions existed.
 
 **Left out by rule.**
 
@@ -141,12 +141,15 @@ The pilot uses the about 17 usable cases decided since June 2026, three open mod
 | Model | Maker | Size | Published | Role in the pilot |
 | --- | --- | --- | --- | --- |
 | Mistral Small 3.2 | Mistral AI | 24 billion parameters | 20 June 2025 | Reportedly the model of the Austrian federal administration's GovGPT |
+| DeepSeek V4 Flash | DeepSeek | 284 billion, 13 billion active | 24 April 2026 | Tested next to Mistral Small 3.2; see the note below |
 | Gemma 4 31B | Google | 31 billion | April 2026 | A small model; it could run on an institution's own computers |
 | GLM-5.3 | Z.ai | 753 billion | August 2026 | The large and newest model; see the note below |
 
-Mistral Small 3.2 is in the pilot because of GovGPT: a model the administration already uses is the most relevant one to test. Only one source names the version (Der Standard, July 2026); the Federal Chancellery speaks of Mistral models in general. Mistral Small 3.2 and Gemma 4 could read images; GLM-5.3 cannot. All three get text only.
+Mistral Small 3.2 is in the pilot because of GovGPT: a model the administration already uses is the most relevant one to test. Only one source names the version (Der Standard, July 2026); the Federal Chancellery speaks of Mistral models in general. Mistral Small 3.2 and Gemma 4 could read images; DeepSeek V4 Flash and GLM-5.3 cannot. All four get text only.
 
-GLM-5.3 is free of prior knowledge only for cases decided since mid-September 2026, at most four today. Its answers on the other cases are shown separately and marked. All three models are used through a commercial service (OpenRouter), each fixed to one hosting provider, so that the same version answers every time.
+DeepSeek V4 Flash was added on 15 November 2026. When Mistral Small 3.2 may search the RIS itself, it writes its answer as free text instead of the required form, with every hosting provider tested, so the program cannot score it. DeepSeek V4 Flash is an open model of the same price class that keeps the form; Mistral Small 3.2 stays in the pilot because of GovGPT. DeepSeek V4 Flash comes from the same maker as the model that writes the opposing reasonings of question 5; this is reported as a limitation of question 5.
+
+GLM-5.3 is free of prior knowledge only for cases decided since mid-September 2026, at most four today. Its answers on the other cases are shown separately and marked. All four models are used through a commercial service (OpenRouter), each fixed to one hosting provider, so that the same version answers every time.
 
 **Two ways of working.**
 
@@ -164,7 +167,7 @@ A third way, with the relevant legal texts handed to the model in advance, is le
 - Rates about 100 answers without knowing which model wrote them: one answer per case, model and way of working.
 - A second person rates 20 of these answers, to show how far two lawyers agree with each other.
 
-**What the judge models do.** Two models from makers other than the tested ones score the same answers, and further ones: Claude Opus 4.8 (Anthropic) and GPT-5.5 (OpenAI), through the University of Vienna's u:ai service. Their agreement with the lawyer shows whether a larger study can rely on them. The two opposing reasonings of question 5 are written by DeepSeek V4 Pro, a model from yet another maker, so that no tested model rates its own text.
+**What the judge models do.** Two models from makers other than the tested ones score the same answers, and further ones: Claude Opus 4.8 (Anthropic) and GPT-5.5 (OpenAI), through the University of Vienna's u:ai service. Their agreement with the lawyer shows whether a larger study can rely on them. The two opposing reasonings of question 5 are written by DeepSeek V4 Pro, a model from yet another maker, so that no tested model rates its own text. DeepSeek V4 Flash, added later, is the one exception: it rates texts of its maker's larger model.
 
 **Cost.** Running the models comes at reasonable cost. The larger cost is the lawyer's time.
 
@@ -235,7 +238,7 @@ In both, the lawyer's time is the larger cost.
 - [ ] The date of the conference, and by when results are needed.
 - [ ] Approval of the German instructions by the legal expert.
 - [x] The two judge models: Claude Opus 4.8 and GPT-5.5 (decided 2026-11-12).
-- [x] The tested models: Mistral Small 3.2, Gemma 4 31B, GLM-5.3 (2026-11-14), each with the sampling settings its maker recommends.
+- [x] The tested models: Mistral Small 3.2, Gemma 4 31B, GLM-5.3 (2026-11-14), DeepSeek V4 Flash (2026-11-15), each with the sampling settings its maker recommends.
 - [x] The changes to the program that this pilot needs (built and released, 2026-11-11 to 2026-11-14).
 
 ## Glossary
@@ -285,6 +288,6 @@ In both, the lawyer's time is the larger cost.
 - Cases and case counts: [RIS](https://www.ris.bka.gv.at), queried on 9 November 2026.
 - The study design: [Begründen LLMs wie der VfGH? – Abstract und Kurzpaper](https://claude.ai/artifact/9k5ZqdbykybvdfuQ3kuPZU).
 - The program: [vfgh-llm-bench](https://github.com/dietrichliko/vfgh-llm-bench).
-- Publication dates and sizes of the models: [Mistral Small 3.2 model card](https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506), [Gemma 4 31B model card](https://huggingface.co/google/gemma-4-31b-it), [GLM-5.3](https://huggingface.co/zai-org/GLM-5.3); dates also from the OpenRouter listing.
+- Publication dates and sizes of the models: [Mistral Small 3.2 model card](https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506), [Gemma 4 31B model card](https://huggingface.co/google/gemma-4-31b-it), [DeepSeek V4 model card](https://fe-static.deepseek.com/chat/transparency/deepseek-V4-model-card-EN.pdf), [GLM-5.3](https://huggingface.co/zai-org/GLM-5.3); dates also from the OpenRouter listing.
 - GovGPT and Mistral Small 3.2: [Der Standard, July 2026](https://www.derstandard.at/story/3000000332452/staat-und-ki-kann-das-gut-ausgehen); [Federal Chancellery, GovGPT launch](https://www.bundeskanzleramt.gv.at/bundeskanzleramt/nachrichten-der-bundesregierung/2026/07/proell-public-ai-launcht-govgpt-fuer-die-bundesverwaltung.html).
 - Models and hosting providers: OpenRouter listing of 9 November 2026.
