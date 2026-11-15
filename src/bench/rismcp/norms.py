@@ -93,6 +93,10 @@ _NORM_SUB = re.compile(
     re.I,
 )
 MAX_LOCAL_PAGES = 5
+# suche_normen: up to this many pages of 100 hits for the overview of laws (the RIS
+# answers deep pages with 500 at times, e.g. page 4 of 100)
+MAX_OVERVIEW_PAGES = 3
+_REGULATION_TYPES = frozenset({"V", "VO"})  # RIS field Typ (BrKons/LrKons)
 _DATE_DE = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(\d{4})\b")
 
 
@@ -116,6 +120,13 @@ class NormHit:
     gemeinde: str | None = None
     sammlung: str = "normen"
     datum: str | None = None  # Kundmachung bzw. Inkrafttreten (Gemeinden, Bezirke)
+    typ: str | None = None  # RIS Typ, e.g. BG, LG, V
+
+    @property
+    def is_regulation(self) -> bool:
+        return (self.typ or "").upper() in _REGULATION_TYPES or "verordnung" in (
+            self.kurztitel or ""
+        ).lower()
 
 
 @dataclass(frozen=True)
@@ -392,7 +403,10 @@ class RisClient:
         paragraf: str | None = None,
         gesetzesnummer: str | None = None,
         abschnitt_typ: str = "Paragraph",
+        pages: int = 1,
     ) -> tuple[int, list[NormHit]]:
+        """``pages > 1`` (``normen`` only): up to that many pages of 100 hits, for the
+        overview of laws; otherwise one page of 20."""
         if art not in ARTEN:
             raise RisError(f"Unbekannte Art {art!r}: {', '.join(ARTEN)}")
         land = normalize_scope(geltungsbereich)
@@ -405,6 +419,7 @@ class RisClient:
                 paragraf=paragraf,
                 gesetzesnummer=gesetzesnummer,
                 abschnitt_typ=abschnitt_typ,
+                pages=pages,
             )
         if land is None:
             raise RisError(
@@ -464,11 +479,12 @@ class RisClient:
         paragraf: str | None,
         gesetzesnummer: str | None,
         abschnitt_typ: str = "Paragraph",
+        pages: int = 1,
     ) -> tuple[int, list[NormHit]]:
         endpoint = "Landesrecht" if land else "Bundesrecht"
         params = {
             "Applikation": "LrKons" if land else "BrKons",
-            "DokumenteProSeite": "Twenty",
+            "DokumenteProSeite": "OneHundred" if pages > 1 else "Twenty",
         }
         if stichtag is not None:
             params["Fassung.FassungVom"] = stichtag.isoformat()
@@ -490,8 +506,20 @@ class RisClient:
             params[f"Bundesland.SucheIn{land}"] = "true"
         docs = await self._search(endpoint, params)
         total = int(docs.get("Hits", {}).get("#text", 0))
+        refs = _as_list(docs.get("OgdDocumentReference"))
+        page = 1
+        while page < pages and len(refs) < total:
+            page += 1
+            try:
+                more = await self._search(endpoint, {**params, "Seitennummer": str(page)})
+            except (RisError, httpx.HTTPError):
+                break  # deep pages fail in the RIS at times; the overview stays shorter
+            batch = _as_list(more.get("OgdDocumentReference"))
+            if not batch:
+                break
+            refs += batch
         hits = []
-        for ref in _as_list(docs.get("OgdDocumentReference")):
+        for ref in refs:
             meta = ref["Data"]["Metadaten"]
             section = meta.get(endpoint, {})
             details = next((v for v in section.values() if isinstance(v, dict)), {})
@@ -504,6 +532,7 @@ class RisClient:
                     gesetzesnummer=details.get("Gesetzesnummer"),
                     in_kraft=details.get("Inkrafttretensdatum"),
                     bundesland=details.get("Bundesland"),
+                    typ=details.get("Typ"),
                 )
             )
         return total, hits

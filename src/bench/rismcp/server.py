@@ -12,6 +12,7 @@ looks decisions up from the worker (``bench.citations``), so this server never s
 """
 
 import logging
+import re
 import secrets
 from datetime import date
 
@@ -26,6 +27,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from bench import __version__
 from bench.rismcp.norms import (
+    MAX_OVERVIEW_PAGES,
     NormHit,
     NormText,
     NotAllowedError,
@@ -42,6 +44,14 @@ TOOL_NAMES = frozenset({"suche_normen", "hole_norm"})
 STICHTAG_HEADER = "x-stichtag"
 MAX_CHARS = 12_000  # per part delivered by hole_norm
 AT = "zum maßgeblichen Zeitpunkt"
+MAX_LISTED_HITS = 20  # single hits listed by suche_normen
+MAX_LISTED_LAWS = 10  # laws in the overview of suche_normen
+_TYPES = {
+    "BG": "Bundesgesetz",
+    "BVG": "Bundesverfassungsgesetz",
+    "LG": "Landesgesetz",
+    "LVG": "Landesverfassungsgesetz",
+}
 
 INSTRUCTIONS = (
     "Recherche im österreichischen Recht in der Fassung zum maßgeblichen Zeitpunkt des Falls: "
@@ -58,14 +68,62 @@ def stichtag_from(ctx: Context) -> date:
         raise RisError("Kein Stichtag für diese Verbindung gesetzt") from exc
 
 
-def format_hits(total: int, hits: list[NormHit], art: str) -> str:
+def laws_in(hits: list[NormHit], suchbegriff: str) -> list[tuple[NormHit, int]]:
+    """The laws among the hits with their hit counts, best first: search words in the
+    title, acts before regulations, many hits before few.
+
+    The RIS sorts hits by title, so an act's regulations named after it come first
+    („Jagdgesetz 2004 - TJG 2004, Tiroler, … Durchführungsverordnung“ before „Jagdgesetz
+    2004, Tiroler“): without the overview, the act was not among the first 20 hits.
+    """
+    words = [w.lower() for w in re.findall(r"\w{3,}", suchbegriff)]
+    groups: dict[str, list[NormHit]] = {}
+    for h in hits:
+        groups.setdefault(h.gesetzesnummer or h.kurztitel, []).append(h)
+
+    def rank(item: tuple[NormHit, int]) -> tuple[int, bool, int, str]:
+        h, n = item
+        title = f"{h.kurztitel} {h.abkuerzung or ''}".lower()
+        return (-sum(w in title for w in words), h.is_regulation, -n, h.kurztitel)
+
+    return sorted(((g[0], len(g)) for g in groups.values()), key=rank)
+
+
+def format_laws(hits: list[NormHit], total: int, suchbegriff: str, scope: str) -> list[str]:
+    laws = laws_in(hits, suchbegriff)
+    if len(laws) < 2:
+        return []
+    basis = f"allen {total}" if len(hits) >= total else f"den ersten {len(hits)} von {total}"
+    lines = [f"Rechtsvorschriften unter {basis} Treffern ({len(laws)}):"]
+    for h, n in laws[:MAX_LISTED_LAWS]:
+        abbr = f" ({h.abkuerzung})" if h.abkuerzung else ""
+        kind = "Verordnung" if h.is_regulation else _TYPES.get(h.typ or "", h.typ or "?")
+        lines.append(
+            f"- {h.kurztitel}{abbr}, {kind}, Gesetzesnummer {h.gesetzesnummer or '?'}: {n} Treffer"
+        )
+    if len(laws) > MAX_LISTED_LAWS:
+        lines.append(f"- … und {len(laws) - MAX_LISTED_LAWS} weitere")
+    lines += [
+        f'Einen Paragrafen daraus: hole_norm(dokument_oder_paragraf="§ <Nummer> '
+        f'<Gesetzesnummer>", geltungsbereich="{scope}").',
+        "",
+    ]
+    return lines
+
+
+def format_hits(
+    total: int, hits: list[NormHit], art: str, suchbegriff: str = "", scope: str = "bund"
+) -> str:
     if not hits:
         return f"Keine Treffer {AT}."
     if art == "normen":
+        overview = format_laws(hits, total, suchbegriff, scope)
+        hits = hits[:MAX_LISTED_HITS]
         head = f"{total} Treffer in der Fassung {AT} (erste {len(hits)}):"
     else:
+        overview = []
         head = f"{total} Treffer, {AT} schon kundgemacht (neueste {len(hits)}):"
-    lines = [head, ""]
+    lines = [*overview, head, ""]
     for h in hits:
         if art == "normen":
             title = h.abkuerzung or h.kurztitel
@@ -214,11 +272,16 @@ def create_server(ris: RisClient | None = None) -> MCPServer:
         try:
             tag = stichtag_from(ctx)
             total, hits = await client.search_norms(
-                suchbegriff, geltungsbereich, tag, art=art, gemeinde=gemeinde
+                suchbegriff,
+                geltungsbereich,
+                tag,
+                art=art,
+                gemeinde=gemeinde,
+                pages=MAX_OVERVIEW_PAGES,
             )
         except (RisError, httpx.HTTPError) as exc:
             raise ToolError(str(exc)) from exc
-        return format_hits(total, hits, art)
+        return format_hits(total, hits, art, suchbegriff, geltungsbereich.strip().lower())
 
     @mcp.tool()
     async def hole_norm(

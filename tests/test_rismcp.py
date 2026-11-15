@@ -394,3 +394,90 @@ async def test_hole_norm_lists_the_laws_when_a_citation_is_ambiguous() -> None:
             cast(RisClient, SectionsRis()), "§ 36 Jagdgesetz", date(2026, 9, 29), "bund"
         )
     assert "LTI-ACT36" in str(exc.value) and "LSB-36" in str(exc.value)
+
+
+# ── suche_normen: overview of the laws among the hits (2026-11-15) ───────────────────
+# Mistral Small 3.2 searched „Tiroler Jagdgesetz 2004“ five times on V8/2026: the RIS
+# sorts by title, the first 20 of 282 hits were all regulations, the act never showed.
+
+TJG_SEARCH = FIX / "suche_tiroler_jagdgesetz.json"
+
+
+def tjg_handler(
+    requests: list[httpx.Request], total: str | None = None, failing_page: int = 4
+) -> Callable[[httpx.Request], httpx.Response]:
+    data = json.loads(TJG_SEARCH.read_text())
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        p = request.url.params
+        assert str(request.url).startswith(f"{API_BASE}/Landesrecht")
+        page = int(p.get("Seitennummer", "1"))
+        if page >= failing_page:
+            return httpx.Response(500)
+        size = 100 if p["DokumenteProSeite"] == "OneHundred" else 20
+        refs = data["refs"][(page - 1) * size : page * size]
+        result = {"Hits": {"#text": total or data["total"]}, "OgdDocumentReference": refs}
+        return httpx.Response(200, json={"OgdSearchResult": {"OgdDocumentResults": result}})
+
+    return handle
+
+
+def tjg_ris(requests: list[httpx.Request], **kwargs: Any) -> RisClient:
+    transport = httpx.MockTransport(tjg_handler(requests, **kwargs))
+    return RisClient(httpx.AsyncClient(transport=transport), min_interval=0)
+
+
+async def test_search_shows_the_act_before_its_regulations() -> None:
+    requests: list[httpx.Request] = []
+    text, err = await call(
+        tjg_ris(requests),
+        "2026-09-29",
+        "suche_normen",
+        suchbegriff="Tiroler Jagdgesetz 2004",
+        geltungsbereich="tirol",
+    )
+    assert not err, text
+    overview, listed = text.split("Treffer in der Fassung", 1)
+    first_law = overview.split("\n- ", 1)[1].split("\n", 1)[0]
+    assert first_law.startswith(
+        "Jagdgesetz 2004, Tiroler (TJG 2004), Landesgesetz, Gesetzesnummer 10000088"
+    )
+    assert "allen 282 Treffern" in overview and 'geltungsbereich="tirol"' in overview
+    assert "10000088" not in listed  # not among the first 20 single hits
+    assert listed.count("\n- ") == srv.MAX_LISTED_HITS
+    assert "2026-09-29" not in text  # the date is never printed
+    assert [r.url.params.get("Seitennummer", "1") for r in requests] == ["1", "2", "3"]
+
+
+async def test_search_survives_a_failing_deep_page() -> None:
+    requests: list[httpx.Request] = []
+    text, err = await call(
+        tjg_ris(requests, total="450", failing_page=3),
+        "2026-09-29",
+        "suche_normen",
+        suchbegriff="Tiroler Jagdgesetz 2004",
+        geltungsbereich="tirol",
+    )
+    assert not err, text
+    assert "den ersten 200 von 450 Treffern" in text
+
+
+def test_laws_ranked_by_title_words_then_acts_then_hits() -> None:
+    from bench.rismcp.norms import NormHit
+
+    def hit(title: str, number: str, typ: str) -> NormHit:
+        return NormHit("X", title, gesetzesnummer=number, typ=typ)
+
+    dvo = [hit(DVO1, "20000620", "V")] * 5
+    act = [hit(ACT, "10000088", "LG")] * 2
+    fish = [hit("Fischereigesetz, Tiroler", "20000001", "LG")] * 9
+    ranked = [h.gesetzesnummer for h, _ in srv.laws_in(dvo + fish + act, "Jagdgesetz")]
+    assert ranked == ["10000088", "20000620", "20000001"]
+
+
+async def test_one_law_needs_no_overview(ris: RisClient) -> None:
+    text, err = await call(
+        ris, "2015-01-01", "suche_normen", suchbegriff="Halteverbot", geltungsbereich="bund"
+    )
+    assert not err and "Rechtsvorschriften unter" not in text
