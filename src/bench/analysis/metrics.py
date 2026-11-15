@@ -8,6 +8,7 @@ from statistics import fmean
 from sqlmodel import Session, col, select
 
 from bench import citebaseline, contamination
+from bench.analysis.acquisition import AcquisitionResult, acquisition
 from bench.analysis.stats import (
     Interval,
     auc,
@@ -859,6 +860,7 @@ class Report:
     pending: dict[str, int] = field(default_factory=dict)  # "model/condition" → open cells
     routing: list[Routing] = field(default_factory=list)
     citation_baseline: citebaseline.Baseline | None = None  # the checker's own miss rate
+    acquisition: list[AcquisitionResult] = field(default_factory=list)  # condition C
 
 
 def allowed_runs(db: Session, order_ids: Iterable[int] | None) -> set[int] | None:
@@ -896,4 +898,5 @@ def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
         outcome_common=common_cases(runs, t),
         pending={f"{m}/{c}": n for (m, c), n in sorted(pending(db, order_ids).items())},
         routing=routing(db, order_ids),
+        acquisition=acquisition(db, [r.id for r in runs if r.condition == "C" and r.answered]),
     )
