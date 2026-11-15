@@ -17,7 +17,7 @@ from bench import export
 from bench.models import AuditLog, User, UserRole
 from bench.providers import ResolvedModel
 from bench.settings import Settings
-from tests.test_calibration import CITES, REASONS, judged
+from tests.test_calibration import CITES, GRADE, REASONS, judged
 from tests.test_dashboard import as_role, client_for
 from tests.test_judges import models as models
 from tests.test_judges import settings as settings
@@ -41,7 +41,7 @@ async def prepared(
         db.add(expert)
         db.flush()
         for item in calibration_queue.draw(db, 2, 0, None, seed=1):
-            calibration_queue.rate(db, item, expert.id or 0, REASONS, CITES)
+            calibration_queue.rate(db, item, expert.id or 0, REASONS, CITES, **GRADE)
         db.commit()
 
 
@@ -67,6 +67,8 @@ async def test_zip_contents(
         "data/calibration_ratings.jsonl.gz",
         "metrics/outcome.csv",
         "metrics/calibration.csv",
+        "metrics/acquisition.csv",
+        "metrics/human_assessment.csv",
         "dashboard/A.html",
         "dashboard/static/app.css",
     } <= names
@@ -94,7 +96,7 @@ async def test_zip_contents(
     assert {"model_key", "accuracy", "accuracy_low", "accuracy_high"} <= set(outcome[0])
     assert {o["model_key"] for o in outcome} == {"alpha", "beta"}
     page = z.read("dashboard/A.html").decode()
-    assert "Leaderboard" in page and 'href="static/app.css"' in page
+    assert "Epistemisches Profil" in page and 'href="static/app.css"' in page
     assert "/export.zip" not in page and "Stand: 2026-11-06 12:00 UTC" in page
     assert "Ohne Roh-Antworten" in z.read("README.md").decode()
 

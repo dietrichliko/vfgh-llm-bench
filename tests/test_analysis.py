@@ -173,6 +173,32 @@ def test_stability() -> None:
     assert s.fleiss_cases == 1  # only case 1 has all three runs
 
 
+def test_stability_across_phrasings() -> None:
+    def run(i: int, case: int, phrasing: int, rep: int, label: str) -> metrics.DecideRun:
+        return metrics.DecideRun(i, case, "m", "A", phrasing, rep, label)
+
+    runs = [
+        # case 1: unstable within phrasing 1, but both phrasings lean "unlawful"
+        run(1, 1, 1, 1, "unlawful"),
+        run(2, 1, 1, 2, "unlawful"),
+        run(3, 1, 1, 3, "dismissed"),
+        run(4, 1, 2, 1, "unlawful"),
+        # case 2: each phrasing stable, but they disagree
+        run(5, 2, 1, 1, "unlawful"),
+        run(6, 2, 2, 1, "dismissed"),
+        # case 3: a tie in phrasing 1 counts as a change
+        run(7, 3, 1, 1, "unlawful"),
+        run(8, 3, 1, 2, "dismissed"),
+        run(9, 3, 2, 1, "unlawful"),
+        # case 4: one phrasing only
+        run(10, 4, 1, 1, "unlawful"),
+        run(11, 4, 1, 2, "unlawful"),
+    ]
+    (s,) = metrics.stability(runs)
+    assert (s.phrasing_cases, s.phrasing_unstable) == (3, 2)
+    assert s.phrasing_share is not None and s.phrasing_share.estimate == 2 / 3
+
+
 # ── levels 2 and 3, calibration and PPI on judged runs ─────────────────────────
 
 
@@ -231,6 +257,12 @@ async def test_reasons_citations_calibration(
         # expert share 0.5 against judge 0.75 on every item: corrected estimate 0.5
         assert ppi["reasons"].corrected is not None
         assert ppi["reasons"].corrected.estimate == pytest.approx(0.5)
+        # the expert's error categories and reviewability, per model and condition
+        assert [(h.model_key, h.condition, h.ratings) for h in report.human] == [
+            ("alpha", "A", 2),
+            ("beta", "A", 2),
+        ]
+        assert all(h.categories == {1: 2} and h.reviewability == 3 for h in report.human)
 
 
 # ── level 5 ─────────────────────────────────────────────────────────────────────

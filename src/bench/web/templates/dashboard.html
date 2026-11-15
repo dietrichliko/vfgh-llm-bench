@@ -1,11 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Ergebnisse · ratio-lab{% endblock %}
+{% block title %}Epistemisches Profil · ratio-lab{% endblock %}
 {% macro iv(i, digits=0) %}{% if i is none %}–{% else %}{{ (i.estimate * 100) | round(digits) | int }} %{% endif %}{% endmacro %}
 {% macro ivr(i) %}{% if i is not none %} <span class="ci">[{{ (i.low * 100) | round | int }}–{{ (i.high * 100) | round | int }}]</span>{% endif %}{% endmacro %}
 {% macro num(x, digits=2) %}{% if x is none %}–{% else %}{{ ("%." ~ digits ~ "f") | format(x) | replace(".", ",") }}{% endif %}{% endmacro %}
 {% block content %}
 <div class="viz-root">
-<h1>Ergebnisse</h1>
+<h1>Epistemisches Profil</h1>
+<p class="lead">Unter welchen Bedingungen ist ein Sprachmodell im juristischen Begründen ein verlässlicher und
+überprüfbarer epistemischer Akteur? Die Modelle werden in fünf Dimensionen gemessen – Wissenserwerb,
+Wissensrepräsentation, rechtliche Schlussfolgerung, Nachvollziehbarkeit, Verlässlichkeit – und einem Stresstest;
+der Tenor-Treffer ist nur eine Kennzahl unter vielen.</p>
 <p class="lead">Protokoll: <strong>{{ protocol_label }}</strong>.
 {% if not frozen %}Alle Zahlen beruhen auf den bisher gespeicherten Läufen und Bewertungen und ändern sich mit jedem neuen Auftrag.
 {% elif alle %}Angezeigt werden <strong>alle Aufträge</strong>, auch Abweichungen vom Protokoll.
@@ -28,10 +32,63 @@ Berechnung nach dem Auswertungsplan (<code>docs/analysis-plan.md</code>).{% if s
 <p>Noch keine ausgewerteten Läufe in Bedingung {{ condition }}.</p>
 {% else %}
 
-{# ── Figure 1 ─────────────────────────────────────────────────────────── #}
+{# ── Figure 1: profile ───────────────────────────────────────────────── #}
 <section class="figure">
-<h2>Leaderboard – {{ conditions[condition] }}</h2>
-<p class="lead">Sortiert nach Tenor-Treffern (Mehrheit der Läufe je Fall). Punkt: Treffer, Band: 95-%-Intervall,
+<h2>Stärken und Schwächen je Modell</h2>
+<p class="lead">Alle Kennzahlen auf 0–100, höher ist besser; Zitatfehler, Instabilität und „beide tragfähig“
+sind umgedreht, die Nachvollziehbarkeit (1–4) ist auf 0–100 gestreckt. Spalten mit „{{ condition }}“ folgen der
+gewählten Bedingung. Dunkles Feld: Stärke, helles: Schwäche; „–“: nicht gemessen.</p>
+<div class="scroll">
+<table class="heat">
+  <thead>
+    <tr><th rowspan="2">Modell</th>{% for g, n in profile_groups %}<th class="c" colspan="{{ n }}">{{ g }}</th>{% endfor %}</tr>
+    <tr>{% for g, t, sub in profile_columns %}<th class="c">{{ t }}<br><span class="lead">{{ sub }}</span></th>{% endfor %}</tr>
+  </thead>
+  <tbody>{% for model, values in profiles %}<tr><th scope="row">{{ model }}</th>
+    {% for v in values %}{% set fill, ink = ramp(v) %}{% set col = profile_columns[loop.index0] %}<td class="c mono" style="background: {{ fill }}; color: {{ ink }}" title="{{ model }} · {{ col[0] }}: {{ col[1] }} {{ col[2] }}: {{ '–' if v is none else v }}">{{ "–" if v is none else v }}</td>{% endfor %}
+  </tr>{% endfor %}</tbody>
+</table>
+</div>
+<p class="lead legend"><span class="swatch" style="background: {{ ramp(40)[0] }}"></span> 40 oder weniger
+  <span class="swatch" style="background: {{ ramp(70)[0] }}"></span> 70 <span class="swatch" style="background: {{ ramp(100)[0] }}"></span> 100</p>
+</section>
+
+<section class="figure">
+<h2>Wissenserwerb (Bedingung C)</h2>
+{% if report.acquisition %}
+<p class="lead">Referenznormen: der genehmigte Normensatz des Falls (geprüft an der Rechtslage der Entscheidung,
+Fassung zum Stichtag). Abgerufen: mit <code>hole_norm</code> in irgendeiner Fassung; Fassung richtig: dasselbe
+RIS-Dokument wie die Referenzfassung. Gepoolt über die Normen, 95-%-Intervalle in Klammern.</p>
+<table>
+  <thead><tr><th>Modell</th><th class="r">Läufe mit Normensatz</th><th class="r">Referenznormen</th><th class="r">abgerufen</th><th class="r">Fassung richtig</th><th class="r">Ø Werkzeugaufrufe</th><th class="r">vom Limit abgeschnitten</th></tr></thead>
+  <tbody>{% for a in report.acquisition %}<tr><td>{{ a.model_key }}</td><td class="r mono">{{ a.runs }}</td><td class="r mono">{{ a.references }}</td>
+    <td class="r mono">{{ iv(a.recall) }}{{ ivr(a.recall) }}</td><td class="r mono">{{ iv(a.version_correct) }}{{ ivr(a.version_correct) }}</td>
+    <td class="r mono">{{ num(a.mean_calls, 1) }}</td><td class="r mono">{{ a.cut_off }}</td></tr>{% endfor %}</tbody>
+</table>
+{% else %}<p>Noch keine Läufe in Bedingung C.</p>{% endif %}
+</section>
+
+<section class="figure">
+<h2>Expertenurteil: Fehlerkategorien und Nachvollziehbarkeit</h2>
+{% if categories %}
+<p class="lead">Blinde Bewertung der gezogenen Antworten (je Antwort die erste Bewertung). Eine Kategorie je Antwort;
+Nachvollziehbarkeit: „Lässt sich die Begründung nachvollziehen und angreifen?“ (1 nein – 4 ja), Median.</p>
+<div class="scroll">
+<table>
+  <thead><tr><th>Modell</th><th>Bedingung</th><th class="r">Antworten</th>{% for n, label in category_labels.items() %}<th class="r" title="{{ label }}">{{ n }}</th>{% endfor %}<th class="r">Nachvollziehbarkeit</th></tr></thead>
+  <tbody>{% for model, cond, n, counts in categories %}{% set h = (report.human | selectattr("model_key", "equalto", model) | selectattr("condition", "equalto", cond) | first) %}
+    <tr><td>{{ model }}</td><td>{{ cond }}</td><td class="r mono">{{ n }}</td>{% for k in counts %}<td class="r mono">{{ k or "·" }}</td>{% endfor %}
+    <td class="r mono">{{ num(h.reviewability, 1) }}</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+<ol class="lead">{% for n, label in category_labels.items() %}<li>{{ label }}</li>{% endfor %}</ol>
+{% else %}<p>Noch keine Expertenbewertungen mit Fehlerkategorie.</p>{% endif %}
+</section>
+
+{# ── Figure 2: outcome hits ─────────────────────────────────────────────────────────── #}
+<section class="figure">
+<h2>Ergebnis-Treffer (eine Dimension unter fünf) – {{ conditions[condition] }}</h2>
+<p class="lead">Alphabetisch nach Modell, keine Rangliste. Tenor-Treffer: Mehrheit der Läufe je Fall. Punkt: Treffer, Band: 95-%-Intervall,
 orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Intervalle in Klammern.
 {% if not report.calibration.calibrated.reasons %}<br><strong>Gründe</strong> und {% endif %}{% if not report.calibration.calibrated.citations %}<strong>Zitate ungenau</strong>{% endif %}
 {% if not report.calibration.calibrated.reasons or not report.calibration.calibrated.citations %} beruhen auf Richtermodellen, die noch nicht kalibriert sind (κ &lt; 0,7 oder zu wenige Expertenbewertungen): vorläufig.{% endif %}</p>
@@ -42,7 +99,7 @@ orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Inte
 {% if report.citation_baseline and report.citation_baseline.share %}<p class="lead">Zitate nicht im RIS gefunden: Auch von den eigenen Zitaten des VfGH findet die Prüfung {{ iv(report.citation_baseline.share) }} nicht (Abschnitt „Zitate“).</p>{% endif %}
 <div class="scroll">
 <table class="leader">
-  <thead><tr><th>#</th><th>Modell</th><th>Stichtag</th><th class="r">Fälle</th><th>Tenor-Treffer</th><th class="r">Läufe richtig</th><th class="r">κ</th>
+  <thead><tr><th>Modell</th><th>Stichtag</th><th class="r">Fälle</th><th>Tenor-Treffer</th><th class="r">Läufe richtig</th><th class="r">κ</th>
     <th class="r">Gründe{% if not report.calibration.calibrated.reasons %} <span class="flag" title="nicht kalibriert">vorl.</span>{% endif %}</th>
     <th class="r">Zitate nicht im RIS gefunden</th>
     <th class="r">Zitate ungenau{% if not report.calibration.calibrated.citations %} <span class="flag" title="nicht kalibriert">vorl.</span>{% endif %}</th>
@@ -50,7 +107,6 @@ orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Inte
   <tbody>
   {% for r in rows %}
     <tr>
-      <td>{{ loop.index }}</td>
       <td><strong>{{ r.model_key }}</strong><br><span class="lead">{{ r.model_name }}</span></td>
       <td class="mono">{{ r.cutoff.strftime("%m/%Y") if r.cutoff else "–" }}</td>
       <td class="r mono">{{ r.cases }}</td>
@@ -81,23 +137,6 @@ orangefarbener Strich: „immer gesetzwidrig“ auf denselben Fällen. 95-%-Inte
   </tbody>
 </table>
 </div>
-</section>
-
-{# ── Figure 2 ─────────────────────────────────────────────────────────── #}
-<section class="figure">
-<h2>Stärken und Schwächen je Modell</h2>
-<p class="lead">Alle Kennzahlen auf 0–100, höher ist besser; Zitatfehler, Instabilität und „beide tragfähig“
-sind umgedreht. Dunkles Feld: Stärke, helles: Schwäche; „–“: nicht gemessen.</p>
-<div class="scroll">
-<table class="heat">
-  <thead><tr><th>Modell</th>{% for t, sub in profile_columns %}<th class="c">{{ t }}<br><span class="lead">{{ sub }}</span></th>{% endfor %}</tr></thead>
-  <tbody>{% for model, values in profiles %}<tr><th scope="row">{{ model }}</th>
-    {% for v in values %}{% set fill, ink = ramp(v) %}<td class="c mono" style="background: {{ fill }}; color: {{ ink }}" title="{{ model }} · {{ profile_columns[loop.index0][0] }} {{ profile_columns[loop.index0][1] }}: {{ '–' if v is none else v }}">{{ "–" if v is none else v }}</td>{% endfor %}
-  </tr>{% endfor %}</tbody>
-</table>
-</div>
-<p class="lead legend"><span class="swatch" style="background: {{ ramp(40)[0] }}"></span> 40 oder weniger
-  <span class="swatch" style="background: {{ ramp(70)[0] }}"></span> 70 <span class="swatch" style="background: {{ ramp(100)[0] }}"></span> 100</p>
 </section>
 
 {# ── Figure 3 ─────────────────────────────────────────────────────────── #}
@@ -132,11 +171,12 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 </section>
 
 {# ── Figure 4 ─────────────────────────────────────────────────────────── #}
-<h2>Vier Auswertungen</h2>
+<h2>Auswertungen nach Dimension</h2>
 <div class="cards">
 
 <section class="card">
   <h3>Quellenzugang</h3>
+  <p class="lead"><span class="dim">Wissenserwerb</span> <span class="dim">Schlussfolgerung</span> B − A: Quellen helfen beim Schließen; C − B: was die eigene Suche kostet.</p>
   <p class="lead">Tenor-Treffer je Modell in den gelaufenen Bedingungen.</p>
   {% set s = slopes %}
   {% if s.conditions | length > 1 %}
@@ -163,6 +203,7 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 
 <section class="card">
   <h3>Vorwissen</h3>
+  <p class="lead"><span class="dim">Wissensrepräsentation</span> Kontamination: weiß das Modell den Fall schon?</p>
   <p class="lead">Anteil der Fälle, die ein Modell nur aus Datum und Geschäftszahl erinnert (Ergebnis richtig und
     mindestens ein Referenzgrund). Vor dem Stichtag: Positivkontrolle; nach dem Stichtag: Studienfälle.</p>
   {% if recall %}
@@ -186,6 +227,7 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 
 <section class="card">
   <h3>Scheinbegründungen</h3>
+  <p class="lead"><span class="dim">Stresstest</span> Sagt eine flüssige Begründung etwas über ihre Richtigkeit?</p>
   <p class="lead">Tenor-Treffer (A) gegen den Anteil der Fälle, in denen beide gegensätzlichen Begründungen als
     tragfähig gelten. Oben links: überzeugt sich von allem; unten rechts: trifft und unterscheidet.</p>
   {% set sc = scatter %}
@@ -211,6 +253,7 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 
 <section class="card">
   <h3>Fehlerrichtung</h3>
+  <p class="lead"><span class="dim">Schlussfolgerung</span> In welche Richtung irrt das Modell?</p>
   {% if confusion %}
   <p class="lead">Kreuztabelle VfGH (Zeilen) gegen {{ confusion.model }} (Spalten), Bedingung {{ condition }}, n = {{ confusion.n }}.
     Die Diagonale (umrandet) ist richtig.</p>
@@ -285,10 +328,13 @@ des Modells oder wurden nicht beauftragt und zählen nicht. Spalten, die über a
 {% endif %}
 
 {% if report.stability %}
-<h2>Stabilität (Bedingung A)</h2>
+<h2>Verlässlichkeit: Stabilität (Bedingung A)</h2>
+<p class="lead">Instabil über Läufe: die Läufe eines Falls sind uneinig. Über Formulierungen: die Mehrheit je
+Formulierung unterscheidet sich (oder ist ein Gleichstand).</p>
 <table>
-  <thead><tr><th>Modell</th><th class="r">Fälle</th><th class="r">instabil</th><th class="r">Fleiss' κ</th><th>κ je Formulierung</th></tr></thead>
+  <thead><tr><th>Modell</th><th class="r">Fälle</th><th class="r">instabil</th><th class="r">über Formulierungen</th><th class="r">Fleiss' κ</th><th>κ je Formulierung</th></tr></thead>
   <tbody>{% for s in report.stability %}<tr><td>{{ s.model_key }}</td><td class="r mono">{{ s.cases }}</td><td class="r mono">{{ s.unstable }} ({{ iv(s.share) }})</td>
+    <td class="r mono">{% if s.phrasing_cases %}{{ s.phrasing_unstable }}/{{ s.phrasing_cases }} ({{ iv(s.phrasing_share) }}){% else %}–{% endif %}</td>
     <td class="r mono">{{ num(s.fleiss) }} <span class="lead">(n = {{ s.fleiss_cases }})</span></td>
     <td class="mono">{% for p, k in s.by_phrasing.items() %}p{{ p }}: {{ num(k) }}{% if not loop.last %}, {% endif %}{% endfor %}</td></tr>{% endfor %}</tbody>
 </table>
