@@ -206,7 +206,9 @@ async def test_reasons_citations_calibration(
         db.flush()
         cites = [("ja", ""), ("teilweise", ""), ("nicht_beurteilbar", ""), ("nein", "")]
         for item in items:
-            calibration_queue.rate(db, item, expert.id or 0, REASONS, cites)
+            calibration_queue.rate(
+                db, item, expert.id or 0, REASONS, cites, category=1, reviewability=3
+            )
         db.commit()
         report = metrics.analyse(db)
         mean = [
