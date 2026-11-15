@@ -1,0 +1,5470 @@
+{
+ "total": "282",
+ "refs": [
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40045586"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Fischereiverordnung, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "20000862",
+       "Inkrafttretensdatum": "2021-01-27"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40045596"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Fischereiverordnung, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 14",
+       "Gesetzesnummer": "20000862",
+       "Inkrafttretensdatum": "2021-01-27"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40000349"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Index zum Landesgesetzblatt für Tirol",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "S",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "20000014",
+       "Inkrafttretensdatum": "2000-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049168"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Achte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "20000938",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054071"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Achte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "20000938",
+       "Inkrafttretensdatum": "2026-04-11"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054072"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Achte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "20000938",
+       "Inkrafttretensdatum": "2026-04-11"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054073"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Achte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "20000938",
+       "Inkrafttretensdatum": "2026-04-11"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054074"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Achte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "20000938",
+       "Inkrafttretensdatum": "2026-04-11"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051862"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Achte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "20000938",
+       "Inkrafttretensdatum": "2025-02-05"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI11000087"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038073"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050650"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050651"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050652"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050653"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050656"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050654"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 8",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050655"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 9",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038076"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Dritte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "10000087",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038036"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051838"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2025-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037990"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054342"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2026-05-09"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037992"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037993"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037994"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037995"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037996"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 8",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037997"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 9",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037998"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 10",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037999"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 11",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038000"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 12",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054343"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 13",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2026-05-09"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038002"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 14",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038003"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 15",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038004"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 16",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038005"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 17",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038006"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 18",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038007"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 19",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038008"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 20",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038009"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 21",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038010"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 22",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038011"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 23",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40054344"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 24",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2026-05-09"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038013"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 25",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038014"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 26",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038015"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 27",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038016"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 28",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038017"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 29",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038018"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 30",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038019"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 31",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038020"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 32",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038021"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 33",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038022"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 34",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038023"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 35",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038024"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 36",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038478"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 36a",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038479"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 36b",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038480"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 36c",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038477"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 37",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038026"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 38",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051839"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2025-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038028"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 2",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038029"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 3",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038030"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 4",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038031"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 5",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038032"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 6",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038033"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 7",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047069"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 8",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2022-01-13"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047070"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Erste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 9",
+       "Gesetzesnummer": "20000620",
+       "Inkrafttretensdatum": "2022-01-13"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI30000386"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2008-03-29"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40055957"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2026-09-18"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40023144"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2008-03-29"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40043747"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2020-02-21"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40023146"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2008-03-29"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40023147"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2008-03-29"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047071"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Fünfte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "20000384",
+       "Inkrafttretensdatum": "2022-01-13"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038054"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038483"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038038"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038039"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038484"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038485"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4a",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038486"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4b",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038487"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4c",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038488"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4d",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038489"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4e",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038490"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4f",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-07-08"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038041"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-05-16"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038042"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-05-16"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038043"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2016-05-16"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038044"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 8",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038045"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 9",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038046"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 10",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038047"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 11",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038048"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 12",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038049"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 13",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038050"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 14",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038051"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 15",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038052"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 16",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038053"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Sechste Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "20000621",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038284"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038258"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038259"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047571"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2022-05-05"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038261"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038262"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40052809"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2025-02-26"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038264"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038265"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 8",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038266"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 9",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038267"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 10",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038268"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 11",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038269"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 12",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038270"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 13",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038271"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 14",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038272"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 15",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038273"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 16",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038274"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 17",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038275"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 18",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038276"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 19",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038277"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 20",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038278"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 21",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40052810"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 22",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2025-02-26"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038280"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 23",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038281"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 24",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038282"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 25",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2016-04-22"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40052811"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Siebte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "20000632",
+       "Inkrafttretensdatum": "2025-02-26"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI11000179"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017972"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40044080"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2006-04-21"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017974"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017975"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017976"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017977"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017978"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017979"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 8",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017980"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 9",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40044081"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 10",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2006-04-21"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017982"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 11",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017983"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 12",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017984"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 13",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017985"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 14",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017986"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 15",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40044082"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 16",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2006-04-21"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017988"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 17",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017989"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 18",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017990"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 19",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017991"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 20",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017992"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 21",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017993"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 22",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017994"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 23",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017995"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 24",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017996"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 25",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017997"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 26",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017998"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40017999"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 2",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40018000"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 3",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40018001"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 4",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40018002"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 5",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40018003"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Vierte Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 6",
+       "Gesetzesnummer": "10000179",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI11000190"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050640"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40021653"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050641"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40021655"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038063"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050642"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050643"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050644"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038068"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 2",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050645"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 3",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2024-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40038070"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004 - TJG 2004, Tiroler, Zweite Durchführungsverordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 4",
+       "Gesetzesnummer": "10000190",
+       "Inkrafttretensdatum": "2015-12-03"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI11000088"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 0",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037494"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037495"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 1a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053949"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 2",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037528"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037529"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 4",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051026"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 5",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40039527"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 6",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2017-03-31"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050098"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 7",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047294"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 8",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037534"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 9",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037535"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 10",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053950"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 11",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047296"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 11a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051028"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 11b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047298"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 12",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40039529"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 12a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2017-03-31"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050099"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 13",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40039530"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 14",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2017-03-31"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047299"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 15",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037547"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 16",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037548"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 17",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047300"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 18",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028239"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 19",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053951"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 20",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037552"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 20a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028241"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 21",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40044008"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 22",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2020-04-18"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028243"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 23",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2010-02-19"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028244"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 24",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037553"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 25",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047301"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 26",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050100"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 27",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40042042"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 27a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2019-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050101"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 27b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050102"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 28",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049075"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 28a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037560"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 29",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051030"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 30",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40052253"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 31",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2025-05-10"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050103"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 32",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049076"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 33",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051032"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 33a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40052254"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 34",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2025-05-10"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051034"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 35",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049077"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 36",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047310"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 36a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047632"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 37",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051035"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 37a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051036"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 37b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051037"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 37c",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051038"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 38",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037575"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 38a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051039"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 39",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051040"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 40",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028264"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 41",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053952"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 42",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047314"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 43",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037579"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 44",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053953"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 45",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051042"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 46",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050104"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 46a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037583"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 47",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028271"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 48",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2006-04-07"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028272"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 49",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2006-04-07"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037584"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 50",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028274"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 50a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028275"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 51",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053954"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 52",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053955"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 52a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053962"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 52b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053963"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 52c",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053956"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 52d",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047317"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 53",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053957"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 53a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047328"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 53b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049088"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 53c",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047319"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 54",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037589"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 55",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028281"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 56",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047320"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 57",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047321"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 58",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053958"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 58a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037593"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 59",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047323"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 60",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050105"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 61",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050106"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 61a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037597"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 62",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40046696"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 62a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2021-11-23"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40039534"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 62b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2017-03-31"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40047324"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 62c",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2022-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053959"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 62d",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037602"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 63",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40039536"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 64",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2017-03-31"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40050107"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 64a",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-01-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40039538"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 64b",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2017-03-31"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40028291"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 65",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2004-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037619"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 66",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051047"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 67",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051048"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 68",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053960"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 69",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40053961"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 70",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2026-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40037622"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 71",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2015-10-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049086"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 72",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40051051"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "§ 73",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2024-08-20"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049087"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Jagdgesetz 2004, Tiroler",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "LG",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "10000088",
+       "Abkuerzung": "TJG 2004",
+       "Inkrafttretensdatum": "2023-04-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40052549"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Landes-Verwaltungsabgabenverordnung 2025",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "Anl. 1",
+       "Gesetzesnummer": "20001022",
+       "Abkuerzung": "LVAV",
+       "Inkrafttretensdatum": "2025-07-01"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40049065"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Rotwild-Tbc-Bekämpfungsplan-Verordnung",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 3",
+       "Gesetzesnummer": "20000476",
+       "Inkrafttretensdatum": "2023-03-10"
+      }
+     }
+    }
+   }
+  },
+  {
+   "Data": {
+    "Metadaten": {
+     "Technisch": {
+      "ID": "LTI40043844"
+     },
+     "Landesrecht": {
+      "Kurztitel": "Zuordnung landesgesetzlich geregelter Berufe zu bestimmten Qualifikationsniveaus",
+      "Bundesland": "Tirol",
+      "LrKons": {
+       "Typ": "V",
+       "ArtikelParagraphAnlage": "§ 1",
+       "Gesetzesnummer": "20000623",
+       "Inkrafttretensdatum": "2020-04-04"
+      }
+     }
+    }
+   }
+  }
+ ]
+}
