@@ -36,6 +36,14 @@ ergibt sich, welchen Kriterien der Richtermodelle die Studie vertrauen kann.</p>
 </table>
 <p class="lead">Ziehungen: {% for d in progress.draws %}Nr. {{ d[0] }} ({{ d[1] }} Antworten, Seed {{ d[2] }}){% if not loop.last %}; {% endif %}{% endfor %}</p>
 {% endif %}
+{% if durations %}
+<h3>Zeit je Bewertung</h3>
+<p class="lead">Vom Öffnen der Seite bis zum Speichern; Grundlage für die Planung einer größeren Studie.</p>
+<table style="width: auto">
+  <thead><tr><th>Person</th><th class="r">Bewertungen</th><th class="r">Median (Minuten)</th></tr></thead>
+  <tbody>{% for d in durations %}<tr><td>{{ d.rater }}</td><td class="r mono">{{ d.ratings }}</td><td class="r mono">{{ "%.1f" | format(d.median_minutes) | replace(".", ",") }}</td></tr>{% endfor %}</tbody>
+</table>
+{% endif %}
 
 <section class="panel no-print">
   <h3 style="margin-top: 0">Antworten ziehen</h3>

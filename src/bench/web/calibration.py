@@ -4,6 +4,7 @@ The rating page never shows model, provider, condition, run id or the judges' sc
 not even in the HTML source; it is addressed by the item id, which is random.
 """
 
+from datetime import UTC, datetime
 from typing import Annotated
 from urllib.parse import quote
 
@@ -23,6 +24,7 @@ from bench.models import (
     ReferenceChecklist,
     Run,
     UserRole,
+    utcnow,
 )
 from bench.web.pages import render
 
@@ -50,6 +52,7 @@ def overview(request: Request, user: StaffDep, db: DbDep, problem: str = "") -> 
         open_items=calibration.queue(db, user.id or 0),
         mine=calibration.rated_by(db, user.id or 0),
         progress=calibration.progress(db) if is_admin else None,
+        durations=calibration.durations(db) if is_admin else [],
         available={k: len(v) for k, v in strata.items()},
         default_size=calibration.DEFAULT_SIZE,
         default_double=calibration.DEFAULT_DOUBLE,
@@ -95,7 +98,7 @@ def next_item(user: StaffDep, db: DbDep) -> Response:
 
 @router.get("/{item_id}", response_class=HTMLResponse)
 def item_page(
-    request: Request, item_id: int, user: StaffDep, db: DbDep, problem: str = ""
+    request: Request, item_id: int, user: StaffDep, db: DbDep, problem: str = "", start: str = ""
 ) -> HTMLResponse:
     item = _item(db, item_id)
     ratings = list(
@@ -128,6 +131,11 @@ def item_page(
         cited=cited,
         mine=mine,
         problem=problem,
+        # when the page was first opened (kept across a failed submit): time per evaluation
+        started_at=start if _when(start) else utcnow().isoformat(),
+        categories=calibration.CATEGORIES,
+        reviewability=calibration.REVIEWABILITY,
+        reviewability_question=calibration.REVIEWABILITY_QUESTION,
         next_id=remaining[0] if remaining else None,
         open_count=len(remaining),
         reason_values=calibration.REASON_VALUES,
@@ -138,6 +146,19 @@ def item_page(
         kind_labels=citations.KIND_LABELS,
         result_labels=citations.RESULT_LABELS,
     )
+
+
+def _number(value: str) -> int | None:
+    return int(value) if value.isdigit() else None
+
+
+def _when(value: str) -> datetime | None:
+    """An aware UTC timestamp from the form, or None."""
+    try:
+        when = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return when.astimezone(UTC) if when.tzinfo else None
 
 
 @router.post("/{item_id}")
@@ -158,11 +179,23 @@ async def rate(request: Request, item_id: int, user: StaffDep, db: DbDep) -> Res
         for i in range(1, len(citations.citations_of(target)) + 1)
     ]
     try:
-        calibration.rate(db, item, user.id or 0, reasons, cited, field("note"))
+        calibration.rate(
+            db,
+            item,
+            user.id or 0,
+            reasons,
+            cited,
+            field("note"),
+            category=_number(field("kategorie")),
+            reviewability=_number(field("nachvollziehbarkeit")),
+            started_at=_when(field("started_at")),
+        )
     except ValueError as exc:
         db.rollback()
+        start = quote(field("started_at"))
         return RedirectResponse(
-            f"/calibration/{item_id}?problem={quote(str(exc))}", status.HTTP_303_SEE_OTHER
+            f"/calibration/{item_id}?problem={quote(str(exc))}&start={start}",
+            status.HTTP_303_SEE_OTHER,
         )
     db.commit()
     return RedirectResponse("/calibration/next", status.HTTP_303_SEE_OTHER)

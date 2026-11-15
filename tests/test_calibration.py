@@ -2,8 +2,11 @@
 
 import json
 import random
+import re
 from collections import Counter
+from datetime import UTC, timedelta
 from typing import Any
+from urllib.parse import quote, unquote
 
 import httpx2
 import pytest
@@ -21,6 +24,7 @@ from bench.models import (
     Run,
     User,
     UserRole,
+    utcnow,
 )
 from bench.providers import ResolvedModel
 from bench.settings import Settings
@@ -37,6 +41,7 @@ from tests.test_judges import settings as settings
 from tests.test_runs import answer, make_order, work
 from tests.test_runs import engine as engine
 
+GRADE = {"category": 2, "reviewability": 3}
 REASONS = [("ja", "Stelle"), ("nein", "")]
 CITES = [("ja", ""), ("teilweise", "nur Abs 1"), ("nicht_beurteilbar", ""), ("nein", "")]
 
@@ -114,28 +119,46 @@ async def test_draw_queue_and_ratings(
         queue = calibration.queue(db, first)
         assert [i.id for i in queue] == sorted(i.id or 0 for i in items)
         with pytest.raises(ValueError, match="jeden Referenzgrund"):
-            calibration.rate(db, queue[0], first, REASONS[:1], CITES)
+            calibration.rate(db, queue[0], first, REASONS[:1], CITES, **GRADE)
+        with pytest.raises(ValueError, match="Kategorie"):
+            calibration.rate(db, queue[0], first, REASONS, CITES, reviewability=2)
+        with pytest.raises(ValueError, match="Kategorie"):
+            calibration.rate(db, queue[0], first, REASONS, CITES, category=7, reviewability=2)
+        with pytest.raises(ValueError, match="Nachvollziehbarkeit"):
+            calibration.rate(db, queue[0], first, REASONS, CITES, category=1, reviewability=5)
         with pytest.raises(ValueError, match="jedes Zitat"):
-            calibration.rate(db, queue[0], first, REASONS, [("vielleicht", "")] * 4)
+            calibration.rate(db, queue[0], first, REASONS, [("vielleicht", "")] * 4, **GRADE)
+        opened = utcnow() - timedelta(minutes=7)
         for item in queue:
-            calibration.rate(db, item, first, REASONS, CITES, note=" ok ")
+            calibration.rate(
+                db, item, first, REASONS, CITES, note=" ok ", **GRADE, started_at=opened
+            )
         db.commit()
         assert calibration.queue(db, first) == []
         # the second person sees only the double items
         doubles = calibration.queue(db, second)
         assert {i.id for i in doubles} == {i.id for i in items if i.double}
         with pytest.raises(ValueError, match="schon bewertet"):
-            calibration.rate(db, doubles[0], first, REASONS, CITES)
+            calibration.rate(db, doubles[0], first, REASONS, CITES, **GRADE)
         single = next(i for i in items if not i.double)
         with pytest.raises(ValueError, match="schon bewertet"):
-            calibration.rate(db, single, second, REASONS, CITES)
-        for item in doubles:
-            calibration.rate(db, item, second, REASONS, CITES)
+            calibration.rate(db, single, second, REASONS, CITES, **GRADE)
+        for item in doubles:  # a page open for days says nothing about the effort
+            calibration.rate(
+                db, item, second, REASONS, CITES, **GRADE, started_at=opened - timedelta(days=2)
+            )
         db.commit()
         assert calibration.queue(db, second) == []
 
         rating = db.exec(select(CalibrationRating)).first()
         assert rating is not None and rating.note == "ok"
+        assert (rating.category, rating.reviewability) == (2, 3)
+        assert rating.started_at is not None
+        assert rating.created_at - rating.started_at.replace(tzinfo=UTC) >= timedelta(minutes=7)
+        (d,) = calibration.durations(db)  # the second person's start times were dropped
+        assert d.ratings == 4 and d.median_minutes >= 7
+        last = db.exec(select(CalibrationRating).order_by(col(CalibrationRating.id).desc())).first()
+        assert last is not None and last.started_at is None
         assert rating.reasons[0] == {"nr": 1, "value": "ja", "evidence": "Stelle"}
         assert rating.citations[1] == {"nr": 2, "value": "teilweise", "note": "nur Abs 1"}
         p = calibration.progress(db)
@@ -239,9 +262,18 @@ async def test_calibration_pages_are_blind(
         assert "problem=" in r.headers["location"]
         data: dict[str, Any] = {"g1": "ja", "g1_beleg": "Rz 3", "g2": "teilweise"}
         data |= {f"z{n}": "nicht_beurteilbar" for n in range(1, 5)}
+        assert 'name="started_at"' in page and 'name="kategorie"' in page
+        started = re.search(r'name="started_at" value="([^"]+)"', page)
+        assert started is not None
+        data["started_at"] = started[1]
+        r = client.post(f"/calibration/{item.id}", data=data, follow_redirects=False)
+        assert "Kategorie" in unquote(r.headers["location"])  # category missing
+        assert f"start={quote(started[1])}" in r.headers["location"]  # the clock keeps running
+        data |= {"kategorie": "6", "nachvollziehbarkeit": "2"}
         r = client.post(f"/calibration/{item.id}", data=data, follow_redirects=False)
         assert r.headers["location"] == "/calibration/next"
         page = client.get(f"/calibration/{item.id}").text
+        assert "Flüssige Begründung verdeckt" in page and "2 – kaum" in page
         assert "Ihre Bewertung" in page and "Rz 3" in page and "<form" not in page.split("Ihre")[1]
         r = client.post(f"/calibration/{item.id}", data=data, follow_redirects=False)
         assert "schon" in r.headers["location"] or "problem=" in r.headers["location"]
