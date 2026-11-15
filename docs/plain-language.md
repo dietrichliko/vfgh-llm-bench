@@ -2,6 +2,8 @@
 
 > Source: Claude Doc [Can a Machine Decide Like the Constitutional Court?](https://claude.ai/artifact/LgxHak8zz4PntCYEZ7J3Ai), exported 2026-11-09. The Claude Doc is the master copy; this file is a read-only snapshot, except for the model choice, the judges and the open points, updated here on 2026-11-14 ahead of the Doc. It describes the planned pilot for two audiences: lawyers who do not know language models, and physicists who do not know the law.
 
+> **Reframed 2026-11-15 as ratio-lab.** The study now asks under what practical conditions an LLM can act as a reliable and reviewable epistemic actor in legal reasoning, with five dimensions (acquisition, representation, inference, reviewability, reliability) and the conditions *Geschlossenes Wissenssystem* (A), *Vorgegebene Quellen* (B) and *Eigene Recherche* (C). The binding version is `docs/analysis-plan.md` §0; this snapshot predates it.
+
 2026-11-09 · Dietrich
 
 ## The question in one page
