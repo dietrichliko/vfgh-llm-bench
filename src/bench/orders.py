@@ -30,10 +30,11 @@ from bench.models import (
 )
 from bench.providers import ResolvedModel, Role, ToolMode
 
+# the single source of the condition labels (dashboard, study, orders, runs)
 CONDITIONS = {
-    "A": "Modell allein",
-    "B": "mit vorgegebenen Normen",
-    "C": "mit eigener Recherche im RIS",
+    "A": "Geschlossenes Wissenssystem",  # the model alone, from what it already knows
+    "B": "Vorgegebene Quellen",  # the case's approved norm set in the prompt
+    "C": "Eigene Recherche",  # RIS tools; C − B isolates acquisition, B − A inference
 }
 AVAILABLE_CONDITIONS = ("A", "B", "C")
 TASKS = {"A": "decide", "B": "decide_b", "C": "decide_c"}  # prompt task per condition

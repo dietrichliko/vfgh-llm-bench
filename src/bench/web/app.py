@@ -22,6 +22,7 @@ from bench.db import make_engine, migrate
 from bench.images import with_figures
 from bench.llm.http import make_http_client
 from bench.normsets import version_of
+from bench.orders import CONDITIONS
 from bench.providers import StudyConfig, load_config, provider_label
 from bench.ris.client import RisClient
 from bench.rismcp.norms import RisClient as NormsRisClient
@@ -112,6 +113,7 @@ def create_app(
     templates.env.globals["role_labels"] = ROLE_LABELS
     templates.env.filters["norm_version"] = version_of
     templates.env.globals["app_version"] = __version__
+    templates.env.globals["condition_labels"] = CONDITIONS
     templates.env.filters["with_figures"] = with_figures
     templates.env.filters["provider_label"] = provider_label
     app.state.templates = templates

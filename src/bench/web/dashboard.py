@@ -21,6 +21,7 @@ from bench.analysis import metrics
 from bench.analysis.stats import Interval
 from bench.auth import DbDep, require_roles
 from bench.models import Case, User, UserRole, audit
+from bench.orders import CONDITIONS
 from bench.providers import ResolvedModel
 from bench.web.cases import OUTCOME_LABELS
 from bench.web.pages import render, resolved_models
@@ -30,7 +31,6 @@ ViewerDep = Annotated[
     User, Depends(require_roles(UserRole.ADMIN, UserRole.EXPERT, UserRole.VIEWER))
 ]
 
-CONDITIONS = {"A": "Modell allein", "B": "vorgegebene Normen", "C": "eigene RIS-Recherche"}
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 RAMP = [  # blue, light → dark (steps 100 … 650)
     "#cde2fb",
