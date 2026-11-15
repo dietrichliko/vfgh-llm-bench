@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Ergebnisse · VfGH-LLM-Studie{% endblock %}
+{% block title %}Ergebnisse · ratio-lab{% endblock %}
 {% macro iv(i, digits=0) %}{% if i is none %}–{% else %}{{ (i.estimate * 100) | round(digits) | int }} %{% endif %}{% endmacro %}
 {% macro ivr(i) %}{% if i is not none %} <span class="ci">[{{ (i.low * 100) | round | int }}–{{ (i.high * 100) | round | int }}]</span>{% endif %}{% endmacro %}
 {% macro num(x, digits=2) %}{% if x is none %}–{% else %}{{ ("%." ~ digits ~ "f") | format(x) | replace(".", ",") }}{% endif %}{% endmacro %}

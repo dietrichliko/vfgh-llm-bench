@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ case.case_number }}: Gericht und Modelle · VfGH-LLM-Studie{% endblock %}
+{% block title %}{{ case.case_number }}: Gericht und Modelle · ratio-lab{% endblock %}
 {% macro level(v) %}{% if v is none %}–{% elif v > 0.75 %}ja{% elif v >= 0.25 %}teilweise{% else %}nein{% endif %}{% endmacro %}
 {% block content %}
 <div class="comparison">

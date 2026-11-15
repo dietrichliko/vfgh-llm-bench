@@ -1,8 +1,12 @@
-# vfgh-llm-bench
+# vfgh-llm-bench: ratio-lab
 
-Web application for the study *Do LLMs Reason Like the Austrian Constitutional Court?*:
-language models decide regulatory review cases of the VfGH (Art 139 B-VG), and their
-answers are compared with the actual decisions.
+Web application of **ratio-lab**: *Under what practical conditions can an LLM act as a
+reliable and reviewable epistemic actor in legal reasoning?* Regulatory review cases of the
+VfGH (Art 139 B-VG) are the test case; the court's carrying reasons are the reference, not
+the target. Models are evaluated on five dimensions: knowledge acquisition, knowledge
+representation, legal inference, justification/reviewability and reliability (see
+[docs/analysis-plan.md](docs/analysis-plan.md)). The repository, image and fly apps keep
+their old names; the public name and domain are ratio-lab.
 
 | Document | Content |
 | --- | --- |
@@ -143,15 +147,17 @@ fly secrets set --app vfgh-bench --stage BENCH_ADMIN_EMAILS=…   # not in the p
 # BENCH_OIDC_CLIENT_ID is in deploy/fly/web.toml (CERN application vfgh-law-bench), then:
 deploy/fly/deploy.sh 0.4.0
 
-# 3. own domain (DNS at Cloudflare): CNAME vfgh-llm-bench → vfgh-bench.fly.dev,
+# 3. own domain (DNS at Cloudflare): CNAME ratio-lab → vfgh-bench.fly.dev,
 #    "DNS only" (grey cloud), so that fly.io gets its own certificate
-fly certs add vfgh-llm-bench.mbi-ai.dev --app vfgh-bench
-fly certs show vfgh-llm-bench.mbi-ai.dev --app vfgh-bench    # until it is issued
+fly certs add ratio-lab.mbi-ai.dev --app vfgh-bench
+fly certs show ratio-lab.mbi-ai.dev --app vfgh-bench    # until it is issued
+#    the former host vfgh-llm-bench.mbi-ai.dev keeps CNAME and certificate; the app
+#    redirects it (301) to BENCH_PUBLIC_URL, see BENCH_LEGACY_HOSTS
 ```
 
 **Login:** CERN SSO (OIDC). Register the application in the
 [CERN Application Portal](https://application-portal.web.cern.ch) with the redirect URI
-`https://vfgh-llm-bench.mbi-ai.dev/auth/callback`; its default role must admit eduGAIN
+`https://ratio-lab.mbi-ai.dev/auth/callback`; its default role must admit eduGAIN
 accounts for users from other universities (e.g. a University of Vienna account via
 "Home organisation – eduGAIN"). The app needs an e-mail address from the login. New
 accounts wait for an admin; addresses in `BENCH_ADMIN_EMAILS` are admins at once.

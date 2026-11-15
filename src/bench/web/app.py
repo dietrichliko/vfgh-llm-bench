@@ -5,6 +5,7 @@ import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import httpx2
 from fastapi import FastAPI, Request, status
@@ -97,7 +98,7 @@ def create_app(
         await app.state.http_client.aclose()
         engine.dispose()
 
-    app = FastAPI(title="VfGH-LLM-Studie", version=__version__, lifespan=lifespan)
+    app = FastAPI(title="ratio-lab", version=__version__, lifespan=lifespan)
     app.state.settings = settings
     app.state.engine = engine
     app.state.oauth = auth.make_oauth(settings)
@@ -136,6 +137,22 @@ def create_app(
                 status_code=status.HTTP_401_UNAUTHORIZED, headers={"HX-Redirect": "/login"}
             )
         return RedirectResponse("/login", status.HTTP_303_SEE_OTHER)
+
+    public_host = urlsplit(settings.public_url).hostname
+    legacy_hosts = {h.lower() for h in settings.legacy_hosts} - {public_host}
+
+    @app.middleware("http")
+    async def _legacy_host(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        # the study moved to a new domain; old bookmarks land on the same page there
+        host = (request.url.hostname or "").lower()
+        if host in legacy_hosts and request.url.path != "/health":
+            target = settings.public_url.rstrip("/") + request.url.path
+            if request.url.query:
+                target += "?" + request.url.query
+            return RedirectResponse(target, status.HTTP_301_MOVED_PERMANENTLY)
+        return await call_next(request)
 
     if marker:
 

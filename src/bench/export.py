@@ -96,7 +96,7 @@ TABLES: list[tuple[str, type[SQLModel], str | None]] = [
     ("norm_sets", NormSet, None),
     ("citation_baseline", CitationBaseline, None),
 ]
-README = """# VfGH-LLM-Studie: Daten und Kennzahlen
+README = """# ratio-lab: Daten und Kennzahlen
 
 Erzeugt am {generated_at} mit bench {version}. Protokoll: {protocol}.
 

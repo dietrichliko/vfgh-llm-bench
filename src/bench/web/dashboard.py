@@ -444,7 +444,7 @@ def export_zip(
     content = export.build(
         db, resolved_models(request), raw=raw, protocol=label, order_ids=order_ids
     )
-    name = f"vfgh-llm-studie-{datetime.now(UTC):%Y%m%d-%H%M}{'-roh' if raw else ''}.zip"
+    name = f"ratio-lab-{datetime.now(UTC):%Y%m%d-%H%M}{'-roh' if raw else ''}.zip"
     audit(db, "export", user_id=user.id, detail={"raw": raw, "bytes": len(content)})
     db.commit()
     return Response(

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Lauf {{ run.id }} · VfGH-LLM-Studie{% endblock %}
+{% block title %}Lauf {{ run.id }} · ratio-lab{% endblock %}
 {% block content %}
 <p class="no-print"><a href="/orders/{{ run.order_id }}">← Auftrag {{ run.order_id }}</a></p>
 <h1>Lauf {{ run.id }}: {{ case.case_number if case else run.case_id }} · <span class="mono">{{ run.model_key }}</span></h1>

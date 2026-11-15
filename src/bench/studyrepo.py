@@ -15,7 +15,7 @@ from pathlib import Path
 from bench.settings import Settings
 
 DEPLOY_KEY = "STUDY_REPO_DEPLOY_KEY"
-AUTHOR = ("-c", "user.name=VfGH-LLM-Studie", "-c", "user.email=noreply@vfgh-llm-studie.invalid")
+AUTHOR = ("-c", "user.name=ratio-lab", "-c", "user.email=noreply@ratio-lab.invalid")
 
 
 class RepoError(RuntimeError):
