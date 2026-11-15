@@ -147,7 +147,7 @@ The pilot uses the about 17 usable cases decided since June 2026, four open mode
 
 Mistral Small 3.2 is in the pilot because of GovGPT: a model the administration already uses is the most relevant one to test. Only one source names the version (Der Standard, July 2026); the Federal Chancellery speaks of Mistral models in general. Mistral Small 3.2 and Gemma 4 could read images; DeepSeek V4 Flash and GLM-5.3 cannot. All four get text only.
 
-DeepSeek V4 Flash was added on 15 November 2026. When Mistral Small 3.2 may search the RIS itself, it writes its answer as free text instead of the required form, with every hosting provider tested, so the program cannot score it. DeepSeek V4 Flash is an open model of the same price class that keeps the form; Mistral Small 3.2 stays in the pilot because of GovGPT. DeepSeek V4 Flash comes from the same maker as the model that writes the opposing reasonings of question 5; this is reported as a limitation of question 5.
+DeepSeek V4 Flash was added on 15 November 2026. When Mistral Small 3.2 may search the RIS itself, it writes its answer as free text instead of the required form, with every hosting provider tested, so the program cannot score it. DeepSeek V4 Flash is an open model of the same price class that keeps the form; Mistral Small 3.2 stays in the pilot because of GovGPT. DeepSeek V4 Flash comes from the same maker as the model that writes the opposing reasonings of question 5, so it does not rate them (no model rates texts of its own maker); question 5 is answered by the other three models.
 
 GLM-5.3 is free of prior knowledge only for cases decided since mid-September 2026, at most four today. Its answers on the other cases are shown separately and marked. All four models are used through a commercial service (OpenRouter), each fixed to one hosting provider, so that the same version answers every time.
 
@@ -167,7 +167,7 @@ A third way, with the relevant legal texts handed to the model in advance, is le
 - Rates about 100 answers without knowing which model wrote them: one answer per case, model and way of working.
 - A second person rates 20 of these answers, to show how far two lawyers agree with each other.
 
-**What the judge models do.** Two models from makers other than the tested ones score the same answers, and further ones: Claude Opus 4.8 (Anthropic) and GPT-5.5 (OpenAI), through the University of Vienna's u:ai service. Their agreement with the lawyer shows whether a larger study can rely on them. The two opposing reasonings of question 5 are written by DeepSeek V4 Pro, a model from yet another maker, so that no tested model rates its own text. DeepSeek V4 Flash, added later, is the one exception: it rates texts of its maker's larger model.
+**What the judge models do.** Two models from makers other than the tested ones score the same answers, and further ones: Claude Opus 4.8 (Anthropic) and GPT-5.5 (OpenAI), through the University of Vienna's u:ai service. Their agreement with the lawyer shows whether a larger study can rely on them. The two opposing reasonings of question 5 are written by DeepSeek V4 Pro, a model from yet another maker, so that no tested model rates its own text. DeepSeek V4 Flash, added later, comes from the same maker and therefore takes no part in question 5.
 
 **Cost.** Running the models comes at reasonable cost. The larger cost is the lawyer's time.
 
