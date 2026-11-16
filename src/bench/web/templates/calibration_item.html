@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Kalibrierung Nr. {{ item.id }} · VfGH-LLM-Studie{% endblock %}
+{% block title %}Kalibrierung Nr. {{ item.id }} · ratio-lab{% endblock %}
 {% block content %}
 <p class="no-print"><a href="/calibration">← Kalibrierung</a></p>
 <h1>Antwort Nr. {{ item.id }}: VfGH {{ case.decision_date.strftime("%d.%m.%Y") }}, {{ case.case_number }}</h1>
@@ -35,10 +35,13 @@
     <ol>{% for z in cited %}{% set r = mine.citations[loop.index0] %}
       <li>{{ z.text }}<br><strong>{{ value_labels[r.value] }}</strong>{% if r.note %}: {{ r.note }}{% endif %}</li>{% endfor %}</ol>
     {% endif %}
+    {% if mine.category %}<h3>Einordnung</h3><p>{{ mine.category }}. {{ categories[mine.category] }}</p>{% endif %}
+    {% if mine.reviewability %}<h3>Nachvollziehbarkeit</h3><p>{{ mine.reviewability }} – {{ reviewability[mine.reviewability] }}</p>{% endif %}
     {% if mine.note %}<p>Notiz: {{ mine.note }}</p>{% endif %}
     {% if next_id %}<p><a class="button" href="/calibration/{{ next_id }}">Nächste Antwort</a></p>{% endif %}
   {% else %}
     <form method="post" action="/calibration/{{ item.id }}">
+      <input type="hidden" name="started_at" value="{{ started_at }}">
       <h2>Referenzgründe</h2>
       <p class="lead">Enthält die Antwort den Grund? Die Formulierung muss nicht übereinstimmen.</p>
       {% for it in checklist.items %}{% set n = loop.index %}
@@ -69,6 +72,18 @@
       {% else %}
       <p>Die Antwort zitiert nichts.</p>
       {% endif %}
+
+      <h2>Einordnung der Antwort</h2>
+      <fieldset class="panel" style="margin-bottom: 0.75rem">
+        <legend>Welche Beschreibung trifft am besten zu? (eine Auswahl)</legend>
+        {% for k, label in categories.items() %}<label class="choice" style="display: block"><input type="radio" name="kategorie" value="{{ k }}" required> {{ k }}. {{ label }}</label>{% endfor %}
+      </fieldset>
+
+      <h2>Nachvollziehbarkeit</h2>
+      <fieldset class="panel" style="margin-bottom: 0.75rem">
+        <legend>{{ reviewability_question }}</legend>
+        {% for k, label in reviewability.items() %}<label class="choice" style="display: block"><input type="radio" name="nachvollziehbarkeit" value="{{ k }}" required> {{ k }} – {{ label }}</label>{% endfor %}
+      </fieldset>
 
       <p><label>Notiz (optional)<br><input type="text" name="note" style="width: 100%"></label></p>
       <p><button type="submit">Bewertung speichern und weiter</button></p>

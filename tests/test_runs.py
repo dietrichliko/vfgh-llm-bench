@@ -995,7 +995,8 @@ def test_condition_c_pages(client: TestClient, settings: Settings) -> None:
         run = db.exec(select(Run)).one()
     page = client.get(f"/runs/{run.id}").text
     assert "Recherche im RIS (1 Werkzeugaufrufe)" in page
-    assert "hole_norm(dokument_oder_paragraf=" in page and "Halte- und Parkverbote" in page
+    assert "Norm abrufen: NOR40147678" in page and "Halte- und Parkverbote" in page
+    assert "Kein genehmigter Normensatz" in page
     assert "2014-01-01 (vom Programm gesetzt" in page
 
 

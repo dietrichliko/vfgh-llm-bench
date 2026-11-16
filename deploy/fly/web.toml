@@ -23,11 +23,13 @@ kill_timeout = 120  # children stop, then a last backup is uploaded
 image = "ghcr.io/dietrichliko/vfgh-llm-bench:0.4.0"
 
 [env]
-# custom domain: Cloudflare CNAME vfgh-llm-bench → vfgh-bench.fly.dev (DNS only), and
-# `fly certs add vfgh-llm-bench.mbi-ai.dev --app vfgh-bench`
-BENCH_PUBLIC_URL = "https://vfgh-llm-bench.mbi-ai.dev"
+# custom domain: Cloudflare CNAME ratio-lab → vfgh-bench.fly.dev (DNS only), and
+# `fly certs add ratio-lab.mbi-ai.dev --app vfgh-bench`. The former host
+# vfgh-llm-bench.mbi-ai.dev keeps its CNAME and certificate; the app answers it with a 301
+# (BENCH_LEGACY_HOSTS).
+BENCH_PUBLIC_URL = "https://ratio-lab.mbi-ai.dev"
 # CERN SSO; the application also admits eduGAIN accounts (CERN Application Portal, default
-# role). Redirect URI: https://vfgh-llm-bench.mbi-ai.dev/auth/callback
+# role). Redirect URI: https://ratio-lab.mbi-ai.dev/auth/callback
 BENCH_OIDC_ISSUER = "https://auth.cern.ch/auth/realms/cern"
 BENCH_SECRETS_DIR = "/nonexistent"  # secrets arrive as environment variables
 # fly.io's proxy ends TLS and connects from its private network: trust its

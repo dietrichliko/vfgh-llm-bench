@@ -197,6 +197,7 @@ a.button { display: inline-block; text-decoration: none; font-family: var(--sans
 .viz-root .nowrap { white-space: nowrap; }
 .viz-root .ci { color: var(--ink2); font-family: var(--mono); font-size: 0.85em; }
 .viz-root .flag { font-size: 0.7rem; font-weight: 600; color: var(--warn); border: 1px solid var(--warn); border-radius: 3px; padding: 0 0.2rem; }
+.viz-root .dim { font-size: 0.7rem; font-weight: 600; color: var(--muted); border: 1px solid var(--muted); border-radius: 3px; padding: 0 0.2rem; }
 .viz-root .leader svg { vertical-align: middle; margin-right: 0.4rem; }
 .viz-root .tabs { display: flex; gap: 1rem; flex-wrap: wrap; font-family: var(--sans); margin-bottom: 1.5rem; }
 .viz-root .tabs a[aria-current] { font-weight: 700; text-decoration: none; border-bottom: 2px solid var(--accent); }

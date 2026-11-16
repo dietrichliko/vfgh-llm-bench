@@ -2,6 +2,17 @@
 {% block content %}
 <h1>Willkommen, {{ user.name }}</h1>
 
+<p class="lead"><strong>ratio-lab</strong> fragt, unter welchen praktischen Bedingungen ein
+Sprachmodell im juristischen Begründen als verlässlicher und überprüfbarer epistemischer Akteur
+auftreten kann. Testfall sind Verordnungsprüfungen des Verfassungsgerichtshofs (Art 139 B-VG);
+die tragenden Gründe des Gerichts sind der Maßstab, nicht das Ziel. Bewertet wird in fünf
+Dimensionen: <em>Wissenserwerb</em> (findet das Modell die maßgeblichen Normen in der richtigen
+Fassung?), <em>Wissensrepräsentation</em> (sagen die zitierten Normen, was das Modell behauptet?),
+<em>Rechtliche Schlussfolgerung</em> (verbindet es Normen und Fall zu einem tragfähigen Ergebnis?),
+<em>Nachvollziehbarkeit</em> (kann eine Juristin die Begründung prüfen und angreifen?) und
+<em>Verlässlichkeit</em> (gleiches Ergebnis und ähnliche Gründe über Wiederholungen und
+Formulierungen).</p>
+
 {% macro tile(href, title, text) -%}
 <a class="tile" href="{{ href }}"><strong>{{ title }}</strong><span>{{ text }}</span></a>
 {%- endmacro %}
@@ -12,7 +23,7 @@ die Projektleitung.</p>
 {% elif user.role.value == "admin" %}
 <h2>Auswertung</h2>
 <div class="tiles">
-  {{ tile("/dashboard", "Ergebnisse", "Leaderboard, Profile, alle Fälle und die vier Auswertungen") }}
+  {{ tile("/dashboard", "Epistemisches Profil", "fünf Dimensionen je Modell, Ergebnis-Treffer, alle Fälle und Auswertungen") }}
   {{ tile("/study", "Studie", "Aufbau festlegen, Protokoll einfrieren, Ergebnisse veröffentlichen") }}
 </div>
 <h2>Fälle und Läufe</h2>
@@ -37,12 +48,12 @@ die Projektleitung.</p>
 <div class="tiles">
   {{ tile("/checklists", "Referenzgründe", "die tragenden Gründe je Fall bewerten und korrigieren") }}
   {{ tile("/calibration", "Kalibrierung", "Antworten der Modelle blind bewerten") }}
-  {{ tile("/dashboard", "Ergebnisse", "die Auswertung") }}
+  {{ tile("/dashboard", "Epistemisches Profil", "die Auswertung") }}
   {{ tile("/prompts", "Prompts", "die Aufgabentexte für die Modelle lesen") }}
 </div>
 {% else %}
 <div class="tiles">
-  {{ tile("/dashboard", "Ergebnisse", "Leaderboard, Profile, alle Fälle und die vier Auswertungen") }}
+  {{ tile("/dashboard", "Epistemisches Profil", "fünf Dimensionen je Modell, Ergebnis-Treffer, alle Fälle und Auswertungen") }}
 </div>
 {% endif %}
 {% endblock %}

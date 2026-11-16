@@ -150,6 +150,8 @@ class CalibrationRating(SQLModel, table=True):
 
     ``reasons``: ``{"nr", "value": ja|teilweise|nein, "evidence"}``; ``citations``:
     ``{"nr", "value": ja|teilweise|nein|nicht_beurteilbar, "note"}``, as in ``JudgeScore``.
+    ``category`` (1–6, ``calibration.CATEGORIES``) and ``reviewability`` (1–4) are human
+    only; ``started_at``: when the rating page was opened (time per evaluation).
     """
 
     __tablename__ = "calibration_ratings"
@@ -165,6 +167,9 @@ class CalibrationRating(SQLModel, table=True):
         default_factory=list, sa_column=Column(JSON, nullable=False)
     )
     note: str | None = None
+    category: int | None = None
+    reviewability: int | None = None
+    started_at: datetime | None = None
     created_at: datetime = Field(default_factory=utcnow)
 
 

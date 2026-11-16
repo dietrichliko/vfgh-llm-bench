@@ -31,7 +31,7 @@ import yaml
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import __version__, orders, prompts, providers
+from bench import __version__, calibration, orders, prompts, providers
 from bench.models import (
     Case,
     CaseParse,
@@ -59,6 +59,28 @@ TASK_ROLE = {
     "extract_reasons": "extractor",
 }
 CONDITIONS = ("A", "B", "C")
+# the study's framing (analysis plan, section 0), frozen with every protocol version
+FRAMING: dict[str, Any] = {
+    "research_question": (
+        "Under what practical conditions can an LLM act as a reliable and reviewable "
+        "epistemic actor in legal reasoning?"
+    ),
+    "test_case": "VfGH regulatory review (Art 139 B-VG); the ratio decidendi is the reference",
+    "dimensions": [
+        "knowledge acquisition",
+        "knowledge representation",
+        "legal inference",
+        "justification / reviewability",
+        "reliability",
+    ],
+    "stress_test": "opposing reasonings: does fluent reasoning carry information on correctness?",
+    "condition_labels": dict(orders.CONDITIONS),
+    "error_categories": dict(calibration.CATEGORIES),
+    "reviewability": {
+        "question": calibration.REVIEWABILITY_QUESTION,
+        "scale": dict(calibration.REVIEWABILITY),
+    },
+}
 
 
 def sha(text: str | bytes) -> str:
@@ -224,6 +246,7 @@ def resolve(db: Session, s: Study, models: dict[str, ResolvedModel]) -> Resolved
         "eligibility": draft.get("eligibility", "cutoff"),
         "prompts": prompt_cfg,
         "analysis_plan_sha256": sha(PLAN.read_bytes()),
+        "framing": FRAMING,
     }
     return out
 
@@ -262,6 +285,7 @@ def files_for(
     """Path (below ``studies/<slug>/``) → text of every protocol file."""
     protocol = {
         "study": config["study"],
+        "framing": config.get("framing"),
         "version": version,
         "tag": tag,
         "frozen_at": frozen_at.isoformat(),

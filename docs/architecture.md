@@ -309,8 +309,9 @@ A study order can run for hours or days. The browser is only used to configure, 
 
 ### As built in stage 6b (dashboard)
 
-- **Page "Ergebnisse"** (`/dashboard`, `bench/web/dashboard.py`, viewer, expert and admin): computed live from `analyse(db)` over all stored decide runs; a condition switch (A/B/C) above the figures. Until the protocol is frozen (6d), the page says that the numbers are provisional.
-- **Figure 1, leaderboard:** per model the cases, accuracy with its interval as a bar and the "always unlawful" baseline as a tick, share of correct runs, κ, reasons, citations not found in the RIS (with the checker's own miss rate on the court's citations) and inaccurate citations; in A also unstable, both sound and AUC. Judge-based columns carry "vorl." while the criterion is not calibrated.
+- **Page "Epistemisches Profil"** (`/dashboard`, `bench/web/dashboard.py`, viewer, expert and admin): computed live from `analyse(db)` over all stored decide runs; a condition switch (A/B/C) above the figures. Until the protocol is frozen (6d), the page says that the numbers are provisional.
+- **Profile first:** a heat table per model grouped by the five dimensions of `analysis-plan.md` §0 and the stress test (acquisition in C, representation, inference, reviewability by the expert, reliability, opposing reasonings); then the acquisition table (§10) and the expert's error categories and reviewability (§11).
+- **Outcome hits** ("eine Dimension unter fünf"), sorted by model, not ranked: per model the cases, accuracy with its interval as a bar and the "always unlawful" baseline as a tick, share of correct runs, κ, reasons, citations not found in the RIS (with the checker's own miss rate on the court's citations) and inaccurate citations; in A also unstable, both sound and AUC. Judge-based columns carry "vorl." while the criterion is not calibrated.
 - **Figure 2, profiles:** all metrics on 0–100 (higher is better) in a blue heatmap with the values in the cells.
 - **Figure 3, case × model:** majority label right / wrong per cell with a glyph (✓ ✗ ·, ~ for disagreeing runs), hits per model and models right per case; admins can open the case.
 - **Figure 4:** source access (accuracy per condition, one line per model, with the McNemar results in the table); prior knowledge (share recalled before vs after the cutoff, from the contamination probe, instead of accuracy by distance to the cutoff, because pre-cutoff cases are never run); sham reasoning (accuracy against both judged sound, with AUC and the partly unlawful row in the table); error direction (confusion matrix for a chosen model, diagonal outlined).
@@ -340,7 +341,7 @@ A study order can run for hours or days. The browser is only used to configure, 
 | --- | --- |
 | Admin | Cases (RIS search, batch import, split/leak view, flags, release); providers and models (status, test, cutoff coverage); prompts (versions, freeze); orders (setup, cost estimate, progress, controls); protocol (freeze, amendments, publish); costs; users |
 | Legal expert | Reference checklists (rate correct / incomplete / wrong); calibration queue (~40 outputs, ~10 of them also rated by a second person; blind, same criteria as the judges); optionally ~10 opposing-reasoning pairs, blind |
-| Viewer | Dashboard (leaderboard, model profiles, case × model grid, the four analyses from `paper.md` §6), case pages, exports |
+| Viewer | Dashboard (epistemic profile, outcome hits, case × model grid, the four analyses from `paper.md` §6), case pages, exports |
 
 - **Login:** generic OIDC (issuer, client id and secret via config/secrets; CERN SSO works) plus a dev login for local use. Admins are listed in the settings.
 - **Blindness in the UI:** before resolution, rating pages show no model name, provider or outcome assignment, not even in the HTML source, URLs or file names. Tests check the rendered HTML.

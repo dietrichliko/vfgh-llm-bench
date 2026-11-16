@@ -3,11 +3,12 @@
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from statistics import fmean
+from statistics import fmean, median
 
 from sqlmodel import Session, col, select
 
 from bench import citebaseline, contamination
+from bench.analysis.acquisition import AcquisitionResult, acquisition
 from bench.analysis.stats import (
     Interval,
     auc,
@@ -523,6 +524,10 @@ class StabilityResult:
     fleiss: float | None
     fleiss_cases: int
     by_phrasing: dict[int, float | None]  # phrasing → Fleiss' κ over its repetitions
+    # across phrasings: the majority outcome of each phrasing differs (or is a tie)
+    phrasing_cases: int = 0  # cases run in more than one phrasing
+    phrasing_unstable: int = 0
+    phrasing_share: Interval | None = None
 
 
 def _fleiss(by_case: dict[int, list[DecideRun]]) -> tuple[float | None, int]:
@@ -549,6 +554,12 @@ def stability(runs: Sequence[DecideRun], exclude: Exclude | None = None) -> list
             p: _fleiss({c: [r for r in rs if r.phrasing == p] for c, rs in multi.items()})[0]
             for p in phrasings
         }
+        across = [
+            {majority([r.label or "none" for r in rs if r.phrasing == p]) for p in ps}
+            for rs in multi.values()
+            if len(ps := {r.phrasing for r in rs}) > 1
+        ]
+        flipped = sum(len(labels) > 1 or None in labels for labels in across)
         results.append(
             StabilityResult(
                 model,
@@ -558,6 +569,9 @@ def stability(runs: Sequence[DecideRun], exclude: Exclude | None = None) -> list
                 kappa,
                 n_full,
                 by_phrasing,
+                len(across),
+                flipped,
+                wilson(flipped, len(across)),
             )
         )
     return results
@@ -827,6 +841,52 @@ def ppi(
     return out
 
 
+# ── human assessment: error categories, reviewability, time ────────────────────
+
+
+@dataclass
+class HumanAssessment:
+    model_key: str
+    condition: str
+    ratings: int
+    categories: dict[int, int]  # category (1–6) → ratings
+    reviewability: float | None  # median, 1–4
+
+
+def human_assessment(db: Session, allowed: set[int] | None = None) -> list[HumanAssessment]:
+    """The expert's error categories and reviewability, per model and condition (first
+    rating of each item; a second person's rating serves agreement only)."""
+    items = {i.id: i for i in _items(db, allowed)}
+    runs = {
+        r.id: r
+        for r in db.exec(
+            select(Run).where(col(Run.id).in_([i.target_run_id for i in items.values()]))
+        ).all()
+    }
+    seen: set[int] = set()
+    per: defaultdict[tuple[str, str], list[CalibrationRating]] = defaultdict(list)
+    for r in db.exec(select(CalibrationRating).order_by(col(CalibrationRating.id))).all():
+        item = items.get(r.item_id)
+        if item is None or r.item_id in seen or r.category is None:
+            continue
+        seen.add(r.item_id)
+        run = runs.get(item.target_run_id)
+        if run is not None:
+            per[run.model_key, run.condition].append(r)
+    return [
+        HumanAssessment(
+            model,
+            condition,
+            len(rs),
+            dict(sorted(Counter(r.category for r in rs if r.category).items())),
+            median([r.reviewability for r in rs if r.reviewability])
+            if any(r.reviewability for r in rs)
+            else None,
+        )
+        for (model, condition), rs in sorted(per.items())
+    ]
+
+
 # ── contamination ──────────────────────────────────────────────────────────────
 
 
@@ -859,6 +919,8 @@ class Report:
     pending: dict[str, int] = field(default_factory=dict)  # "model/condition" → open cells
     routing: list[Routing] = field(default_factory=list)
     citation_baseline: citebaseline.Baseline | None = None  # the checker's own miss rate
+    acquisition: list[AcquisitionResult] = field(default_factory=list)  # condition C
+    human: list[HumanAssessment] = field(default_factory=list)  # error categories etc.
 
 
 def allowed_runs(db: Session, order_ids: Iterable[int] | None) -> set[int] | None:
@@ -896,4 +958,6 @@ def analyse(db: Session, order_ids: Iterable[int] | None = None) -> Report:
         outcome_common=common_cases(runs, t),
         pending={f"{m}/{c}": n for (m, c), n in sorted(pending(db, order_ids).items())},
         routing=routing(db, order_ids),
+        acquisition=acquisition(db, [r.id for r in runs if r.condition == "C" and r.answered]),
+        human=human_assessment(db, allowed),
     )

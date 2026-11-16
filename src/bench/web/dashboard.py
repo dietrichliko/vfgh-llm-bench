@@ -20,7 +20,9 @@ from sqlmodel import Session, col, select
 from bench.analysis import metrics
 from bench.analysis.stats import Interval
 from bench.auth import DbDep, require_roles
+from bench.calibration import CATEGORIES
 from bench.models import Case, User, UserRole, audit
+from bench.orders import CONDITIONS
 from bench.providers import ResolvedModel
 from bench.web.cases import OUTCOME_LABELS
 from bench.web.pages import render, resolved_models
@@ -30,7 +32,6 @@ ViewerDep = Annotated[
     User, Depends(require_roles(UserRole.ADMIN, UserRole.EXPERT, UserRole.VIEWER))
 ]
 
-CONDITIONS = {"A": "Modell allein", "B": "vorgegebene Normen", "C": "eigene RIS-Recherche"}
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 RAMP = [  # blue, light → dark (steps 100 … 650)
     "#cde2fb",
@@ -67,7 +68,7 @@ def est(i: Interval | None) -> float | None:
     return None if i is None else i.estimate
 
 
-# ── figure 1: leaderboard ──────────────────────────────────────────────────────
+# ── figure 2: outcome hits (one dimension of five) ──────────────────────────────
 
 
 @dataclass
@@ -119,49 +120,86 @@ def leaderboard(
                 auc=opp[k].auc if condition == "A" and k in opp else None,
             )
         )
-    return sorted(rows, key=lambda r: -(est(r.accuracy) or 0))
+    return sorted(rows, key=lambda r: r.model_key)  # no ranking: one dimension of five
 
 
-# ── figure 2: profiles ─────────────────────────────────────────────────────────
+# ── figure 1: epistemic profile ────────────────────────────────────────────────
 
-PROFILE_COLUMNS = [
-    ("Tenor", "A"),
-    ("Tenor", "B"),
-    ("Tenor", "C"),
-    ("Gründe", "Anteil, A"),
-    ("Zitate", "im RIS gefunden, A"),
-    ("Stabil", "Läufe, A"),
-    ("Unterscheidung", "1 − beide tragf."),
-    ("AUC", "× 100"),
+# the five dimensions of the analysis plan (section 0) and the stress test; a column is
+# (title, subtitle); "{c}" is the condition on display
+PROFILE_GROUPS: list[tuple[str, list[tuple[str, str]]]] = [
+    ("Wissenserwerb", [("Referenznormen", "abgerufen, C"), ("Fassung", "richtig, C")]),
+    (
+        "Wissensrepräsentation",
+        [("Zitate", "im RIS gefunden, {c}"), ("Zitate", "tragen die Aussage, {c}")],
+    ),
+    (
+        "Rechtliche Schlussfolgerung",
+        [("Tenor", "A"), ("Tenor", "B"), ("Tenor", "C"), ("Gründe", "Referenzgründe, {c}")],
+    ),
+    ("Nachvollziehbarkeit", [("Expertin", "Median 1–4, {c}")]),
+    ("Verlässlichkeit", [("Stabil", "über Läufe, A"), ("Stabil", "über Formulierungen, A")]),
+    ("Stresstest", [("Unterscheidung", "1 − beide tragf."), ("AUC", "× 100")]),
 ]
 
 
-def profiles(report: metrics.Report, models: list[str]) -> list[tuple[str, list[int | None]]]:
+def profile_columns(condition: str) -> list[tuple[str, str, str]]:
+    """(group, title, subtitle) per column, for the condition on display."""
+    return [
+        (group, title, sub.replace("{c}", condition))
+        for group, cols in PROFILE_GROUPS
+        for title, sub in cols
+    ]
+
+
+def _inverse(x: float | None) -> int | None:
+    return None if x is None else pct(1 - x)
+
+
+def profiles(
+    report: metrics.Report, models: list[str], condition: str = "A"
+) -> list[tuple[str, list[int | None]]]:
+    """Per model one value 0–100 per profile column (higher is better)."""
     acc = {(o.model_key, o.condition): est(o.accuracy) for o in report.outcome}
     reasons = {(r.model_key, r.condition): est(r.share) for r in report.reasons}
-    fab = {(c.model_key, c.condition): est(c.not_found_share) for c in report.citations}
-    stab = {s.model_key: est(s.share) for s in report.stability}
+    cites = {(c.model_key, c.condition): c for c in report.citations}
+    stab = {s.model_key: s for s in report.stability}
     opp = {o.model_key: o for o in report.opposing}
+    acq = {a.model_key: a for a in report.acquisition}
+    human = {(h.model_key, h.condition): h for h in report.human}
     out = []
     for k in models:
-        f, s, o = fab.get((k, "A")), stab.get(k), opp.get(k)
-        both = est(o.both_sound) if o else None
+        c, s, o, a = cites.get((k, condition)), stab.get(k), opp.get(k), acq.get(k)
+        h = human.get((k, condition))
         out.append(
             (
                 k,
                 [
+                    pct(est(a.recall)) if a else None,
+                    pct(est(a.version_correct)) if a else None,
+                    _inverse(est(c.not_found_share)) if c else None,
+                    _inverse(est(c.inaccurate)) if c else None,
                     pct(acc.get((k, "A"))),
                     pct(acc.get((k, "B"))),
                     pct(acc.get((k, "C"))),
-                    pct(reasons.get((k, "A"))),
-                    None if f is None else pct(1 - f),
-                    None if s is None else pct(1 - s),
-                    None if both is None else pct(1 - both),
+                    pct(reasons.get((k, condition))),
+                    pct((h.reviewability - 1) / 3) if h and h.reviewability else None,
+                    _inverse(est(s.share)) if s else None,
+                    _inverse(est(s.phrasing_share)) if s else None,
+                    _inverse(est(o.both_sound)) if o else None,
                     pct(est(o.auc)) if o else None,
                 ],
             )
         )
     return out
+
+
+def categories(report: metrics.Report) -> list[tuple[str, str, int, list[int]]]:
+    """(model, condition, ratings, count per error category 1–6) of the expert ratings."""
+    return [
+        (h.model_key, h.condition, h.ratings, [h.categories.get(n, 0) for n in CATEGORIES])
+        for h in report.human
+    ]
 
 
 # ── figure 3: case × model ─────────────────────────────────────────────────────
@@ -381,8 +419,11 @@ def context(
         "run_conditions": run_conditions,
         "models": models,
         "rows": rows,
-        "profile_columns": PROFILE_COLUMNS,
-        "profiles": profiles(report, models),
+        "profile_columns": profile_columns(condition),
+        "profile_groups": [(g, len(cols)) for g, cols in PROFILE_GROUPS],
+        "profiles": profiles(report, models, condition),
+        "categories": categories(report),
+        "category_labels": CATEGORIES,
         "grid": grid(db, runs, report, condition),
         "slopes": slopes(report, models),
         "recall": recall_bars(db, metrics.allowed_runs(db, order_ids)),
@@ -444,7 +485,7 @@ def export_zip(
     content = export.build(
         db, resolved_models(request), raw=raw, protocol=label, order_ids=order_ids
     )
-    name = f"vfgh-llm-studie-{datetime.now(UTC):%Y%m%d-%H%M}{'-roh' if raw else ''}.zip"
+    name = f"ratio-lab-{datetime.now(UTC):%Y%m%d-%H%M}{'-roh' if raw else ''}.zip"
     audit(db, "export", user_id=user.id, detail={"raw": raw, "bytes": len(content)})
     db.commit()
     return Response(

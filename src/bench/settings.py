@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     secrets_dir: Path = Path("/run/secrets")
     database_url: str = ""
     public_url: str = "http://localhost:8000"
+    # former public hosts: requests to them are redirected (301) to public_url
+    legacy_hosts: list[str] = ["vfgh-llm-bench.mbi-ai.dev"]
 
     session_hours: int = 8
     cost_cap_total_usd: float | None = None  # over all orders; None = no total cap

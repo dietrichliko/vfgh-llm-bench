@@ -116,6 +116,9 @@ async def test_freeze_writes_the_protocol_files(
             "prompts/judge.p1.v1.md",
         } <= set(files)
         assert "config_sha256: " + pv.sha256 in files["protocol.yaml"]
+        assert "epistemic actor" in files["protocol.yaml"]
+        assert "Flüssige Begründung verdeckt" in files["protocol.yaml"]
+        assert "## 0 Research question and dimensions" in files["analysis-plan.md"]
         assert files["cases.csv"].count("\n") == 4  # header + 3 cases
         assert "TEST_OR_KEY" in files["models.yaml"] and "or-secret" not in files["models.yaml"]
         assert files["analysis-plan.md"] == protocol.PLAN.read_text()
@@ -244,7 +247,9 @@ async def test_study_page_freeze_and_publish(
         dash = client.get("/dashboard").text
         assert "konf-2026-protocol-v1" in dash and "weichen ab" in dash
         assert "Noch keine ausgewerteten Läufe" in dash
-        assert "Leaderboard" in client.get("/dashboard?alle=1").text
+        assert (
+            "Ergebnis-Treffer (eine Dimension unter fünf)" in client.get("/dashboard?alle=1").text
+        )
 
     # a study order after the freeze
     with Session(engine) as db:

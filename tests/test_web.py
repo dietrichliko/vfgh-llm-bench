@@ -19,6 +19,15 @@ def test_health(client: TestClient) -> None:
     assert client.get("/health").json()["status"] == "ok"
 
 
+def test_legacy_host_redirects(client: TestClient) -> None:
+    old = "https://vfgh-llm-bench.mbi-ai.dev"
+    r = client.get(f"{old}/dashboard?bedingung=B", follow_redirects=False)
+    assert r.status_code == 301
+    assert r.headers["location"] == "http://localhost:8000/dashboard?bedingung=B"
+    assert client.get(f"{old}/health").status_code == 200  # fly's checks use any host
+    assert client.get("/login").status_code == 200  # the public host is served
+
+
 def test_pages_require_login(client: TestClient) -> None:
     r = client.get("/", follow_redirects=False)
     assert r.status_code == 303

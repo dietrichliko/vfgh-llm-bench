@@ -17,9 +17,9 @@ from bench.models import PromptVersion, audit
 PROMPT_DIR = Path(__file__).parent / "prompts"
 USER_MARKER = "---user---"
 TASKS = {
-    "decide": "Entscheidung (Bedingung A)",
-    "decide_b": "Entscheidung mit vorgegebenen Normen (Bedingung B)",
-    "decide_c": "Entscheidung mit RIS-Recherche (Bedingung C)",
+    "decide": "Entscheidung, geschlossenes Wissenssystem (Bedingung A)",
+    "decide_b": "Entscheidung mit vorgegebenen Quellen (Bedingung B)",
+    "decide_c": "Entscheidung mit eigener Recherche im RIS (Bedingung C)",
     "extract_reasons": "Referenzgründe aus den Erwägungen (Hilfsaufgabe)",
     "judge": "Bewertung von Gründen und Zitaten (Richtermodell)",
     "write_opposing": "Zwei Begründungen mit entgegengesetztem Ergebnis (Hilfsaufgabe)",

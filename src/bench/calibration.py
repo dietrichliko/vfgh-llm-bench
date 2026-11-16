@@ -9,12 +9,17 @@
   A person sees the items they can still rate, in item order; the rating page shows the
   case, the reference reasons, the answer and the citation check, as the judges see
   them, but never model, provider, condition or the judges' scores.
+- Besides the judges' criteria the expert classifies the answer (``CATEGORIES``) and rates
+  its reviewability (``REVIEWABILITY``); both are human only. The page records when it was
+  opened, so each rating carries the time it took.
 - Items and ratings are immutable (trigger). Agreement metrics follow in stage 6.
 """
 
 import random
 from collections import Counter, defaultdict
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+from statistics import median
 
 from sqlalchemy import func
 from sqlmodel import Session, col, select
@@ -27,12 +32,30 @@ from bench.models import (
     JudgeScore,
     ReferenceChecklist,
     Run,
+    User,
     audit,
     utcnow,
 )
 
 REASON_VALUES = ("ja", "teilweise", "nein")
 CITATION_VALUES = ("ja", "teilweise", "nein", "nicht_beurteilbar")
+# error categories (analysis plan, section 0): one per answer
+CATEGORIES = {
+    1: "Richtiges Ergebnis, richtige Gründe",
+    2: "Richtiges Ergebnis, andere Gründe",
+    3: "Falsches Ergebnis, erkennbares rechtliches Missverständnis",
+    4: "Argumente der Antragstellerin unkritisch übernommen",
+    5: "Ungenaue oder erfundene Rechtssätze",
+    6: "Flüssige Begründung verdeckt schwache rechtliche Grundlage",
+}
+REVIEWABILITY_QUESTION = "Lässt sich die Begründung nachvollziehen und angreifen?"
+REVIEWABILITY = {
+    1: "nein – Schritte und Quellen bleiben im Dunkeln",
+    2: "kaum – nur einzelne Schritte prüfbar",
+    3: "weitgehend – die meisten Schritte mit Quelle prüfbar",
+    4: "ja – jeder Schritt nachvollziehbar und angreifbar",
+}
+MAX_DURATION = timedelta(hours=12)  # a page left open longer says nothing about the effort
 DEFAULT_SIZE = 40
 DEFAULT_DOUBLE = 10
 
@@ -219,6 +242,41 @@ def progress(db: Session) -> Progress:
     )
 
 
+@dataclass
+class Duration:
+    rater: str
+    ratings: int  # with a usable start time
+    median_minutes: float
+
+
+def minutes(rating: CalibrationRating) -> float | None:
+    """Time from opening the page to submitting the rating; None if not recorded."""
+    if rating.started_at is None:
+        return None
+    start = (
+        rating.started_at.replace(tzinfo=UTC)
+        if rating.started_at.tzinfo is None
+        else rating.started_at
+    )
+    end = (
+        rating.created_at.replace(tzinfo=UTC)
+        if rating.created_at.tzinfo is None
+        else rating.created_at
+    )
+    return (end - start).total_seconds() / 60
+
+
+def durations(db: Session) -> list[Duration]:
+    """Median minutes per evaluation and evaluator, for planning a larger study."""
+    per: defaultdict[int, list[float]] = defaultdict(list)
+    for r in db.exec(select(CalibrationRating)).all():
+        m = minutes(r)
+        if m is not None:
+            per[r.rater_id].append(m)
+    names = {u.id: u.name or u.email for u in db.exec(select(User)).all()}
+    return [Duration(names.get(k, str(k)), len(v), median(v)) for k, v in sorted(per.items())]
+
+
 # ── rating ──────────────────────────────────────────────────────────────────────
 
 
@@ -229,8 +287,15 @@ def rate(
     reasons: list[tuple[str, str]],
     cited: list[tuple[str, str]],
     note: str = "",
+    *,
+    category: int | None = None,
+    reviewability: int | None = None,
+    started_at: datetime | None = None,
 ) -> CalibrationRating:
-    """Store one rating; ``reasons`` and ``cited`` are (value, evidence/note) in list order."""
+    """Store one rating; ``reasons`` and ``cited`` are (value, evidence/note) in list order.
+
+    ``started_at`` (page opened) is kept only if it lies within ``MAX_DURATION`` before now.
+    """
     ratings = list(
         db.exec(select(CalibrationRating).where(CalibrationRating.item_id == item.id)).all()
     )
@@ -246,6 +311,13 @@ def rate(
         raise ValueError("Bitte jeden Referenzgrund bewerten")
     if len(cited) != m or any(v not in CITATION_VALUES for v, _ in cited):
         raise ValueError("Bitte jedes Zitat bewerten")
+    if category not in CATEGORIES:
+        raise ValueError("Bitte die Antwort einer Kategorie zuordnen")
+    if reviewability not in REVIEWABILITY:
+        raise ValueError("Bitte die Nachvollziehbarkeit bewerten")
+    now = utcnow()
+    if started_at is not None and not (now - MAX_DURATION <= started_at <= now):
+        started_at = None
     rating = CalibrationRating(
         item_id=item.id or 0,
         rater_id=user_id,
@@ -254,7 +326,10 @@ def rate(
         ],
         citations=[{"nr": i, "value": v, "note": t.strip()} for i, (v, t) in enumerate(cited, 1)],
         note=note.strip() or None,
-        created_at=utcnow(),
+        category=category,
+        reviewability=reviewability,
+        started_at=started_at,
+        created_at=now,
     )
     db.add(rating)
     db.flush()

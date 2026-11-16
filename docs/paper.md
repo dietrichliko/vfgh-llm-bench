@@ -2,6 +2,8 @@
 
 > Source: Claude Doc [Begründen LLMs wie der VfGH? – Abstract und Kurzpaper](https://claude.ai/artifact/9k5ZqdbykybvdfuQ3kuPZU), rev 31, exported 2026-10-29. The Claude Doc is the master copy; this file is a read-only snapshot.
 
+> **Reframed 2026-11-15 as ratio-lab.** The study now asks under what practical conditions an LLM can act as a reliable and reviewable epistemic actor in legal reasoning, with five dimensions (acquisition, representation, inference, reviewability, reliability) and the conditions *Geschlossenes Wissenssystem* (A), *Vorgegebene Quellen* (B) and *Eigene Recherche* (C). The binding version is `docs/analysis-plan.md` §0; this snapshot predates it.
+
 2026-10-27 · Dietrich
 
 Design of an automated evaluation of language models on regulatory review under Art 139 B-VG

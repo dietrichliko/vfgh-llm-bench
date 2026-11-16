@@ -1,6 +1,35 @@
 # Analysis plan
 
-As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.md`). It fixes how the five levels of `docs/paper.md` §5 are computed from the stored runs, so that nothing is chosen after seeing results. The code is `bench/analysis/`; every rule below has a test.
+As of 2026-11-15. DRAFT, to be frozen with the protocol (see `docs/publication.md`). It fixes how the metrics are computed from the stored runs, so that nothing is chosen after seeing results. The code is `bench/analysis/`; every rule below has a test.
+
+## 0 Research question and dimensions (ratio-lab)
+
+**Research question.** Under what practical conditions can an LLM act as a reliable and reviewable epistemic actor in legal reasoning? Regulatory review by the VfGH (Art 139 B-VG) is the test case ("legal laboratory"). The court's carrying reasons (*ratio decidendi*) are the **reference, not the target**: the outcome is one measurement among many.
+
+**Conditions.** Each case is decided under up to three conditions:
+
+| | Condition | The model gets |
+| --- | --- | --- |
+| A | Closed knowledge system (*Geschlossenes Wissenssystem*) | the case only |
+| B | Provided sources (*Vorgegebene Quellen*) | the case and the approved norm set, valid on the Stichtag |
+| C | Own research (*Eigene Recherche*) | the case and RIS tools (`suche_normen`, `hole_norm`), at most 15 calls |
+
+B − A isolates **inference given the right sources**; C − B isolates the cost of **acquiring** them.
+
+**Five dimensions and the stress test**, with the metrics that measure them:
+
+| # | Dimension | Question | Metrics (section) |
+| --- | --- | --- | --- |
+| 1 | Knowledge acquisition | Does the model find the relevant norms, in the version valid on the decisive date? | reference-norm recall, version correctness, search effort, condition C (§10); accuracy C vs B (§2) |
+| 2 | Knowledge representation | Does each cited norm say what the model claims, or is it distorted or invented? | not found in the RIS, inaccurate (§4); contamination probe (§8); error category 5 (§11) |
+| 3 | Legal inference | Does it connect the norms to the case and reach a legally supported conclusion? | outcome (§2), share of reference reasons (§3); error categories 1–3 (§11) |
+| 4 | Justification / reviewability | Can a lawyer follow, examine and contest the reasoning? | expert reviewability 1–4 (§11) |
+| 5 | Reliability | Same outcome and similar reasons across runs and phrasings? | unstable across runs and across phrasings, Fleiss' κ (§5) |
+| – | Stress test | Does fluent reasoning carry information about legal correctness? | opposing reasonings: both sound, AUC (§6); error categories 4 and 6 (§11) |
+
+The dashboard ("Epistemisches Profil") leads with these dimensions; the outcome table is sorted by model, not by accuracy.
+
+**Opposing reasonings (pilot).** A helper model writes one reasoning for and one against unlawfulness; the tested models assess each separately (condition A). This measures whether a model *recognises* a legally supported reasoning, not whether it can *produce* a persuasive one; the latter (tested models write both, a lawyer picks blind) is a later extension.
 
 ## 1 Data
 
@@ -37,6 +66,7 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 - Condition A, per model: a case is **unstable** if its runs do not all give the same label (a missing label is a label of its own).
 - **Fleiss' κ** over the cases with all runs, runs as raters.
 - Reported per phrasing too (5 repetitions each), to separate wording from sampling.
+- **Across phrasings:** among cases run in more than one phrasing, a case is unstable across phrasings if the majority labels of its phrasings differ, or one of them is a tie; share with a Wilson interval.
 
 ## 6 Level 5: opposing reasonings
 
@@ -64,3 +94,25 @@ As of 2026-11-06. DRAFT, to be frozen with the protocol (see `docs/publication.m
 - **Pilot:** every comparison is exploratory. McNemar p-values (conditions; each model against the *always unlawful* baseline) are reported without correction for multiplicity and support no claim.
 - **Full study:** "a model beats the baseline" is tested per model by exact McNemar on its cases (model right vs baseline right, discordant pairs), with **Holm** correction over the tested models; the comparison of conditions likewise, Holm over models per pair of conditions.
 - Every figure and export names the protocol tag and hash it is based on.
+
+## 10 Knowledge acquisition (condition C)
+
+- **Reference norms:** the case's approved norm set (the norms the admin checked against the decision's legal framework, part II "Rechtslage"), in the version valid on the Stichtag; items that are left out, procedural (VfGG, Art 139/140 B-VG) or EU law do not count. Without an approved norm set a run has no reference and is left out of recall and version correctness.
+- **Identity of a norm:** short title and section as the RIS states them (blocks *Kurztitel* and *§/Artikel/Anlage*); a later part of a long document is known by its document number.
+- **Reference-norm recall:** share of reference norms fetched with `hole_norm` in any version; pooled over the reference norms of a model's C runs, Wilson interval.
+- **Version correctness:** among the fetched reference norms, share fetched as the same RIS document as the reference version (each version has its own document number); pooled, Wilson interval. A version the tool marked as not in force on the Stichtag is shown on the run page.
+- **Search effort:** mean number of tool calls per C run, the number of calls the limit cut off, the **share of C runs with at least one tool call** and the share of executed calls that returned an error (Wilson intervals). A model that rarely searches answers in C much as in A, so an A–C or B–C difference says something about acquisition only for the runs that used the tools (pilot test runs: DeepSeek V4 Flash answered without any tool call in 5 of 6 C runs on V8/2026).
+- **Cited:** a fetched document counts as cited if the citation check found the same document for one of the answer's citations (shown per step, no metric).
+
+## 11 Human assessment: error categories, reviewability, time
+
+- On each calibration item the expert also records, blind, **one error category**:
+  1. right result, right reasons;
+  2. right result, other reasons;
+  3. wrong result, recognisable legal misunderstanding;
+  4. applicant's arguments adopted uncritically;
+  5. inaccurate or invented legal propositions;
+  6. fluent reasoning that masks a weak legal basis;
+- and **reviewability**: "Lässt sich die Begründung nachvollziehen und angreifen?" on a scale 1 (no: steps and sources stay obscure) to 4 (yes: every step can be followed and contested).
+- Reported per model and condition from the first rating of each item: counts per category and the **median** reviewability. Judges do not rate these; they are human only and descriptive.
+- **Time per evaluation:** from opening the rating page to submitting it (pages open longer than 12 hours are left out); median per evaluator, to plan the effort of a larger study.

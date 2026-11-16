@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Kalibrierung · VfGH-LLM-Studie{% endblock %}
+{% block title %}Kalibrierung · ratio-lab{% endblock %}
 {% block content %}
 <h1>Kalibrierung der Richtermodelle</h1>
 <p class="lead">Sie bewerten Antworten der getesteten Modelle nach denselben Kriterien wie die
@@ -35,6 +35,14 @@ ergibt sich, welchen Kriterien der Richtermodelle die Studie vertrauen kann.</p>
   <tbody>{% for k, v in progress.by_stratum.items() %}<tr><td class="mono">{{ k }}</td><td>{{ v[0] }}</td><td>{{ v[1] }}</td></tr>{% endfor %}</tbody>
 </table>
 <p class="lead">Ziehungen: {% for d in progress.draws %}Nr. {{ d[0] }} ({{ d[1] }} Antworten, Seed {{ d[2] }}){% if not loop.last %}; {% endif %}{% endfor %}</p>
+{% endif %}
+{% if durations %}
+<h3>Zeit je Bewertung</h3>
+<p class="lead">Vom Öffnen der Seite bis zum Speichern; Grundlage für die Planung einer größeren Studie.</p>
+<table style="width: auto">
+  <thead><tr><th>Person</th><th class="r">Bewertungen</th><th class="r">Median (Minuten)</th></tr></thead>
+  <tbody>{% for d in durations %}<tr><td>{{ d.rater }}</td><td class="r mono">{{ d.ratings }}</td><td class="r mono">{{ "%.1f" | format(d.median_minutes) | replace(".", ",") }}</td></tr>{% endfor %}</tbody>
+</table>
 {% endif %}
 
 <section class="panel no-print">

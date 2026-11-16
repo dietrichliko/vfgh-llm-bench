@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy import func
 from sqlmodel import Session, col, select
 
-from bench import citations, judges, opposing, orders, prompts
+from bench import citations, judges, normsets, opposing, orders, prompts
+from bench.analysis import acquisition
 from bench.auth import AdminDep, DbDep
 from bench.models import (
     Case,
@@ -406,6 +407,10 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         ).all()
     }
     target = db.get(Run, run.target_run_id) if run.target_run_id else None
+    research = None
+    if run.condition == "C" and run.task == "decide" and case is not None:
+        norm_set = normsets.approved_for(db, [case]).get(case.id or 0)
+        research = acquisition.trajectory(run, norm_set, checks)
     others = db.exec(
         select(Run.id, Run.status, Run.started_at)
         .where(Run.job_id == run.job_id)
@@ -420,6 +425,7 @@ def run_detail(request: Request, run_id: int, user: AdminDep, db: DbDep) -> HTML
         prompt=prompt,
         attempts=others,
         stichtag=stichtag,
+        research=research,
         checks=checks,
         scores=scores,
         checklists=checklists,

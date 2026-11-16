@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Studie · VfGH-LLM-Studie{% endblock %}
+{% block title %}Studie · ratio-lab{% endblock %}
 {% block content %}
 <h1>Studie und Protokoll</h1>
 <p class="lead">Vor dem Lauf der Studie wird ihr Aufbau eingefroren: Fälle, Modelle je Rolle, Bedingungen,
@@ -31,7 +31,7 @@ Protokollversion mit Begründung.</p>
   <h3>Bedingungen</h3>
   <table style="width: auto">
     <thead><tr><th></th><th>Bedingung</th><th>Wiederholungen</th><th>Formulierungen</th></tr></thead>
-    <tbody>{% for c, label in (("A", "Modell allein"), ("B", "vorgegebene Normen"), ("C", "eigene RIS-Recherche")) %}{% set d = draft.get("conditions", {}).get(c) %}
+    <tbody>{% for c, label in condition_labels.items() %}{% set d = draft.get("conditions", {}).get(c) %}
       <tr><td><input type="checkbox" name="cond_{{ c }}" id="cond_{{ c }}"{% if d %} checked{% endif %}></td><td><label for="cond_{{ c }}">{{ c }}: {{ label }}</label></td>
         <td><input type="number" name="rep_{{ c }}" min="1" max="20" value="{{ d.repetitions if d else (5 if c == 'A' else 1) }}" style="width: 5rem"></td>
         <td><input type="number" name="phr_{{ c }}" min="1" max="3" value="{{ d.phrasings if d else (3 if c == 'A' else 1) }}" style="width: 5rem"></td></tr>{% endfor %}</tbody>

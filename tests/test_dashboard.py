@@ -89,8 +89,16 @@ async def test_dashboard_figures(
     with client_for(engine, settings) as client:
         as_role(client, engine, "viewer@example.org", UserRole.VIEWER)
         page = client.get("/dashboard").text
-        # figure 1
-        assert "Leaderboard – Modell allein" in page
+        # profile first, by dimension
+        assert "<h1>Epistemisches Profil</h1>" in page
+        for group in ("Wissenserwerb", "Wissensrepräsentation", "Nachvollziehbarkeit"):
+            assert f">{group}</th>" in page
+        assert page.index("Stärken und Schwächen") < page.index("Ergebnis-Treffer")
+        assert "Noch keine Läufe in Bedingung C" in page
+        assert "Noch keine Expertenbewertungen mit Fehlerkategorie" in page
+        # outcome hits: one dimension of five, alphabetical
+        assert "Ergebnis-Treffer (eine Dimension unter fünf) – Geschlossenes Wissenssystem" in page
+        assert page.index("<strong>alpha</strong>") < page.index("<strong>beta</strong>")
         assert "<strong>alpha</strong>" in page and "<strong>beta</strong>" in page
         assert "67 %" in page and "vorl." in page  # judges not calibrated yet
         # figure 2: tenor A 67, citations found in the RIS 67 (one of three not found)
