@@ -1,3 +1,18 @@
+## v0.6.0 (2026-11-16)
+
+### Feat
+
+- **analysis**: share of C runs that used the tools, and failed calls
+- **dashboard**: lead with the epistemic profile, outcome hits as one dimension of five
+- **analysis**: knowledge acquisition in condition C
+- **calibration**: error category, reviewability and time per evaluation
+- name the conditions closed knowledge system, provided sources and own research
+- **web**: rename the portal to ratio-lab and redirect the former host
+
+### Fix
+
+- **citations**: lists of sections and genitive law names are not invented sources
+
 ## v0.5.2 (2026-11-15)
 
 ### Fix
