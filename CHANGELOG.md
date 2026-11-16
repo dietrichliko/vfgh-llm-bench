@@ -1,3 +1,9 @@
+## v0.6.1 (2026-11-16)
+
+### Fix
+
+- **tests**: type the test helpers so mypy passes on the release check
+
 ## v0.6.0 (2026-11-16)
 
 ### Feat
