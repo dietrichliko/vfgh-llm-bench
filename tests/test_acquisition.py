@@ -74,11 +74,13 @@ TOOL_CALLS = [
 ]
 
 
+def c_run(tool_calls: list[dict[str, object]]) -> Run:
+    """A condition C run as far as the trajectory reads it: the tool calls only."""
+    return Run(condition="C", tool_calls=tool_calls)  # type: ignore[call-arg]
+
+
 def test_trajectory_recall_version_and_citation() -> None:
-    run = Run(
-        condition="C",
-        tool_calls=TOOL_CALLS,
-    )
+    run = c_run(TOOL_CALLS)
     checks = [
         CitationCheck(
             run_id=1,
@@ -113,15 +115,15 @@ def test_trajectory_recall_version_and_citation() -> None:
 
 
 def test_trajectory_without_norm_set() -> None:
-    run = Run(condition="C", tool_calls=[])
+    run = c_run([])
     t = trajectory(run)
     assert t.steps == [] and t.references == [] and t.recall is None and t.version_correct is None
 
 
 def test_summarise_pools_over_reference_norms() -> None:
-    searched = trajectory(Run(condition="C", tool_calls=TOOL_CALLS), NORM_SET)
-    silent = trajectory(Run(condition="C", tool_calls=[]), NORM_SET)  # answered from memory
-    no_set = trajectory(Run(condition="C", tool_calls=[TOOL_CALLS[0]]))
+    searched = trajectory(c_run(TOOL_CALLS), NORM_SET)
+    silent = trajectory(c_run([]), NORM_SET)  # answered from memory
+    no_set = trajectory(c_run([TOOL_CALLS[0]]))
     a = summarise("m", [searched, silent, no_set])
     assert (a.runs, a.references, a.cut_off) == (2, 6, 1)
     assert a.recall is not None and a.recall.estimate == 2 / 6

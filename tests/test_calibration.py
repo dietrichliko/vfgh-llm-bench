@@ -5,7 +5,7 @@ import random
 import re
 from collections import Counter
 from datetime import UTC, timedelta
-from typing import Any
+from typing import Any, TypedDict
 from urllib.parse import quote, unquote
 
 import httpx2
@@ -41,7 +41,13 @@ from tests.test_judges import settings as settings
 from tests.test_runs import answer, make_order, work
 from tests.test_runs import engine as engine
 
-GRADE = {"category": 2, "reviewability": 3}
+
+class Grade(TypedDict):
+    category: int
+    reviewability: int
+
+
+GRADE: Grade = {"category": 2, "reviewability": 3}
 REASONS = [("ja", "Stelle"), ("nein", "")]
 CITES = [("ja", ""), ("teilweise", "nur Abs 1"), ("nicht_beurteilbar", ""), ("nein", "")]
 
