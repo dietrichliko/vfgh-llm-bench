@@ -289,6 +289,8 @@ async def test_municipal_law_needs_a_state(ris: RisClient) -> None:
         ("§ 94f Abs 1 lit b Z 2 StVO 1960", ("Paragraph", "94f", "StVO 1960")),
         ("§44 Abs4 letzter Satz StVO 1960", ("Paragraph", "44", "StVO 1960")),
         ("§36 Abs1 vorletzter Satz TJG 2004", ("Paragraph", "36", "TJG 2004")),
+        ("§2 Abs 1 und Abs 11 samt Anlage TJG 2004", ("Paragraph", "2", "TJG 2004")),
+        ("§ 11b des Tiroler Jagdgesetzes 2004", ("Paragraph", "11b", "Tiroler Jagdgesetzes 2004")),
     ],
 )
 def test_parse_citation(citation: str, expected: tuple[str, str, str]) -> None:
@@ -481,3 +483,16 @@ async def test_one_law_needs_no_overview(ris: RisClient) -> None:
         ris, "2015-01-01", "suche_normen", suchbegriff="Halteverbot", geltungsbereich="bund"
     )
     assert not err and "Rechtsvorschriften unter" not in text
+
+
+def test_genitive_names_are_also_looked_up_in_the_nominative() -> None:
+    from bench.normsets import title_candidates
+
+    assert title_candidates("Tiroler Jagdgesetzes 2004") == [
+        "Tiroler Jagdgesetzes 2004",
+        "Tiroler Jagdgesetz 2004",
+    ]
+    assert "Allgemeines Verwaltungsverfahrensgesetz 1991" in title_candidates(
+        "Allgemeinen Verwaltungsverfahrensgesetzes 1991"
+    )
+    assert title_candidates("StVO 1960") == ["StVO 1960"]
